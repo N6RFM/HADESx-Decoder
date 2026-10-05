@@ -11,3 +11,4 @@ dist/
 *.cfile
 *.dll
 *.exe
+grc/*.py
