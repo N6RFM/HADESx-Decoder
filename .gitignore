@@ -1,0 +1,13 @@
+__pycache__/
+*.pyc
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+.venv/
+# big recordings live outside the repository; only the small excerpts in examples/iq/ are tracked
+*.iq
+!examples/iq/*.iq
+*.cfile
+*.dll
+*.exe

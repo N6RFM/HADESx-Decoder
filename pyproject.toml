@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "unne1b-decoder"
+version = "1.0.0"
+description = "Decoder for UNNE-1B (HADES-E2) 200 baud FSK telemetry and CODEC2 voice, with automatic Doppler tracking"
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+keywords = ["amateur radio", "satellite", "UNNE-1B", "HADES-E2", "AMSAT-EA", "FSK", "codec2", "gnuradio"]
+dependencies = ["numpy>=1.21", "scipy>=1.7"]
+
+[project.optional-dependencies]
+dll = ["unicorn>=2.0", "pefile"]
+dev = ["pytest", "matplotlib", "pyyaml"]
+
+[project.scripts]
+unne1b-decode = "unne1b.cli:main"
+unne1b-voice = "unne1b.voice:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src", "tests"]
+testpaths = ["tests"]
