@@ -13,6 +13,25 @@ def make_packet(ptype, addr, data):
     return b'\xaa' * 16 + b'\xbf\x35' + body + struct.pack('>H', crc16_ccitt_false(body))
 
 
+def make_sized_packet(ptype, addr, data, training=16):
+    """HADES-SA / HADES-L layout: training, sync, size byte, type/addr, scrambled data, CRC.
+    The size byte counts type/addr + data + CRC; the CRC covers type/addr + the scrambled data."""
+    body = bytes([(ptype << 4) | addr]) + scramble(data)
+    crc = struct.pack('>H', crc16_ccitt_false(body))
+    return b'\xaa' * training + b'\xbf\x35' + bytes([len(body) + 2]) + body + crc
+
+
+def make_sized_voice(nframes, addr=3, vtype=11, seed=0, training=16):
+    """Voice packets with the size byte (0x25), as sent by HADES-SA (type 11) and HADES-L."""
+    rng = random.Random(seed)
+    out, pay = b'\xaa' * training, []
+    for i in range(nframes):
+        d = bytes(rng.randrange(256) for _ in range(35))
+        pay.append(d)
+        out += b'\xbf\x35' + bytes([37, (vtype << 4) | addr, i]) + d
+    return out, pay
+
+
 def data_len(ptype):
     return TOTAL_BYTES[ptype] - 18 - 3
 
@@ -32,8 +51,8 @@ def fsk_iq(pkt, fs=50000, baud=200, center=-5000.0, shift=1650.0, snr_db=None, d
            fade_db=0.0, seed=0, lead_s=0.5):
     """Complex baseband 2-FSK, mark (bit 1) = lower tone. SNR is in a 2.2 kHz band at burst start."""
     bits = np.array([int(c) for c in ''.join(format(b, '08b') for b in pkt)])
-    sps = int(fs // baud)
-    f = np.repeat(np.where(bits == 1, -shift / 2, shift / 2), sps).astype(float)
+    edges = np.round(np.arange(len(bits) + 1) * (fs / float(baud))).astype(int)      # exact (fractional) symbol timing
+    f = np.repeat(np.where(bits == 1, -shift / 2, shift / 2), np.diff(edges)).astype(float)
     pad = int(lead_s * fs)
     f = np.concatenate([np.zeros(pad), f, np.zeros(pad)])
     f = f + center + drift * np.linspace(0, 1, len(f))
@@ -50,18 +69,19 @@ def fsk_iq(pkt, fs=50000, baud=200, center=-5000.0, shift=1650.0, snr_db=None, d
     return (x + noise).astype(np.complex64)
 
 
-def decode_iq(x, fs=50000, flips=3, chunk=4096):
+def decode_iq(x, fs=50000, flips=3, chunk=4096, bauds=(200,), emit_unverified=False):
     """Run the same chain as the CLI on an in-memory array; returns the list of frames."""
     from scipy import signal
-    from unne1b import FskCentreTracker, Unne1bDeframer
+    from unne1b import FskCentreTracker, MultiBaudDeframer
     tr = FskCentreTracker(fs)
     ys = []
     for i in range(0, len(x), chunk):
         ys.append(tr.push(x[i:i + chunk])[0])
     ys.append(tr.flush()[0])
     y = np.concatenate(ys)
-    out = signal.lfilter(signal.firwin(129, 2350, fs=fs), 1.0, y)[::5].astype(np.complex64)
-    df = Unne1bDeframer(fs=fs / 5, max_flips=flips)
+    dec = max(1, int(round(fs / 10000.0)))
+    out = signal.lfilter(signal.firwin(129, 2350, fs=fs), 1.0, y)[::dec].astype(np.complex64)
+    df = MultiBaudDeframer(fs=fs / dec, bauds=bauds, max_flips=flips, emit_unverified=emit_unverified)
     frames = []
     for j in range(0, len(out), 2000):
         frames += df.push(out[j:j + 2000])[1]

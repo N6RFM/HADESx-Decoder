@@ -71,15 +71,17 @@ from gnuradio import gr
 
 
 class blk(gr.sync_block):
-    """UNNE-1B FSK200 deframer: complex baseband in, demodulated FSK out, decoded frames printed"""
+    """UNNE-1B / HADES-SA / HADES-L FSK deframer: complex baseband in, demodulated FSK out, decoded frames printed"""
 
-    def __init__(self, samp_rate=10000.0, baud=200.0, max_flips=3, dll_path='', log_path='', c2_path='',
-                 hex_time='none', rec_start='', delay_s=1.2):
-        gr.sync_block.__init__(self, name='UNNE-1B FSK200 deframer',
+    def __init__(self, samp_rate=10000.0, bauds='200,800', max_flips=3, dll_path='', log_path='', c2_path='',
+                 hex_time='none', rec_start='', delay_s=1.2, emit_unverified=False):
+        gr.sync_block.__init__(self, name='UNNE-1B / HADES FSK deframer',
                                in_sig=[np.complex64], out_sig=[np.float32])
         self.message_port_register_out(pmt.intern('frames'))
         self.message_port_register_out(pmt.intern('hex'))
-        self.df = Unne1bDeframer(fs=float(samp_rate), baud=float(baud), max_flips=int(max_flips))
+        # one deframer per baud rate: UNNE-1B = 200, HADES-SA alternates 800 / 200, HADES-L = 800
+        self.df = MultiBaudDeframer(fs=float(samp_rate), bauds=parse_bauds(bauds), max_flips=int(max_flips),
+                                    emit_unverified=bool(emit_unverified))
         self.log_path = log_path
         self.c2_path = c2_path
         # optional time stamp on the hex port: none | utc | local | unix | stream
@@ -140,7 +142,7 @@ class blk(gr.sync_block):
             stamp = self._stamp()
             self.message_port_pub(pmt.intern('hex'),
                                   pmt.intern(stamp + ' ' + fr['plain'] if stamp else fr['plain']))
-            if self.c2_path and fr['type'] == 15:
+            if self.c2_path and fr.get('voice'):
                 with open(self.c2_path, 'ab') as f:
                     f.write(plain)
             if self.log_path:
@@ -249,6 +251,8 @@ blocks:
     var('lookahead_s', '1.2', 'Tracker look-ahead delay in seconds; also used to correct the hex-port time stamps', 208, 60)
     var('hex_time', q3 % 'none', 'Time stamp on the deframer hex port: none, utc, local, unix or stream (docs/gnuradio.md)', 416, 60)
     var('rec_start', q3 % '', 'Optional start time of a recording, e.g. 2026-10-04T22:48:12Z, so the stamps follow the file', 640, 60)
+    var('bauds', q3 % '200,800', 'Baud rates to try: 200, 800 or 200,800 (UNNE-1B sends 200; HADES-SA alternates 800 and 200; HADES-L 800)', 848, 60)
+    var('emit_unverified', 'False', 'True = also print length-byte frames whose CRC fails (for exploring new satellites or packet types)', 1056, 60)
     o.append('''- name: epy_block_src
   id: epy_block
   parameters:
@@ -302,7 +306,8 @@ blocks:
   id: epy_block
   parameters:
     _source_code: |
-%s    baud: '200'
+%s    bauds: bauds
+    emit_unverified: emit_unverified
     comment: 'FSK discriminator / tone detector, clock recovery, sync 0xBF35, descramble, CRC16, decode. Frames are printed to the console.'
     dll_path: dll_path
     log_path: log_path

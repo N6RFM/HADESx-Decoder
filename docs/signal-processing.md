@@ -63,9 +63,25 @@ fades by 15 dB during the frame (`examples/iq/pass_t032s_type14.iq`) decodable.
 
 Bits go into a rolling buffer. The decoder searches for `1011111100110101` (`0xBF35`). After a hit:
 
-* if the next byte is `0x25` and the one after has type nibble 15 -> **voice packet** (fixed 320 bits, no CRC);
-* otherwise the type nibble selects the packet length (`TOTAL_BYTES` in `core.py`); unknown types are skipped;
+* if the next byte is `0x25` and the one after has type nibble 15 (UNNE-1B) or 11 (HADES-SA / HADES-L) -> **voice
+  packet** (fixed 320 bits, no CRC);
+* otherwise the layouts described in 5a are tried: *legacy* (the type nibble selects the length from `TOTAL_BYTES` in
+  `core.py`) and *sized* (the first byte is the length);
 * when enough bits have arrived, the CRC is checked.
+
+## 5a. Several frame layouts and baud rates
+
+After a sync word the scanner looks at the next two bytes and considers every layout that fits: **legacy** (type/address,
+data, CRC: UNNE-1B telemetry), **sized** (a length byte first: HADES-SA and HADES-L) and **voice** (`0x25`, type 15 or 11).
+Candidates are first checked exactly, shortest first; only when none passes (and all their bits have arrived) is bit
+repair tried, with the fewest flips first. That ordering matters: an early version that tried repair on every layout at once let a
+wrong layout match the CRC by chance and corrupted a frame of a synthetic voice burst; the test suite now guards against it.
+
+HADES-SA alternates between **800** and **200** baud, so `MultiBaudDeframer` runs one deframer per baud rate on the same
+10 kHz stream (50 samples per symbol at 200 baud, 12.5 at 800 baud) and reports each frame from whichever rate sees it. A
+wrong-rate deframer sees noise and produces nothing: the sync word plus CRC (or the voice header) make false frames
+extremely unlikely (none in the 354 s example pass). Costs about twice the CPU of a single rate; `--baud 800` or
+`--baud 200` restricts it.
 
 ## 6. Bit-error repair
 

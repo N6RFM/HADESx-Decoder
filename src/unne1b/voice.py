@@ -23,14 +23,15 @@ from .core import VOICE_PAYLOAD_BYTES, voice_assemble
 
 
 def load_packets(path):
-    """Return {packet_number: 35-byte payload} from a .jsonl log or a raw .c2 payload file."""
+    """Return {packet_number: 35-byte payload} from a .jsonl log or a raw .c2 payload file.
+    Voice packets are type 15 on UNNE-1B and type 11 on HADES-SA / HADES-L (flagged "voice" in the log)."""
     pk = {}
     if path.endswith(('.jsonl', '.json')):
         for line in open(path):
             line = line.strip()
             if line:
                 fr = json.loads(line)
-                if fr.get('type') == 15 and 'payload' in fr:
+                if (fr.get('voice') or fr.get('type') == 15) and 'payload' in fr:
                     pk.setdefault(fr['number'], bytes.fromhex(fr['payload']))
     else:
         data = open(path, 'rb').read()

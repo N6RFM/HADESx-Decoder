@@ -165,6 +165,30 @@ blocks:
     coordinate: [640, 60]
     rotation: 0
     state: enabled
+- name: bauds
+  id: variable
+  parameters:
+    comment: 'Baud rates to try: 200, 800 or 200,800 (UNNE-1B sends 200; HADES-SA alternates 800 and 200; HADES-L 800)'
+    value: '''200,800'''
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [848, 60]
+    rotation: 0
+    state: enabled
+- name: emit_unverified
+  id: variable
+  parameters:
+    comment: 'True = also print length-byte frames whose CRC fails (for exploring new satellites or packet types)'
+    value: False
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [1056, 60]
+    rotation: 0
+    state: enabled
 - name: epy_block_src
   id: epy_block
   parameters:
@@ -276,7 +300,8 @@ blocks:
           'SYNC_BITS', 'TOTAL_BYTES', 'PRE_BYTES', 'TYPE_NAMES', 'DLL_FUNCS', 'SOURCES',
           'crc16_ccitt_false', 'descramble', 'scramble', 'bits_to_bytes', 'check_frame',
           'VOICE_PAYLOAD_BYTES', 'VOICE_XOR_KEY', 'voice_unwhiten', 'voice_pad_700c', 'voice_assemble',
-          'DllDecoder', 'FskCentreTracker', 'Unne1bDeframer', 'format_frame',
+          'DllDecoder', 'FskCentreTracker', 'Unne1bDeframer', 'MultiBaudDeframer', 'parse_bauds', 'format_frame',
+          'type_name', 'DLL_SATELLITES', 'LEGACY_SOURCES', 'VOICE_TYPES', 'VOICE_SIZE_BYTE', 'TYPE_NAMES_BY_SOURCE',
       ]
 
       SYNC_BITS = '1011111100110101'          # 0xBF35
@@ -299,7 +324,33 @@ blocks:
                    12: 'visualiza_efemeridespacket',
                    14: 'visualiza_time_series_packet'}
 
-      SOURCES = {0xC: 'UNNE-1B', 0xB: 'MARIA-G'}
+      # Source address nibble -> satellite.  UNNE-1B (0xC), MARIA-G (0xB), HADES-ICM (2) are from AMSAT-EA's UNNE-1 /
+      # MARIA-G / HADES-R / HADES-ICM document; HADES-SA = 3 is what AMSAT-EA's HADES-SA decoder and its sample frames use.
+      # HADES-L: its document gives 5 in the packet tables and 3 in the text - 5 is assumed until real frames settle it.
+      SOURCES = {0xC: 'UNNE-1B', 0xB: 'MARIA-G', 2: 'HADES-ICM', 3: 'HADES-SA', 5: 'HADES-L'}
+
+      # Satellites whose frame contents the optional hadesr.dll decodes (UNNE-1, MARIA-G, HADES-R/ICM family).
+      DLL_SATELLITES = (0xC, 0xB, 2)
+      # Satellites that send the older layout without a length byte (type/addr, data, CRC).
+      LEGACY_SOURCES = (0xC, 0xB, 2)
+
+      # Packet type names that differ from the generic TYPE_NAMES above, by source address.
+      TYPE_NAMES_BY_SOURCE = {
+          3: {7: 'Experiment payload', 8: 'Antenna deploy', 9: 'Extended power (INA)', 10: 'SSDV image packet',
+              11: 'CODEC2 voice', 12: 'Ephemeris', 13: 'PN9 link test', 14: 'Time series', 15: 'BBS message'},
+          5: {7: 'Lofith experiment', 8: 'Antenna deploy', 9: 'Extended power (INA)', 11: 'CODEC2 voice', 12: 'Ephemeris',
+              13: 'PN9 link test', 14: 'Time series', 15: 'ICM story message'},
+      }
+
+
+      def type_name(src, ptype):
+          """Human-readable packet type for a source address."""
+          return TYPE_NAMES_BY_SOURCE.get(src, {}).get(ptype) or TYPE_NAMES.get(ptype, '?')
+
+
+      # CODEC2 voice packet type: 15 on UNNE-1B, 11 on HADES-SA / HADES-L (all carry size 37 = type/addr + number + 35 bytes)
+      VOICE_TYPES = (11, 15)
+      VOICE_SIZE_BYTE = 37
 
 
       def _make_crc_table():
@@ -759,8 +810,10 @@ blocks:
           and band-limited to about +-2 kHz, sample rate fs (e.g. 10 kHz)."""
 
           def __init__(self, fs=10000.0, baud=200.0, kp=0.15, ki=0.002,
-                       max_flips=3, flip_candidates=16, clip_hz=2500.0):
+                       max_flips=3, flip_candidates=16, clip_hz=2500.0, emit_unverified=False):
               self.fs = float(fs)
+              self.baud = float(baud)
+              self.emit_unverified = bool(emit_unverified)
               self.sps0 = self.fs / float(baud)
               self.T = self.sps0
               self.kp, self.ki = kp, ki
@@ -793,6 +846,8 @@ blocks:
               self.soft = []
               self.scan = 0
               self.nframes = 0
+              self.dropped = 0                   # bits trimmed from the front of self.bits so far
+              self.failed = set()                # (global sync position, layout) already tried and rejected
 
           @staticmethod
           def _causal_ma(x, L, tail):
@@ -935,25 +990,56 @@ blocks:
               if k:
                   del self.edges[:k]
 
-          def _try_fix(self, rawbits, softs):
-              raw = bits_to_bytes(rawbits)
-              if crc16_ccitt_false(raw[:-2]) == (raw[-2] << 8 | raw[-1]):
-                  return True, check_frame(raw)[1], raw, []
-              if self.max_flips <= 0:
-                  return False, None, raw, []
-              sv = np.abs(np.array(softs[8:]))
-              order = np.argsort(sv)[:self.flip_candidates] + 8
-              for nf in range(1, self.max_flips + 1):
-                  for comb in combinations(order.tolist(), nf):
-                      bb = list(rawbits)
-                      for c in comb:
-                          bb[c] ^= 1
-                      r2 = bits_to_bytes(bb)
-                      if crc16_ccitt_false(r2[:-2]) == (r2[-2] << 8 | r2[-1]):
-                          return True, check_frame(r2)[1], r2, list(comb)
-              return False, None, raw, []
+          @staticmethod
+          def _attempt(rawbits, softs, crc_from, nflips, flip_candidates):
+              """Try to make the frame pass its CRC by flipping exactly `nflips` of the least certain bits (0 = as received).
+              Returns (plain, raw, flips) on success, else None.  `plain` = type/address byte + descrambled data."""
+              def check(raw):
+                  return crc16_ccitt_false(raw[crc_from:-2]) == (raw[-2] << 8 | raw[-1])
+
+              def plain_of(raw):
+                  return raw[crc_from:crc_from + 1] + descramble(raw[crc_from + 1:-2])
+              if nflips == 0:
+                  raw = bits_to_bytes(rawbits)
+                  return (plain_of(raw), raw, []) if check(raw) else None
+              lo = 8 * (crc_from + 1)
+              sv = np.abs(np.array(softs[lo:]))
+              order = (np.argsort(sv)[:flip_candidates] + lo).tolist()
+              for comb in combinations(order, nflips):
+                  bb = list(rawbits)
+                  for c in comb:
+                      bb[c] ^= 1
+                  r2 = bits_to_bytes(bb)
+                  if check(r2):
+                      return plain_of(r2), r2, list(comb)
+              return None
+
+          @staticmethod
+          def _has_sclock(src, ptype):
+              if src in (3, 5):                                   # HADES-SA / HADES-L
+                  return ptype in (1, 2, 3, 4, 5, 14)
+              return ptype in (1, 2, 3, 4, 5, 10, 14)             # UNNE-1B family
+
+          def _frame_dict(self, framing, plain, raw, flips, crc_ok):
+              ptype, src = plain[0] >> 4, plain[0] & 0x0F
+              fr = {'type': ptype, 'src': src, 'src_name': SOURCES.get(src, 'unknown'),
+                    'type_name': type_name(src, ptype), 'framing': framing, 'baud': int(self.baud),
+                    'raw': raw.hex(), 'plain': plain.hex(), 'flips': flips, 'crc_ok': crc_ok,
+                    'sclock': (struct.unpack('<I', plain[1:5])[0] if self._has_sclock(src, ptype) and len(plain) >= 5 else None)}
+              if framing == 'sized':
+                  fr['size'] = raw[0]
+              return fr
+
+          def _byte_at(self, i):
+              return int(''.join(map(str, self.bits[i:i + 8])), 2)
 
           def _scan_frames(self):
+              """Find frames after each 0xBF35 sync word.  Three layouts are recognised:
+                legacy   type/addr, data, CRC                    (UNNE-1B telemetry; length from the type)
+                sized    size, type/addr, data, CRC              (HADES-SA, HADES-L; length from the size byte)
+                voice    0x25, type/addr (type 15 or 11), number, 35 bytes   (CODEC2; no CRC)
+              Candidates are first checked exactly; bit repair is only tried when every candidate's bits have arrived, and
+              with the fewest flips first, so a true frame beats a chance CRC match of a wrong layout."""
               frames = []
               while True:
                   s = ''.join(map(str, self.bits[self.scan:]))
@@ -963,81 +1049,158 @@ blocks:
                       self.scan = max(self.scan, len(self.bits) - len(SYNC_BITS) + 1)
                       break
                   a = self.scan + j
-                  if len(self.bits) < a + 24:
+                  if len(self.bits) < a + 32:
                       self.scan = a
                       break
-                  first = int(''.join(map(str, self.bits[a + 16:a + 24])), 2)
-                  if first == 37 and len(self.bits) >= a + 16 + 304:
-                      tb = int(''.join(map(str, self.bits[a + 24:a + 32])), 2)
-                      if tb >> 4 == 15:                               # type 15: CODEC2 voice frame
-                          num = int(''.join(map(str, self.bits[a + 32:a + 40])), 2)
-                          payload = bits_to_bytes(self.bits[a + 40:a + 16 + 304])
-                          self.nframes += 1
-                          frames.append({'type': 15, 'src': tb & 15,
-                                         'src_name': SOURCES.get(tb & 15, 'unknown'),
-                                         'number': num, 'payload': payload.hex(),
-                                         'raw': payload.hex(), 'plain': payload.hex(),
-                                         'flips': [], 'sclock': None, 'nocrc': True})
-                          self.scan = a + 16 + 304
-                          continue
-                  elif first == 37:
-                      self.scan = a
-                      break
-                  ptype = int(''.join(map(str, self.bits[a + 16:a + 20])), 2)
-                  if ptype not in TOTAL_BYTES:
-                      self.scan = a + 1
-                      continue
-                  nbits = 8 * (TOTAL_BYTES[ptype] - PRE_BYTES)
-                  if len(self.bits) < a + 16 + nbits:
-                      self.scan = a
-                      break
-                  rawbits = self.bits[a + 16:a + 16 + nbits]
-                  softs = self.soft[a + 16:a + 16 + nbits]
-                  ok, plain, raw, flips = self._try_fix(rawbits, softs)
-                  if ok:
+                  b0, b1 = self._byte_at(a + 16), self._byte_at(a + 24)
+                  if b0 == VOICE_SIZE_BYTE and (b1 >> 4) in VOICE_TYPES:        # CODEC2 voice: exclusive, no CRC
+                      nbits = 8 * (1 + VOICE_SIZE_BYTE)
+                      if len(self.bits) < a + 16 + nbits:
+                          self.scan = a
+                          break
+                      payload = bits_to_bytes(self.bits[a + 40:a + 16 + nbits])
                       self.nframes += 1
-                      src = plain[0] & 0x0F
-                      fr = {'type': ptype, 'src': src,
-                            'src_name': SOURCES.get(src, 'unknown'),
-                            'raw': raw.hex(), 'plain': plain.hex(), 'flips': flips,
-                            'sclock': (struct.unpack('<I', plain[1:5])[0]
-                                       if ptype in (1, 2, 3, 4, 5, 10, 14) else None)}
-                      frames.append(fr)
+                      frames.append({'type': b1 >> 4, 'src': b1 & 15, 'src_name': SOURCES.get(b1 & 15, 'unknown'),
+                                     'type_name': type_name(b1 & 15, b1 >> 4), 'framing': 'sized', 'voice': True,
+                                     'baud': int(self.baud), 'number': self._byte_at(a + 32), 'payload': payload.hex(),
+                                     'raw': payload.hex(), 'plain': payload.hex(), 'flips': [], 'crc_ok': None,
+                                     'sclock': None, 'nocrc': True})
                       self.scan = a + 16 + nbits
-                  else:
-                      self.scan = a + 1
+                      continue
+                  cands = []
+                  if (b0 >> 4) in TOTAL_BYTES and (b0 & 15) in LEGACY_SOURCES:
+                      cands.append(('legacy', 8 * (TOTAL_BYTES[b0 >> 4] - PRE_BYTES), 0))
+                  if 3 <= b0 <= 255 and (b1 >> 4) >= 1 and (b1 & 15) in SOURCES:
+                      cands.append(('sized', 8 * (1 + b0), 1))
+                  gidx = self.dropped + a
+                  cands = [c for c in cands if (gidx, c[0]) not in self.failed]
+                  cands.sort(key=lambda c: c[1])
+                  have = [c for c in cands if len(self.bits) >= a + 16 + c[1]]
+                  pending = len(have) < len(cands)
+                  hit = None
+                  for kind, nbits, crc_from in have:                           # 1. exact CRC, shortest layout first
+                      r = self._attempt(self.bits[a + 16:a + 16 + nbits], None, crc_from, 0, 0)
+                      if r:
+                          hit = (kind, nbits) + r
+                          break
+                  if hit is None and pending:
+                      self.scan = a                                            # wait for the longer layouts' bits
+                      break
+                  if hit is None and self.max_flips > 0:                       # 2. bit repair, fewest flips first
+                      for nf in range(1, self.max_flips + 1):
+                          for kind, nbits, crc_from in have:
+                              r = self._attempt(self.bits[a + 16:a + 16 + nbits], self.soft[a + 16:a + 16 + nbits],
+                                                crc_from, nf, self.flip_candidates)
+                              if r:
+                                  hit = (kind, nbits) + r
+                                  break
+                          if hit:
+                              break
+                  if hit is not None:
+                      kind, nbits, plain, raw, flips = hit
+                      self.nframes += 1
+                      frames.append(self._frame_dict(kind, plain, raw, flips, True))
+                      self.scan = a + 16 + nbits
+                      continue
+                  for kind, nbits, crc_from in have:
+                      self.failed.add((gidx, kind))
+                  sized = [c for c in have if c[0] == 'sized']
+                  if self.emit_unverified and sized:                           # for exploring new satellites / packet types
+                      nbits = sized[0][1]
+                      raw = bits_to_bytes(self.bits[a + 16:a + 16 + nbits])
+                      plain = raw[1:2] + descramble(raw[2:-2])
+                      self.nframes += 1
+                      frames.append(self._frame_dict('sized', plain, raw, [], False))
+                      self.scan = a + 16 + nbits
+                      continue
+                  self.scan = a + 1
               # bound memory
               if len(self.bits) > 8192:
                   drop = len(self.bits) - 4096
                   del self.bits[:drop]
                   del self.soft[:drop]
+                  self.dropped += drop
                   self.scan = max(0, self.scan - drop)
+                  self.failed = {k for k in self.failed if k[0] >= self.dropped}
               return frames
+
+      class MultiBaudDeframer(object):
+          """Runs one Unne1bDeframer per baud rate on the same stream, because HADES-SA alternates between 800 and 200 baud
+          (and HADES-L can be switched by telecommand).  A frame is reported by whichever rate it is received at."""
+
+          def __init__(self, fs=10000.0, bauds=(200.0,), **kw):
+              self.deframers = [Unne1bDeframer(fs=fs, baud=b, **kw) for b in bauds]
+
+          @property
+          def nframes(self):
+              return sum(d.nframes for d in self.deframers)
+
+          def push(self, x):
+              """Returns (demodulated float stream of the first baud rate, frames from all rates)."""
+              first, frames = None, []
+              for i, d in enumerate(self.deframers):
+                  dd, fr = d.push(x)
+                  if i == 0:
+                      first = dd
+                  frames.extend(fr)
+              return first, frames
+
+
+      def parse_bauds(value):
+          """'auto' -> (200, 800); '800' -> (800,); '200,800' -> (200, 800); a number or a list of numbers also works."""
+          if isinstance(value, (int, float)):
+              return (float(value),)
+          if isinstance(value, (list, tuple)):
+              return tuple(float(v) for v in value)
+          v = str(value).strip().lower()
+          if v in ('', 'auto'):
+              return (200.0, 800.0)
+          out = tuple(float(t) for t in v.replace(' ', '').split(',') if t)
+          if not out or any(b <= 0 for b in out):
+              raise ValueError('baud must be "auto", a number, or a comma separated list (got %r)' % (value,))
+          return out
 
 
       def format_frame(fr, dll=None):
-          ptype = fr['type']
-          if ptype == 15:
-              return ('=== UNNE-1B packet type 15 (CODEC2 voice) frame #%d from %s [no CRC in this packet type] ===\n'
-                      'payload (35 bytes, 280 bits): %s' % (fr['number'], fr['src_name'], fr['payload']))
-          lines = ['=== UNNE-1B packet type %d (%s) from %s  [CRC OK%s] ===' % (
-              ptype, TYPE_NAMES.get(ptype, '?'), fr['src_name'],
-              (', corrected bits %s' % fr['flips']) if fr['flips'] else '')]
+          ptype, src = fr['type'], fr['src']
+          name = fr.get('type_name') or type_name(src, ptype)
+          # UNNE-1B keeps its original header text; other satellites are named by their source address
+          if src == 0xC:
+              lead = 'UNNE-1B packet type %d (%s)' % (ptype, name)
+              tail = ' from %s' % fr['src_name']
+          else:
+              lead = '%s packet type %d (%s)' % (fr['src_name'], ptype, name)
+              tail = ''
+          if fr.get('voice'):
+              return ('=== %s frame #%d%s [no CRC in this packet type] ===\n'
+                      'payload (35 bytes, 280 bits): %s' % (lead.replace('(%s)' % name, '(%s)' % name), fr['number'],
+                                                            tail, fr['payload']))
+          status = 'CRC OK' if fr.get('crc_ok', True) else 'CRC FAIL - unverified'
+          if fr['flips']:
+              status += ', corrected bits %s' % fr['flips']
+          lines = ['=== %s%s  [%s] ===' % (lead, tail, status)]
+          if fr.get('framing') == 'sized' or fr.get('baud', 200) != 200:
+              lines.append('link: %s baud%s' % (fr.get('baud', 200),
+                                                (', length byte %d' % fr['size']) if fr.get('size') is not None else ''))
           if fr['sclock'] is not None:
               sc = fr['sclock']
               lines.append('sclock: %d s  (%dd %02d:%02d:%02d since boot)' % (
                   sc, sc // 86400, sc % 86400 // 3600, sc % 3600 // 60, sc % 60))
           text = None
-          if dll is not None:
+          dll_ok = src in DLL_SATELLITES and fr.get('crc_ok', True) and fr.get('framing', 'legacy') == 'legacy'
+          if dll is not None and dll_ok:
               try:
-                  text = dll.decode(ptype, fr['src'], bytes.fromhex(fr['plain']))
+                  text = dll.decode(ptype, src, bytes.fromhex(fr['plain']))
               except Exception as e:                       # noqa
                   text = '[DLL decode failed: %s]' % e
           if text:
               lines.append(text.rstrip())
           else:
               lines.append('data (descrambled): ' + fr['plain'][2:])
-              lines.append('(pass --dll hadesr.dll to get the full field-by-field decode)')
+              if dll_ok:
+                  lines.append('(pass --dll hadesr.dll to get the full field-by-field decode)')
+              else:
+                  lines.append('(field-by-field decoding for %s is not implemented yet - raw bytes shown)' % fr['src_name'])
           return '\n'.join(lines)
 
 
@@ -1160,7 +1323,8 @@ blocks:
           'SYNC_BITS', 'TOTAL_BYTES', 'PRE_BYTES', 'TYPE_NAMES', 'DLL_FUNCS', 'SOURCES',
           'crc16_ccitt_false', 'descramble', 'scramble', 'bits_to_bytes', 'check_frame',
           'VOICE_PAYLOAD_BYTES', 'VOICE_XOR_KEY', 'voice_unwhiten', 'voice_pad_700c', 'voice_assemble',
-          'DllDecoder', 'FskCentreTracker', 'Unne1bDeframer', 'format_frame',
+          'DllDecoder', 'FskCentreTracker', 'Unne1bDeframer', 'MultiBaudDeframer', 'parse_bauds', 'format_frame',
+          'type_name', 'DLL_SATELLITES', 'LEGACY_SOURCES', 'VOICE_TYPES', 'VOICE_SIZE_BYTE', 'TYPE_NAMES_BY_SOURCE',
       ]
 
       SYNC_BITS = '1011111100110101'          # 0xBF35
@@ -1183,7 +1347,33 @@ blocks:
                    12: 'visualiza_efemeridespacket',
                    14: 'visualiza_time_series_packet'}
 
-      SOURCES = {0xC: 'UNNE-1B', 0xB: 'MARIA-G'}
+      # Source address nibble -> satellite.  UNNE-1B (0xC), MARIA-G (0xB), HADES-ICM (2) are from AMSAT-EA's UNNE-1 /
+      # MARIA-G / HADES-R / HADES-ICM document; HADES-SA = 3 is what AMSAT-EA's HADES-SA decoder and its sample frames use.
+      # HADES-L: its document gives 5 in the packet tables and 3 in the text - 5 is assumed until real frames settle it.
+      SOURCES = {0xC: 'UNNE-1B', 0xB: 'MARIA-G', 2: 'HADES-ICM', 3: 'HADES-SA', 5: 'HADES-L'}
+
+      # Satellites whose frame contents the optional hadesr.dll decodes (UNNE-1, MARIA-G, HADES-R/ICM family).
+      DLL_SATELLITES = (0xC, 0xB, 2)
+      # Satellites that send the older layout without a length byte (type/addr, data, CRC).
+      LEGACY_SOURCES = (0xC, 0xB, 2)
+
+      # Packet type names that differ from the generic TYPE_NAMES above, by source address.
+      TYPE_NAMES_BY_SOURCE = {
+          3: {7: 'Experiment payload', 8: 'Antenna deploy', 9: 'Extended power (INA)', 10: 'SSDV image packet',
+              11: 'CODEC2 voice', 12: 'Ephemeris', 13: 'PN9 link test', 14: 'Time series', 15: 'BBS message'},
+          5: {7: 'Lofith experiment', 8: 'Antenna deploy', 9: 'Extended power (INA)', 11: 'CODEC2 voice', 12: 'Ephemeris',
+              13: 'PN9 link test', 14: 'Time series', 15: 'ICM story message'},
+      }
+
+
+      def type_name(src, ptype):
+          """Human-readable packet type for a source address."""
+          return TYPE_NAMES_BY_SOURCE.get(src, {}).get(ptype) or TYPE_NAMES.get(ptype, '?')
+
+
+      # CODEC2 voice packet type: 15 on UNNE-1B, 11 on HADES-SA / HADES-L (all carry size 37 = type/addr + number + 35 bytes)
+      VOICE_TYPES = (11, 15)
+      VOICE_SIZE_BYTE = 37
 
 
       def _make_crc_table():
@@ -1643,8 +1833,10 @@ blocks:
           and band-limited to about +-2 kHz, sample rate fs (e.g. 10 kHz)."""
 
           def __init__(self, fs=10000.0, baud=200.0, kp=0.15, ki=0.002,
-                       max_flips=3, flip_candidates=16, clip_hz=2500.0):
+                       max_flips=3, flip_candidates=16, clip_hz=2500.0, emit_unverified=False):
               self.fs = float(fs)
+              self.baud = float(baud)
+              self.emit_unverified = bool(emit_unverified)
               self.sps0 = self.fs / float(baud)
               self.T = self.sps0
               self.kp, self.ki = kp, ki
@@ -1677,6 +1869,8 @@ blocks:
               self.soft = []
               self.scan = 0
               self.nframes = 0
+              self.dropped = 0                   # bits trimmed from the front of self.bits so far
+              self.failed = set()                # (global sync position, layout) already tried and rejected
 
           @staticmethod
           def _causal_ma(x, L, tail):
@@ -1819,25 +2013,56 @@ blocks:
               if k:
                   del self.edges[:k]
 
-          def _try_fix(self, rawbits, softs):
-              raw = bits_to_bytes(rawbits)
-              if crc16_ccitt_false(raw[:-2]) == (raw[-2] << 8 | raw[-1]):
-                  return True, check_frame(raw)[1], raw, []
-              if self.max_flips <= 0:
-                  return False, None, raw, []
-              sv = np.abs(np.array(softs[8:]))
-              order = np.argsort(sv)[:self.flip_candidates] + 8
-              for nf in range(1, self.max_flips + 1):
-                  for comb in combinations(order.tolist(), nf):
-                      bb = list(rawbits)
-                      for c in comb:
-                          bb[c] ^= 1
-                      r2 = bits_to_bytes(bb)
-                      if crc16_ccitt_false(r2[:-2]) == (r2[-2] << 8 | r2[-1]):
-                          return True, check_frame(r2)[1], r2, list(comb)
-              return False, None, raw, []
+          @staticmethod
+          def _attempt(rawbits, softs, crc_from, nflips, flip_candidates):
+              """Try to make the frame pass its CRC by flipping exactly `nflips` of the least certain bits (0 = as received).
+              Returns (plain, raw, flips) on success, else None.  `plain` = type/address byte + descrambled data."""
+              def check(raw):
+                  return crc16_ccitt_false(raw[crc_from:-2]) == (raw[-2] << 8 | raw[-1])
+
+              def plain_of(raw):
+                  return raw[crc_from:crc_from + 1] + descramble(raw[crc_from + 1:-2])
+              if nflips == 0:
+                  raw = bits_to_bytes(rawbits)
+                  return (plain_of(raw), raw, []) if check(raw) else None
+              lo = 8 * (crc_from + 1)
+              sv = np.abs(np.array(softs[lo:]))
+              order = (np.argsort(sv)[:flip_candidates] + lo).tolist()
+              for comb in combinations(order, nflips):
+                  bb = list(rawbits)
+                  for c in comb:
+                      bb[c] ^= 1
+                  r2 = bits_to_bytes(bb)
+                  if check(r2):
+                      return plain_of(r2), r2, list(comb)
+              return None
+
+          @staticmethod
+          def _has_sclock(src, ptype):
+              if src in (3, 5):                                   # HADES-SA / HADES-L
+                  return ptype in (1, 2, 3, 4, 5, 14)
+              return ptype in (1, 2, 3, 4, 5, 10, 14)             # UNNE-1B family
+
+          def _frame_dict(self, framing, plain, raw, flips, crc_ok):
+              ptype, src = plain[0] >> 4, plain[0] & 0x0F
+              fr = {'type': ptype, 'src': src, 'src_name': SOURCES.get(src, 'unknown'),
+                    'type_name': type_name(src, ptype), 'framing': framing, 'baud': int(self.baud),
+                    'raw': raw.hex(), 'plain': plain.hex(), 'flips': flips, 'crc_ok': crc_ok,
+                    'sclock': (struct.unpack('<I', plain[1:5])[0] if self._has_sclock(src, ptype) and len(plain) >= 5 else None)}
+              if framing == 'sized':
+                  fr['size'] = raw[0]
+              return fr
+
+          def _byte_at(self, i):
+              return int(''.join(map(str, self.bits[i:i + 8])), 2)
 
           def _scan_frames(self):
+              """Find frames after each 0xBF35 sync word.  Three layouts are recognised:
+                legacy   type/addr, data, CRC                    (UNNE-1B telemetry; length from the type)
+                sized    size, type/addr, data, CRC              (HADES-SA, HADES-L; length from the size byte)
+                voice    0x25, type/addr (type 15 or 11), number, 35 bytes   (CODEC2; no CRC)
+              Candidates are first checked exactly; bit repair is only tried when every candidate's bits have arrived, and
+              with the fewest flips first, so a true frame beats a chance CRC match of a wrong layout."""
               frames = []
               while True:
                   s = ''.join(map(str, self.bits[self.scan:]))
@@ -1847,81 +2072,158 @@ blocks:
                       self.scan = max(self.scan, len(self.bits) - len(SYNC_BITS) + 1)
                       break
                   a = self.scan + j
-                  if len(self.bits) < a + 24:
+                  if len(self.bits) < a + 32:
                       self.scan = a
                       break
-                  first = int(''.join(map(str, self.bits[a + 16:a + 24])), 2)
-                  if first == 37 and len(self.bits) >= a + 16 + 304:
-                      tb = int(''.join(map(str, self.bits[a + 24:a + 32])), 2)
-                      if tb >> 4 == 15:                               # type 15: CODEC2 voice frame
-                          num = int(''.join(map(str, self.bits[a + 32:a + 40])), 2)
-                          payload = bits_to_bytes(self.bits[a + 40:a + 16 + 304])
-                          self.nframes += 1
-                          frames.append({'type': 15, 'src': tb & 15,
-                                         'src_name': SOURCES.get(tb & 15, 'unknown'),
-                                         'number': num, 'payload': payload.hex(),
-                                         'raw': payload.hex(), 'plain': payload.hex(),
-                                         'flips': [], 'sclock': None, 'nocrc': True})
-                          self.scan = a + 16 + 304
-                          continue
-                  elif first == 37:
-                      self.scan = a
-                      break
-                  ptype = int(''.join(map(str, self.bits[a + 16:a + 20])), 2)
-                  if ptype not in TOTAL_BYTES:
-                      self.scan = a + 1
-                      continue
-                  nbits = 8 * (TOTAL_BYTES[ptype] - PRE_BYTES)
-                  if len(self.bits) < a + 16 + nbits:
-                      self.scan = a
-                      break
-                  rawbits = self.bits[a + 16:a + 16 + nbits]
-                  softs = self.soft[a + 16:a + 16 + nbits]
-                  ok, plain, raw, flips = self._try_fix(rawbits, softs)
-                  if ok:
+                  b0, b1 = self._byte_at(a + 16), self._byte_at(a + 24)
+                  if b0 == VOICE_SIZE_BYTE and (b1 >> 4) in VOICE_TYPES:        # CODEC2 voice: exclusive, no CRC
+                      nbits = 8 * (1 + VOICE_SIZE_BYTE)
+                      if len(self.bits) < a + 16 + nbits:
+                          self.scan = a
+                          break
+                      payload = bits_to_bytes(self.bits[a + 40:a + 16 + nbits])
                       self.nframes += 1
-                      src = plain[0] & 0x0F
-                      fr = {'type': ptype, 'src': src,
-                            'src_name': SOURCES.get(src, 'unknown'),
-                            'raw': raw.hex(), 'plain': plain.hex(), 'flips': flips,
-                            'sclock': (struct.unpack('<I', plain[1:5])[0]
-                                       if ptype in (1, 2, 3, 4, 5, 10, 14) else None)}
-                      frames.append(fr)
+                      frames.append({'type': b1 >> 4, 'src': b1 & 15, 'src_name': SOURCES.get(b1 & 15, 'unknown'),
+                                     'type_name': type_name(b1 & 15, b1 >> 4), 'framing': 'sized', 'voice': True,
+                                     'baud': int(self.baud), 'number': self._byte_at(a + 32), 'payload': payload.hex(),
+                                     'raw': payload.hex(), 'plain': payload.hex(), 'flips': [], 'crc_ok': None,
+                                     'sclock': None, 'nocrc': True})
                       self.scan = a + 16 + nbits
-                  else:
-                      self.scan = a + 1
+                      continue
+                  cands = []
+                  if (b0 >> 4) in TOTAL_BYTES and (b0 & 15) in LEGACY_SOURCES:
+                      cands.append(('legacy', 8 * (TOTAL_BYTES[b0 >> 4] - PRE_BYTES), 0))
+                  if 3 <= b0 <= 255 and (b1 >> 4) >= 1 and (b1 & 15) in SOURCES:
+                      cands.append(('sized', 8 * (1 + b0), 1))
+                  gidx = self.dropped + a
+                  cands = [c for c in cands if (gidx, c[0]) not in self.failed]
+                  cands.sort(key=lambda c: c[1])
+                  have = [c for c in cands if len(self.bits) >= a + 16 + c[1]]
+                  pending = len(have) < len(cands)
+                  hit = None
+                  for kind, nbits, crc_from in have:                           # 1. exact CRC, shortest layout first
+                      r = self._attempt(self.bits[a + 16:a + 16 + nbits], None, crc_from, 0, 0)
+                      if r:
+                          hit = (kind, nbits) + r
+                          break
+                  if hit is None and pending:
+                      self.scan = a                                            # wait for the longer layouts' bits
+                      break
+                  if hit is None and self.max_flips > 0:                       # 2. bit repair, fewest flips first
+                      for nf in range(1, self.max_flips + 1):
+                          for kind, nbits, crc_from in have:
+                              r = self._attempt(self.bits[a + 16:a + 16 + nbits], self.soft[a + 16:a + 16 + nbits],
+                                                crc_from, nf, self.flip_candidates)
+                              if r:
+                                  hit = (kind, nbits) + r
+                                  break
+                          if hit:
+                              break
+                  if hit is not None:
+                      kind, nbits, plain, raw, flips = hit
+                      self.nframes += 1
+                      frames.append(self._frame_dict(kind, plain, raw, flips, True))
+                      self.scan = a + 16 + nbits
+                      continue
+                  for kind, nbits, crc_from in have:
+                      self.failed.add((gidx, kind))
+                  sized = [c for c in have if c[0] == 'sized']
+                  if self.emit_unverified and sized:                           # for exploring new satellites / packet types
+                      nbits = sized[0][1]
+                      raw = bits_to_bytes(self.bits[a + 16:a + 16 + nbits])
+                      plain = raw[1:2] + descramble(raw[2:-2])
+                      self.nframes += 1
+                      frames.append(self._frame_dict('sized', plain, raw, [], False))
+                      self.scan = a + 16 + nbits
+                      continue
+                  self.scan = a + 1
               # bound memory
               if len(self.bits) > 8192:
                   drop = len(self.bits) - 4096
                   del self.bits[:drop]
                   del self.soft[:drop]
+                  self.dropped += drop
                   self.scan = max(0, self.scan - drop)
+                  self.failed = {k for k in self.failed if k[0] >= self.dropped}
               return frames
+
+      class MultiBaudDeframer(object):
+          """Runs one Unne1bDeframer per baud rate on the same stream, because HADES-SA alternates between 800 and 200 baud
+          (and HADES-L can be switched by telecommand).  A frame is reported by whichever rate it is received at."""
+
+          def __init__(self, fs=10000.0, bauds=(200.0,), **kw):
+              self.deframers = [Unne1bDeframer(fs=fs, baud=b, **kw) for b in bauds]
+
+          @property
+          def nframes(self):
+              return sum(d.nframes for d in self.deframers)
+
+          def push(self, x):
+              """Returns (demodulated float stream of the first baud rate, frames from all rates)."""
+              first, frames = None, []
+              for i, d in enumerate(self.deframers):
+                  dd, fr = d.push(x)
+                  if i == 0:
+                      first = dd
+                  frames.extend(fr)
+              return first, frames
+
+
+      def parse_bauds(value):
+          """'auto' -> (200, 800); '800' -> (800,); '200,800' -> (200, 800); a number or a list of numbers also works."""
+          if isinstance(value, (int, float)):
+              return (float(value),)
+          if isinstance(value, (list, tuple)):
+              return tuple(float(v) for v in value)
+          v = str(value).strip().lower()
+          if v in ('', 'auto'):
+              return (200.0, 800.0)
+          out = tuple(float(t) for t in v.replace(' ', '').split(',') if t)
+          if not out or any(b <= 0 for b in out):
+              raise ValueError('baud must be "auto", a number, or a comma separated list (got %r)' % (value,))
+          return out
 
 
       def format_frame(fr, dll=None):
-          ptype = fr['type']
-          if ptype == 15:
-              return ('=== UNNE-1B packet type 15 (CODEC2 voice) frame #%d from %s [no CRC in this packet type] ===\n'
-                      'payload (35 bytes, 280 bits): %s' % (fr['number'], fr['src_name'], fr['payload']))
-          lines = ['=== UNNE-1B packet type %d (%s) from %s  [CRC OK%s] ===' % (
-              ptype, TYPE_NAMES.get(ptype, '?'), fr['src_name'],
-              (', corrected bits %s' % fr['flips']) if fr['flips'] else '')]
+          ptype, src = fr['type'], fr['src']
+          name = fr.get('type_name') or type_name(src, ptype)
+          # UNNE-1B keeps its original header text; other satellites are named by their source address
+          if src == 0xC:
+              lead = 'UNNE-1B packet type %d (%s)' % (ptype, name)
+              tail = ' from %s' % fr['src_name']
+          else:
+              lead = '%s packet type %d (%s)' % (fr['src_name'], ptype, name)
+              tail = ''
+          if fr.get('voice'):
+              return ('=== %s frame #%d%s [no CRC in this packet type] ===\n'
+                      'payload (35 bytes, 280 bits): %s' % (lead.replace('(%s)' % name, '(%s)' % name), fr['number'],
+                                                            tail, fr['payload']))
+          status = 'CRC OK' if fr.get('crc_ok', True) else 'CRC FAIL - unverified'
+          if fr['flips']:
+              status += ', corrected bits %s' % fr['flips']
+          lines = ['=== %s%s  [%s] ===' % (lead, tail, status)]
+          if fr.get('framing') == 'sized' or fr.get('baud', 200) != 200:
+              lines.append('link: %s baud%s' % (fr.get('baud', 200),
+                                                (', length byte %d' % fr['size']) if fr.get('size') is not None else ''))
           if fr['sclock'] is not None:
               sc = fr['sclock']
               lines.append('sclock: %d s  (%dd %02d:%02d:%02d since boot)' % (
                   sc, sc // 86400, sc % 86400 // 3600, sc % 3600 // 60, sc % 60))
           text = None
-          if dll is not None:
+          dll_ok = src in DLL_SATELLITES and fr.get('crc_ok', True) and fr.get('framing', 'legacy') == 'legacy'
+          if dll is not None and dll_ok:
               try:
-                  text = dll.decode(ptype, fr['src'], bytes.fromhex(fr['plain']))
+                  text = dll.decode(ptype, src, bytes.fromhex(fr['plain']))
               except Exception as e:                       # noqa
                   text = '[DLL decode failed: %s]' % e
           if text:
               lines.append(text.rstrip())
           else:
               lines.append('data (descrambled): ' + fr['plain'][2:])
-              lines.append('(pass --dll hadesr.dll to get the full field-by-field decode)')
+              if dll_ok:
+                  lines.append('(pass --dll hadesr.dll to get the full field-by-field decode)')
+              else:
+                  lines.append('(field-by-field decoding for %s is not implemented yet - raw bytes shown)' % fr['src_name'])
           return '\n'.join(lines)
 
 
@@ -1933,15 +2235,17 @@ blocks:
 
 
       class blk(gr.sync_block):
-          """UNNE-1B FSK200 deframer: complex baseband in, demodulated FSK out, decoded frames printed"""
+          """UNNE-1B / HADES-SA / HADES-L FSK deframer: complex baseband in, demodulated FSK out, decoded frames printed"""
 
-          def __init__(self, samp_rate=10000.0, baud=200.0, max_flips=3, dll_path='', log_path='', c2_path='',
-                       hex_time='none', rec_start='', delay_s=1.2):
-              gr.sync_block.__init__(self, name='UNNE-1B FSK200 deframer',
+          def __init__(self, samp_rate=10000.0, bauds='200,800', max_flips=3, dll_path='', log_path='', c2_path='',
+                       hex_time='none', rec_start='', delay_s=1.2, emit_unverified=False):
+              gr.sync_block.__init__(self, name='UNNE-1B / HADES FSK deframer',
                                      in_sig=[np.complex64], out_sig=[np.float32])
               self.message_port_register_out(pmt.intern('frames'))
               self.message_port_register_out(pmt.intern('hex'))
-              self.df = Unne1bDeframer(fs=float(samp_rate), baud=float(baud), max_flips=int(max_flips))
+              # one deframer per baud rate: UNNE-1B = 200, HADES-SA alternates 800 / 200, HADES-L = 800
+              self.df = MultiBaudDeframer(fs=float(samp_rate), bauds=parse_bauds(bauds), max_flips=int(max_flips),
+                                          emit_unverified=bool(emit_unverified))
               self.log_path = log_path
               self.c2_path = c2_path
               # optional time stamp on the hex port: none | utc | local | unix | stream
@@ -2002,7 +2306,7 @@ blocks:
                   stamp = self._stamp()
                   self.message_port_pub(pmt.intern('hex'),
                                         pmt.intern(stamp + ' ' + fr['plain'] if stamp else fr['plain']))
-                  if self.c2_path and fr['type'] == 15:
+                  if self.c2_path and fr.get('voice'):
                       with open(self.c2_path, 'ab') as f:
                           f.write(plain)
                   if self.log_path:
@@ -2010,7 +2314,8 @@ blocks:
                       with open(self.log_path, 'a') as f:
                           f.write(json.dumps(fr) + '\n')
               return len(x)
-    baud: '200'
+    bauds: bauds
+    emit_unverified: emit_unverified
     comment: 'FSK discriminator / tone detector, clock recovery, sync 0xBF35, descramble, CRC16, decode. Frames are printed to the console.'
     dll_path: dll_path
     log_path: log_path

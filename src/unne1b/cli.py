@@ -6,8 +6,7 @@ import sys
 
 import numpy as np
 
-from .core import (DllDecoder, FskCentreTracker, Unne1bDeframer, format_frame,
-                   voice_assemble)
+from .core import (DllDecoder, FskCentreTracker, MultiBaudDeframer, format_frame, parse_bauds)
 
 
 def _read_iq(path, fmt):
@@ -34,7 +33,9 @@ def build_parser():
     ap.add_argument('--center', default='auto',
                     help='"auto" (default): adaptive tracking of the FSK centre; '
                          'or a fixed offset in Hz')
-    ap.add_argument('--baud', type=float, default=200)
+    ap.add_argument('--baud', default='auto',
+                    help='baud rate(s) to try: "auto" (default) = 200 and 800, a number, or a comma separated list '
+                         '(UNNE-1B sends 200; HADES-SA alternates 800 and 200; HADES-L 800)')
     ap.add_argument('--min-db', type=float, default=15.0,
                     help='tone detection threshold above the noise floor (default 15 dB)')
     ap.add_argument('--dll', help='path to hadesr.dll: official field-by-field decode via '
@@ -42,7 +43,9 @@ def build_parser():
     ap.add_argument('--log', help='append decoded frames as JSON lines to this file')
     ap.add_argument('--flips', type=int, default=3,
                     help='max bit errors to try to correct (0-4, default 3)')
-    ap.add_argument('--c2out', help='write the raw CODEC2 voice payloads (type 15) to this file')
+    ap.add_argument('--c2out', help='write the raw CODEC2 voice payloads (type 15 / 11) to this file')
+    ap.add_argument('--emit-unverified', action='store_true',
+                    help='also report length-byte frames whose CRC fails (marked CRC FAIL; for exploring new satellites)')
     ap.add_argument('--voice-wav', help='decode the CODEC2 voice to this WAV (needs c2dec)')
     ap.add_argument('--voice-speed', type=float, default=1.0,
                     help='time-stretch the voice WAV, pitch preserved (e.g. 1.15)')
@@ -54,7 +57,8 @@ def main(argv=None):
     a = build_parser().parse_args(argv)
 
     fs = a.fs
-    dec = max(1, int(round(fs / (50.0 * a.baud))))           # ~50 samples per symbol
+    bauds = parse_bauds(a.baud)
+    dec = max(1, int(round(fs / 10000.0)))                    # about 10 kHz after decimation
     fs2 = fs / dec
     if a.format == 'cf32':
         mm = np.memmap(a.iq, dtype=np.complex64, mode='r')
@@ -88,7 +92,7 @@ def main(argv=None):
     fixed = 0.0 if auto else float(a.center)
     taps = signal.firwin(129, 2350, fs=fs)
     zi = np.zeros(len(taps) - 1, dtype=np.complex128)
-    df = Unne1bDeframer(fs=fs2, baud=a.baud, max_flips=a.flips)
+    df = MultiBaudDeframer(fs=fs2, bauds=bauds, max_flips=a.flips, emit_unverified=a.emit_unverified)
     state = {'nf': 0, 'consumed': 0}
     voice = {}
 
@@ -104,7 +108,7 @@ def main(argv=None):
             if a.log:
                 with open(a.log, 'a') as f:
                     f.write(json.dumps(fr) + '\n')
-            if fr['type'] == 15:
+            if fr.get('voice'):
                 voice.setdefault(fr['number'], bytes.fromhex(fr['payload']))
                 if a.c2out:
                     with open(a.c2out, 'ab') as f:

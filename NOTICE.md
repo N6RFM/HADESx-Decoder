@@ -116,3 +116,14 @@ Suggested citation:
 
 > N6RFM, *UNNE-1B Decoder* (2026), <https://github.com/N6RFM/UNNE-1B-Decoder>, developed with the help of
 > Claude (Anthropic) and built on documentation and software by AMSAT-EA.
+
+---
+
+## 6. Test data from AMSAT-EA's HADES-SA repository
+
+`tests/data/hades_sa_sample_frames.json` contains the sample telemetry frames published in AMSAT-EA's
+**HADES-SA_SpinnyONE** repository (`byte_version/sample_type_XX.txt`, (c) AMSAT EA, CC BY 4.0,
+<https://github.com/AMSAT-EA/HADES-SA_SpinnyONE>), copied unchanged except for the format (a hex string instead of
+space-separated bytes). They are used to check this project's scrambler, CRC and frame detection against another
+satellite's frames. The packet-type tables for HADES-SA and HADES-L in `docs/satellites.md` summarise AMSAT-EA's
+documents (the HADES-L transmissions description and the HADES-SA decoder source) in our own words.

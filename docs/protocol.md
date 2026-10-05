@@ -39,6 +39,10 @@ cycling through the packet types (the voice stream occupies about a minute).
 
 The type/address byte also gives the packet length, so a receiver knows where the CRC is.
 
+> **Other satellites.** HADES-SA and HADES-L put a **length byte** between the sync word and the type/address byte, run at
+> 800 baud (1600 Hz tone spacing) as well as 200, and have different packet types. The decoder recognises both layouts
+> automatically; see [satellites.md](satellites.md). Everything below about the scrambler and the CRC applies to both.
+
 ### Packet types, sizes and durations
 
 Total bytes include 16 training + 2 sync + 1 type/address + data + 2 CRC.

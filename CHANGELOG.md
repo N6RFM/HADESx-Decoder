@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+* HADES-SA / HADES-L frame support: length-byte layout, automatic 200 + 800 baud detection (`--baud`), per-satellite packet type names, `--emit-unverified`; frames of satellites the DLL does not know are shown as raw bytes. Tested with AMSAT-EA's sample frames and synthetic signals only.
 * Optional time stamp on the deframer's `hex` port (`hex_time`: none, utc, local, unix, stream; `rec_start` for recordings).
 * New `hex` message port on the deframer block: one hex string per decoded frame (the same bytes as the `frames` PDU payload).
 * Notes on the origin of `hadesr.dll` (AMSAT-EA's, not Andy UZ7HO's; SoundModem is his) and the tested DLL version (1.08, compiled 5 January 2025).

@@ -11,7 +11,7 @@ IQ file source + end padding --> Throttle --> UNNE-1B adaptive FSK tracker --> L
         (epy block)                              (epy block)                          (FIR filter)
                                                   |  output 1 = tracked centre            |
                                                   v                                       v
-                                       Keep 1 in 5000 -> "Tracked FSK centre"      UNNE-1B FSK200 deframer (epy block)
+                                       Keep 1 in 5000 -> "Tracked FSK centre"      UNNE-1B / HADES FSK deframer (epy block)
                                                                                          |  prints frames
                           Input spectrum (raw)    Centred signal (spectrum)              v
                                                                                      "FSK demod" time plot
@@ -22,7 +22,8 @@ IQ file source + end padding --> Throttle --> UNNE-1B adaptive FSK tracker --> L
 * **UNNE-1B adaptive FSK tracker** - [tracking.md](tracking.md). Output 0 is the signal mixed to 0 Hz (delayed 1.2 s),
   output 1 is the tracked centre in Hz.
 * **FIR filter** - low-pass 2.35 kHz, decimation 5.
-* **UNNE-1B FSK200 deframer** - demodulation, clock recovery, CRC, decode ([signal-processing.md](signal-processing.md)). Decoded
+* **UNNE-1B / HADES FSK deframer** - demodulation (one deframer per baud rate in `bauds`), clock recovery, CRC, decode
+  ([signal-processing.md](signal-processing.md), [satellites.md](satellites.md)). Decoded
   frames are **printed on the console** from which you started Companion/Python, and also published on two
   message ports so you can connect other blocks:
   * `frames` - a PDU: metadata dictionary (`type`, `src`, `sclock`) + the frame bytes as a u8 vector;
@@ -65,6 +66,8 @@ IQ file source + end padding --> Throttle --> UNNE-1B adaptive FSK tracker --> L
 | `lookahead_s` | 1.2 | tracker look-ahead delay in seconds; it is passed to both the tracker and the deframer so the time stamps stay correct |
 | `hex_time` | `'none'` | time stamp on the `hex` port: `'none'`, `'utc'`, `'local'`, `'unix'` or `'stream'` (in quotes) |
 | `rec_start` | `''` | start time of a recording, e.g. `'2026-10-04T22:48:12Z'`, so that stamps follow the file's time line |
+| `bauds` | `'200,800'` | baud rates to try: `'200'` (UNNE-1B), `'800'` (HADES-L), or both (HADES-SA alternates); a single rate is a little faster |
+| `emit_unverified` | `False` | `True` also prints length-byte frames whose CRC fails (marked `CRC FAIL`), for exploring new satellites |
 
 **Common mistake:** in a variable's dialog the **ID** field is the variable's *name* (`iq_file`, `dll_path`) and must not
 be changed. The path goes in the **Value** field, with quotes: `'/home/me/passes/pass.iq'`. Typing a path into ID gives

@@ -61,6 +61,8 @@ data (descrambled): ...
 | `--center auto\|HZ` | `auto` (default) = adaptive tracker; or a fixed centre offset in Hz |
 | `--min-db 15` | tracker detection threshold above the noise floor; lower = more sensitive, more false alarms |
 | `--flips 3` | maximum number of bit errors to try to repair (0-4) |
+| `--baud auto\|200\|800\|200,800` | baud rates to try (default `auto` = 200 and 800; UNNE-1B sends 200, HADES-SA alternates 800/200, HADES-L 800) |
+| `--emit-unverified` | also report length-byte frames whose CRC fails, marked `CRC FAIL` (for exploring new satellites) |
 | `--dll PATH` | decode text from AMSAT-EA's `hadesr.dll` via emulation (see [dll-emulation.md](dll-emulation.md)) |
 | `--log FILE` | append every frame as one JSON line |
 | `--c2out FILE` | write raw voice payloads (35 bytes per packet) |
