@@ -9,7 +9,8 @@ so you never have to chase the signal by hand.
 
 UNNE-1B is a 1.5P PocketQube built by [AMSAT-EA](https://www.amsat-ea.org/) with Universidad Nebrija,
 downlink **436.888 MHz**. This project is an independent, open-source ground-station decoder; it is
-not an AMSAT-EA product.
+not an AMSAT-EA product, and AMSAT-EA has not endorsed it. It is built on the open documentation and
+source code that AMSAT-EA publishes - see [Acknowledgements](#acknowledgements-and-licence).
 
 ```
 IQ file / SDR  ->  FSK tracker (finds the signal anywhere in the band, follows its drift)
@@ -118,6 +119,7 @@ Using the single-file release (`unne1b_standalone.py`) on Debian/Ubuntu: `sudo a
 | [Troubleshooting](docs/troubleshooting.md) | common problems |
 | [Limitations and roadmap](docs/limitations-and-roadmap.md) | known gaps |
 | [Development](docs/development.md) | tests, build tools, project layout |
+| [Credits and notices](NOTICE.md) | attribution, licences, what was taken from AMSAT-EA and what was changed |
 
 ## Repository layout
 
@@ -146,10 +148,20 @@ the figures and result files were produced from the full file.
   document (v1.01). Decoding does not depend on it. See [reverse-engineering notes](docs/reverse-engineering-notes.md).
 * See [limitations](docs/limitations-and-roadmap.md) for the full list.
 
-## Credits and licence
+## Acknowledgements and licence
 
-* Code: MIT (see [LICENSE](LICENSE)). Documentation and example data: CC BY 4.0.
-* The air-interface description is AMSAT-EA's *UNNE-1B - Descripcion de transmisiones* (v1.01).
-* The voice XOR key and the scrambler/CRC cross-check vectors come from AMSAT-EA's
-  [HADES-SA_SpinnyONE](https://github.com/AMSAT-EA/HADES-SA_SpinnyONE) repository (CC BY 4.0).
-* `hadesr.dll` is AMSAT-EA's software and is **not** included; see [NOTICE.md](NOTICE.md).
+**This project stands on AMSAT-EA's open work.** Please credit them if you use it:
+
+* **The air interface** (frame format, packet types, scrambler and CRC definitions, voice packet structure) comes
+  from AMSAT-EA's document *UNNE-1B - Descripcion de transmisiones*, v1.01.
+* **The CODEC2 voice key and padding rule** come from AMSAT-EA's open-source
+  [HADES-SA_SpinnyONE](https://github.com/AMSAT-EA/HADES-SA_SpinnyONE) decoder (CC BY 4.0, (c) AMSAT EA;
+  scrambler and CRC by Gabriel Otero Perez). That repository's scrambler and CRC code is also what this project's own
+  implementation is tested against.
+* **`hadesr.dll`**, AMSAT-EA's telemetry decoder library, provides the optional labelled output. It is **not**
+  included; you supply your own copy.
+* AMSAT-EA has not reviewed or endorsed this project.
+
+Exactly what was taken, what was changed and the licence terms are in **[NOTICE.md](NOTICE.md)**.
+
+Licences: code MIT (see [LICENSE](LICENSE)); documentation and example data CC BY 4.0.

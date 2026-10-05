@@ -4,6 +4,8 @@ Sources: AMSAT-EA *UNNE-1B - Descripcion de transmisiones* v1.01 (10 Feb 2026), 
 sources for the sister satellite HADES-SA (CC BY 4.0), and measurements on a real pass. Where the document and the real
 signal disagree, this page says so and states what the decoder implements.
 
+Attribution, licences and the list of what was taken from AMSAT-EA: [NOTICE.md](../NOTICE.md).
+
 ## Physical layer
 
 | Item | Value |

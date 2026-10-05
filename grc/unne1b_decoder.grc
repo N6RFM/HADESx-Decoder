@@ -229,6 +229,11 @@ blocks:
       #   data is scrambled (x^17 + x^12 + 1, state 0x2C350000, bit 0 of every byte is
       #   skipped - verified against AMSAT-EA's reference genesis_scrambler.c)
       #   CRC-CCITT-FALSE is computed over the *scrambled* bytes (type/addr .. data)
+      #
+      # Credits: the frame format follows AMSAT-EA's UNNE-1B transmission document; the voice XOR
+      # key and padding rule come from AMSAT-EA's HADES-SA_SpinnyONE sources ((c) AMSAT EA, CC BY 4.0);
+      # scrambler and CRC behaviour follow AMSAT-EA's genesis_scrambler.c / genesis_crc.c
+      # (Gabriel Otero Perez).  Full attribution and the list of changes: NOTICE.md.
       # ----------------------------------------------------------------------------
 
       __all__ = [
@@ -282,7 +287,9 @@ blocks:
 
 
       def descramble(data, init=0x2C350000):
-          """Self-synchronising descrambler as implemented in hadesr.dll."""
+          """Self-synchronising descrambler.  Behaviour defined by AMSAT-EA's genesis_scrambler.c
+          (Gabriel Otero Perez, (c) AMSAT EA, CC BY 4.0, github.com/AMSAT-EA/HADES-SA_SpinnyONE);
+          this is an independent Python implementation, checked against that C code."""
           reg = init
           out = bytearray(data)
           for k in range(len(out)):
@@ -333,8 +340,11 @@ blocks:
 
       # ---- CODEC2 voice (type 15) helpers ---------------------------------------
       # Each voice packet: sync(2) | size=0x25 | 0xF<<4|addr | frame number | 35 payload bytes
-      # The 35 bytes are XOR-whitened with a fixed keystream (taken from AMSAT-EA's
-      # HADES-SA reference decoder, CC BY 4.0) and hold ten 28-bit Codec2 700C frames.
+      # The 35 bytes are XOR-whitened with a fixed keystream and hold ten 28-bit Codec2 700C frames.
+      # Attribution: the key values below are copied unchanged from AMSAT-EA's HADES-SA_SpinnyONE
+      # repository, byte_version/main.c (visualiza_codec2, xor_codec2[35]), (c) AMSAT EA 2026,
+      # licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/); the 28-bit -> 4-byte
+      # padding rule is re-implemented from add_padding_codec2() in the same file.
       VOICE_PAYLOAD_BYTES = 35
       VOICE_XOR_KEY = bytes([
           0xed, 0x15, 0xd5, 0x3b, 0x34, 0x70, 0xe0, 0xfd, 0xed, 0x83, 0x90, 0xdb,
@@ -1103,6 +1113,11 @@ blocks:
       #   data is scrambled (x^17 + x^12 + 1, state 0x2C350000, bit 0 of every byte is
       #   skipped - verified against AMSAT-EA's reference genesis_scrambler.c)
       #   CRC-CCITT-FALSE is computed over the *scrambled* bytes (type/addr .. data)
+      #
+      # Credits: the frame format follows AMSAT-EA's UNNE-1B transmission document; the voice XOR
+      # key and padding rule come from AMSAT-EA's HADES-SA_SpinnyONE sources ((c) AMSAT EA, CC BY 4.0);
+      # scrambler and CRC behaviour follow AMSAT-EA's genesis_scrambler.c / genesis_crc.c
+      # (Gabriel Otero Perez).  Full attribution and the list of changes: NOTICE.md.
       # ----------------------------------------------------------------------------
 
       __all__ = [
@@ -1156,7 +1171,9 @@ blocks:
 
 
       def descramble(data, init=0x2C350000):
-          """Self-synchronising descrambler as implemented in hadesr.dll."""
+          """Self-synchronising descrambler.  Behaviour defined by AMSAT-EA's genesis_scrambler.c
+          (Gabriel Otero Perez, (c) AMSAT EA, CC BY 4.0, github.com/AMSAT-EA/HADES-SA_SpinnyONE);
+          this is an independent Python implementation, checked against that C code."""
           reg = init
           out = bytearray(data)
           for k in range(len(out)):
@@ -1207,8 +1224,11 @@ blocks:
 
       # ---- CODEC2 voice (type 15) helpers ---------------------------------------
       # Each voice packet: sync(2) | size=0x25 | 0xF<<4|addr | frame number | 35 payload bytes
-      # The 35 bytes are XOR-whitened with a fixed keystream (taken from AMSAT-EA's
-      # HADES-SA reference decoder, CC BY 4.0) and hold ten 28-bit Codec2 700C frames.
+      # The 35 bytes are XOR-whitened with a fixed keystream and hold ten 28-bit Codec2 700C frames.
+      # Attribution: the key values below are copied unchanged from AMSAT-EA's HADES-SA_SpinnyONE
+      # repository, byte_version/main.c (visualiza_codec2, xor_codec2[35]), (c) AMSAT EA 2026,
+      # licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/); the 28-bit -> 4-byte
+      # padding rule is re-implemented from add_padding_codec2() in the same file.
       VOICE_PAYLOAD_BYTES = 35
       VOICE_XOR_KEY = bytes([
           0xed, 0x15, 0xd5, 0x3b, 0x34, 0x70, 0xe0, 0xfd, 0xed, 0x83, 0x90, 0xdb,

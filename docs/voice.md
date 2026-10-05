@@ -17,7 +17,8 @@ correct reading turned out to be:
 * **Codec2 700C** uses 28 bits per 40 ms frame, so a packet is 10 frames = 400 ms of speech, and no other standard mode
   divides 280 bits evenly except 1400 (5 x 56). The mode is confirmed by AMSAT-EA's reference merge tool, which
   writes a Codec2 file header with mode byte 8 (`CODEC2_MODE_700C`).
-* **The XOR key** is fixed (the same bytes for every packet) and comes from AMSAT-EA's HADES-SA reference decoder:
+* **The XOR key** is fixed (the same bytes for every packet) and comes from AMSAT-EA's HADES-SA reference decoder
+  (`byte_version/main.c` in [HADES-SA_SpinnyONE](https://github.com/AMSAT-EA/HADES-SA_SpinnyONE), (c) AMSAT EA, CC BY 4.0; copied unchanged, see [NOTICE.md](../NOTICE.md)):
 
   ```
   ed 15 d5 3b 34 70 e0 fd ed 83 90 db aa 2e 25 d6 5e 81 41 86 bd 67 79 5d

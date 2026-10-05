@@ -1,5 +1,5 @@
 {
- "source": "AMSAT-EA HADES-SA_SpinnyONE byte_version genesis_scrambler.c / genesis_crc.c (CC BY 4.0), compiled with gcc",
+ "source": "AMSAT-EA HADES-SA_SpinnyONE, byte_version/genesis_scrambler.c (Gabriel Otero Perez) and byte_version/genesis_crc.c (Gabriel Otero), (c) AMSAT EA, CC BY 4.0 (https://github.com/AMSAT-EA/HADES-SA_SpinnyONE). Outputs produced by compiling these C files with gcc and running them on random inputs generated for this project.",
  "cases": [
   {
    "input": "3c",

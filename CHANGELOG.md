@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+* Attribution expanded: NOTICE.md rewritten to the CC BY 4.0 requirements for AMSAT-EA's documents and code (creator, copyright notices, licence link, source links, list of changes), acknowledgements section in the README, credit comments in the source files.
+
 ## 1.0.0 - 2026-10-05
 
 First public version.
