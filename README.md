@@ -1,4 +1,4 @@
-# unne1b-decoder
+# UNNE-1B Decoder
 
 Decode the **UNNE-1B (HADES-E2)** amateur-radio satellite straight from an SDR recording:
 200 baud FSK telemetry (CRC-checked, with the official field-by-field readout) and the
@@ -53,8 +53,8 @@ A 354 s, 50 ksps recording of the pass of **2026-10-04 22:48:12** decodes to 45 
 ## Quick start
 
 ```bash
-git clone https://github.com/YOUR-USER/unne1b-decoder.git
-cd unne1b-decoder
+git clone https://github.com/YOUR-USER/UNNE-1B-Decoder.git
+cd UNNE-1B-Decoder
 pip install -e .                      # numpy + scipy
 sudo apt install codec2               # only needed for the voice WAV (provides c2dec)
 

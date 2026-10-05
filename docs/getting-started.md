@@ -11,8 +11,8 @@
 ## Install
 
 ```bash
-git clone https://github.com/YOUR-USER/unne1b-decoder.git
-cd unne1b-decoder
+git clone https://github.com/YOUR-USER/UNNE-1B-Decoder.git
+cd UNNE-1B-Decoder
 pip install -e .            # or: pip install -e ".[dll]"   or   ".[dev]" for the test tools
 unne1b-decode --help
 ```
