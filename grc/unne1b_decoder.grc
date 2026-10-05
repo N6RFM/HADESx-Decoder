@@ -2288,7 +2288,9 @@ blocks:
               dt = datetime.datetime.fromtimestamp(epoch, datetime.timezone.utc)
               if self.hex_time == 'local':
                   dt = dt.astimezone()
-              return dt.isoformat(timespec='milliseconds').replace('+00:00', 'Z')
+              stamp = dt.isoformat(timespec='milliseconds')
+              # 'Z' only for utc; local keeps a numeric offset (even in a UTC zone) so it parses the same everywhere
+              return stamp.replace('+00:00', 'Z') if self.hex_time == 'utc' else stamp
 
           def work(self, input_items, output_items):
               x = input_items[0]

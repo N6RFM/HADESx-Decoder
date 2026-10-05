@@ -122,3 +122,20 @@ def test_pdu_port_is_unchanged(monkeypatch):
     run(blk)
     pdus = [m for port, m in blk.sent if port == 'frames']
     assert len(pdus) == 1 and pdus[0][1] == bytes.fromhex('1c30ef02')
+
+
+def test_local_mode_keeps_a_numeric_offset_even_in_a_utc_zone(monkeypatch):
+    """Regression: in a UTC zone (a CI runner) the local time stamp used to end in 'Z', which Python 3.10 cannot parse."""
+    if not hasattr(time, 'tzset'):
+        pytest.skip('needs time.tzset (POSIX)')
+    monkeypatch.setenv('TZ', 'UTC')
+    time.tzset()
+    try:
+        blk = make(monkeypatch, hex_time='local', rec_start='2026-10-04T22:48:12Z')
+        at(blk, 212.6)
+        stamp = run(blk)[0].split(' ')[0]
+        assert stamp == '2026-10-04T22:51:44.600+00:00'
+        assert abs(datetime.datetime.fromisoformat(stamp).timestamp() - 1791154304.6) < 0.002
+    finally:
+        monkeypatch.delenv('TZ', raising=False)
+        time.tzset()
