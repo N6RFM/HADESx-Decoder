@@ -53,7 +53,7 @@ A 354 s, 50 ksps recording of the pass of **2026-10-04 22:48:12** decodes to 45 
 ## Quick start
 
 ```bash
-git clone https://github.com/YOUR-USER/UNNE-1B-Decoder.git
+git clone https://github.com/N6RFM/UNNE-1B-Decoder.git
 cd UNNE-1B-Decoder
 pip install -e .                      # numpy + scipy
 sudo apt install codec2               # only needed for the voice WAV (provides c2dec)
