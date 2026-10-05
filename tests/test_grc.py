@@ -24,4 +24,4 @@ def test_grc_is_valid_yaml():
 def test_deframer_has_hex_port():
     text = open(os.path.join(ROOT, 'grc', 'unne1b_decoder.grc')).read()
     assert "message_port_register_out(pmt.intern('hex'))" in text
-    assert "message_port_pub(pmt.intern('hex'), pmt.intern(fr['plain']))" in text
+    assert 'def _stamp(self)' in text and 'hex_time' in text

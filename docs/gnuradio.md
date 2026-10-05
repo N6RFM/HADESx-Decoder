@@ -32,6 +32,24 @@ IQ file source + end padding --> Throttle --> UNNE-1B adaptive FSK tracker --> L
     give their 35 payload bytes (70 hex characters) still XOR-whitened. Connect it to a *Message Debug* block to
     watch it, or to your own block (`pmt.symbol_to_string(msg)` in Python gives the string).
 
+    **Optional time stamp.** Set the variable `hex_time` to `'utc'`, `'local'`, `'unix'` or `'stream'` and the string
+    becomes `<time stamp> <hex>` (one space between them); the default `'none'` gives the hex only. The stamp is the
+    time the frame was *completed* (its last bit received), accurate to about +-0.5 s; frames found in the same
+    scheduler call share one stamp. The same instant in each format:
+
+    | `hex_time` | Example |
+    |---|---|
+    | `'utc'` | `2026-10-04T22:51:44.600Z 1c30ef02...` |
+    | `'local'` | `2026-10-04T15:51:44.600-07:00 1c30ef02...` (your computer's time zone) |
+    | `'unix'` | `1791154304.600 1c30ef02...` (seconds since 1970-01-01 UTC) |
+    | `'stream'` | `212.600 1c30ef02...` (seconds from the start of the input stream) |
+
+    In `utc`, `local` and `unix` modes the time comes from your computer's clock minus the tracker look-ahead, which is
+    right for **live reception**. For a **recording** set `rec_start` to when it began, for example
+    `'2026-10-04T22:48:12Z'` (a bare time without a zone is taken as UTC): the stamps are then `rec_start` plus the
+    position in the file, whatever the playback speed. An unknown `hex_time` value stops the flowgraph with a message
+    listing the valid choices.
+
 ## Variables (edit them in Companion)
 
 | Variable | Default | Meaning |
@@ -44,6 +62,9 @@ IQ file source + end padding --> Throttle --> UNNE-1B adaptive FSK tracker --> L
 | `dll_path` | `''` | optional path of `hadesr.dll` (in quotes) for the labelled decode |
 | `log_path` | `''` | optional JSON-lines log |
 | `c2_path` | `''` | optional file receiving raw voice payloads |
+| `lookahead_s` | 1.2 | tracker look-ahead delay in seconds; it is passed to both the tracker and the deframer so the time stamps stay correct |
+| `hex_time` | `'none'` | time stamp on the `hex` port: `'none'`, `'utc'`, `'local'`, `'unix'` or `'stream'` (in quotes) |
+| `rec_start` | `''` | start time of a recording, e.g. `'2026-10-04T22:48:12Z'`, so that stamps follow the file's time line |
 
 **Common mistake:** in a variable's dialog the **ID** field is the variable's *name* (`iq_file`, `dll_path`) and must not
 be changed. The path goes in the **Value** field, with quotes: `'/home/me/passes/pass.iq'`. Typing a path into ID gives

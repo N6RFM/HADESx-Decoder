@@ -73,7 +73,8 @@ from gnuradio import gr
 class blk(gr.sync_block):
     """UNNE-1B FSK200 deframer: complex baseband in, demodulated FSK out, decoded frames printed"""
 
-    def __init__(self, samp_rate=10000.0, baud=200.0, max_flips=3, dll_path='', log_path='', c2_path=''):
+    def __init__(self, samp_rate=10000.0, baud=200.0, max_flips=3, dll_path='', log_path='', c2_path='',
+                 hex_time='none', rec_start='', delay_s=1.2):
         gr.sync_block.__init__(self, name='UNNE-1B FSK200 deframer',
                                in_sig=[np.complex64], out_sig=[np.float32])
         self.message_port_register_out(pmt.intern('frames'))
@@ -81,6 +82,20 @@ class blk(gr.sync_block):
         self.df = Unne1bDeframer(fs=float(samp_rate), baud=float(baud), max_flips=int(max_flips))
         self.log_path = log_path
         self.c2_path = c2_path
+        # optional time stamp on the hex port: none | utc | local | unix | stream
+        self.hex_time = str(hex_time).strip().lower() or 'none'
+        if self.hex_time not in ('none', 'utc', 'local', 'unix', 'stream'):
+            raise ValueError('hex_time must be one of none, utc, local, unix, stream (got %r)' % (hex_time,))
+        self.fs_in = float(samp_rate)
+        self.lookahead = float(delay_s)       # the tracker delays the stream by this many seconds
+        self.n_in = 0                         # samples received so far (includes the silent pre-fill)
+        self.rec_start = None
+        if str(rec_start).strip():
+            import datetime
+            dt = datetime.datetime.fromisoformat(str(rec_start).strip().replace('Z', '+00:00'))
+            if dt.tzinfo is None:
+                dt = dt.replace(tzinfo=datetime.timezone.utc)      # a bare time is taken as UTC
+            self.rec_start = dt.timestamp()
         self.dll = None
         if dll_path:
             try:
@@ -90,8 +105,28 @@ class blk(gr.sync_block):
                 print('[unne1b] could not load %s (%s) - install "unicorn pefile" for full '
                       'decoding; showing raw fields' % (dll_path, e), flush=True)
 
+    def _stamp(self):
+        """Time stamp for the frames found in this call: the moment they were completed (about +-0.5 s)."""
+        if self.hex_time == 'none':
+            return ''
+        stream_t = self.n_in / self.fs_in - self.lookahead       # seconds into the input stream
+        if self.hex_time == 'stream':
+            return '%.3f' % max(stream_t, 0.0)
+        if self.rec_start is not None:
+            epoch = self.rec_start + stream_t                     # recording start + position in the file
+        else:
+            epoch = time.time() - self.lookahead                  # live: samples are delayed by the look-ahead
+        if self.hex_time == 'unix':
+            return '%.3f' % epoch
+        import datetime
+        dt = datetime.datetime.fromtimestamp(epoch, datetime.timezone.utc)
+        if self.hex_time == 'local':
+            dt = dt.astimezone()
+        return dt.isoformat(timespec='milliseconds').replace('+00:00', 'Z')
+
     def work(self, input_items, output_items):
         x = input_items[0]
+        self.n_in += len(x)
         dd, frames = self.df.push(x)
         output_items[0][:len(dd)] = dd
         for fr in frames:
@@ -101,8 +136,10 @@ class blk(gr.sync_block):
                                'sclock': fr['sclock'] if fr['sclock'] is not None else -1})
             self.message_port_pub(pmt.intern('frames'),
                                   pmt.cons(meta, pmt.init_u8vector(len(plain), list(plain))))
-            # hex-only port: the same bytes as the PDU payload, as one lower-case hex string
-            self.message_port_pub(pmt.intern('hex'), pmt.intern(fr['plain']))
+            # hex port: the PDU payload bytes as one lower-case hex string, optionally '<time stamp> <hex>'
+            stamp = self._stamp()
+            self.message_port_pub(pmt.intern('hex'),
+                                  pmt.intern(stamp + ' ' + fr['plain'] if stamp else fr['plain']))
             if self.c2_path and fr['type'] == 15:
                 with open(self.c2_path, 'ab') as f:
                     f.write(plain)
@@ -209,6 +246,9 @@ blocks:
     var('dll_path', q3 % dll, 'Optional: path to hadesr.dll for the official field-by-field decode (pip install unicorn pefile)', 800, 12)
     var('log_path', q3 % '', 'Optional: JSON-lines log of decoded frames', 960, 12)
     var('c2_path', q3 % '', 'Optional: file that receives the CODEC2 voice payloads (type 15)', 1120, 12)
+    var('lookahead_s', '1.2', 'Tracker look-ahead delay in seconds; also used to correct the hex-port time stamps', 208, 60)
+    var('hex_time', q3 % 'none', 'Time stamp on the deframer hex port: none, utc, local, unix or stream (docs/gnuradio.md)', 416, 60)
+    var('rec_start', q3 % '', 'Optional start time of a recording, e.g. 2026-10-04T22:48:12Z, so the stamps follow the file', 640, 60)
     o.append('''- name: epy_block_src
   id: epy_block
   parameters:
@@ -239,7 +279,7 @@ blocks:
   parameters:
     _source_code: |
 %s    comment: 'Adaptive FSK tracker: finds the two-tone FSK anywhere in the 50 kHz band, follows Doppler, mixes it to 0 Hz. Look-ahead 1.2 s. Output 1 = tracked centre (Hz).'
-    delay_s: '1.2'
+    delay_s: lookahead_s
     maxoutbuf: '0'
     minoutbuf: '0'
     min_db: min_db
@@ -267,9 +307,12 @@ blocks:
     dll_path: dll_path
     log_path: log_path
     c2_path: c2_path
+    delay_s: lookahead_s
+    hex_time: hex_time
     max_flips: '3'
     maxoutbuf: '0'
     minoutbuf: '0'
+    rec_start: rec_start
     samp_rate: samp_rate / decim
 %s''' % (indent(core + deframer_wrapper, 6), st(904, 176)))
     if gui:
