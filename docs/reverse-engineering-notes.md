@@ -74,10 +74,9 @@ pre-fill corrupted the noise-floor estimate. Fixed by seeding the floor only fro
 
 ## Open questions
 
-* **Tone spacing:** the document says 1125 Hz; measured 1608-1654 Hz in every burst. The data rate is right (200 baud) so
-  it is not a clock error; either the document is out of date, the deviation was changed, or the SDR has a scaling
-  problem. Worth re-checking with another receiver.
+* **Tone spacing (resolved):** the document said 1125 Hz; 1608-1654 Hz was measured in every burst while the data rate
+  (200 baud) was right. AMSAT-EA confirmed in October 2026 that the document was wrong and will correct it.
 * **Frequency behaviour:** the FSK centre moves in a V-shaped path while other carriers in the band move monotonically.
 * **Training length:** the document's text says 64 bits, its tables say 128; 128 (about 126 recovered) is received.
 * **Voice pace:** the message (the opening of *Don Quijote*) sounds natural at 115-120 % speed; whether the satellite's recording is slow or the decoded time base is a little off is unknown.
-* **Types 4, 5, 6, 8, 9** have not been received yet.
+* **Types 4, 5, 6, 8, 9** have not been received yet; AMSAT-EA has offered IQ recordings.

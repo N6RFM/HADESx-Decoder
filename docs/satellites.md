@@ -6,8 +6,8 @@ CRC-16. The decoder recognises the variants automatically (by the frame itself, 
 
 | Satellite | Downlink | Baud / tone spacing | Frame layout | Status here |
 |---|---|---|---|---|
-| **UNNE-1B** (HADES-E2) | 436.888 MHz | 200, 1125 Hz in the document (about 1.64 kHz measured) | legacy: type/addr, data, CRC; voice with a length byte | **decoded from real recordings** (telemetry, voice) |
-| **HADES-SA / SpinnyONE** (SO-127) | 436.875 MHz | 800 with 1600 Hz spacing, or 200 with 1125 Hz; alternates every 30 days | length byte, then type/addr, data, CRC | framing, scrambler, CRC and demodulation checked with AMSAT-EA's sample frames and synthetic signals; **not yet tested on a real recording** |
+| **UNNE-1B** (HADES-E2) | 436.888 MHz | 200, about 1.64 kHz (the 1125 Hz in document v1.01 was an error, confirmed by AMSAT-EA) | legacy: type/addr, data, CRC; voice with a length byte | **decoded from real recordings** (telemetry, voice) |
+| **HADES-SA / SpinnyONE** (SO-127) | 436.875 MHz | 800 with 1600 Hz spacing, or 200 with 1125 Hz (per its document; the same figure was wrong for UNNE-1B, so check on real recordings); alternates every 30 days | length byte, then type/addr, data, CRC | framing, scrambler, CRC and demodulation checked with AMSAT-EA's sample frames and synthetic signals; **not yet tested on a real recording** |
 | **HADES-L** | 436.665 MHz | 800 with 1600 Hz spacing | length byte, then type/addr, data, CRC | same as HADES-SA; packet types from AMSAT-EA's document; **not yet tested on a real recording** |
 | MARIA-G, HADES-ICM | - | 200 | legacy | recognised by address; not launched / ended, untested |
 

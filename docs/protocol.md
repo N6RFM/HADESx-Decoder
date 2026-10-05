@@ -14,7 +14,7 @@ Attribution, licences and the list of what was taken from AMSAT-EA: [NOTICE.md](
 | Modulation | binary FSK |
 | Baud rate | **200 baud** (initial; can be raised by telecommand up to 2400) |
 | Mark / space | lower tone = **mark = bit 1**, higher tone = **space = bit 0** |
-| Tone spacing | document: 1125 Hz. **Measured: about 1.64 kHz** (1608-1654 Hz in every burst) |
+| Tone spacing | **about 1.64 kHz** (1608-1654 Hz measured in every burst). Version 1.01 of the AMSAT-EA document said 1125 Hz; AMSAT-EA confirmed in October 2026 that this was an error and will correct it |
 | Bit order | bytes are sent **MSB first** |
 | Occupied bandwidth | about 3 kHz (measured: two tones 1.64 kHz apart plus 200 baud sidebands) |
 

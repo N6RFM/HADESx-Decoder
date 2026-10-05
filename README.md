@@ -9,7 +9,8 @@ so you never have to chase the signal by hand.
 
 UNNE-1B is a 1.5P PocketQube built by [AMSAT-EA](https://www.amsat-ea.org/) with Universidad Nebrija,
 downlink **436.888 MHz**. This project is an independent, open-source ground-station decoder; it is
-not an AMSAT-EA product, and AMSAT-EA has not endorsed it. It is built on the open documentation and
+not an AMSAT-EA product; AMSAT-EA has reviewed the credit given here and confirmed it is correct (October 2026).
+It is built on the open documentation and
 source code that AMSAT-EA publishes - see [Acknowledgements](#acknowledgements-and-licence).
 
 Developed by **N6RFM** with help from Claude (Anthropic) - see [Authorship](#authorship).
@@ -151,8 +152,8 @@ the figures and result files were produced from the full file.
   ([transcript](examples/results/voice_transcript.md)). Voice packets have **no CRC**, so bit errors cannot be
   detected. The pace sounds natural at 115-120 % speed (`--voice-speed 1.15`); whether the original is slow or the
   time base is slightly off is not known.
-* The measured FSK tone spacing is about **1.64 kHz**, not the 1125 Hz written in the AMSAT-EA
-  document (v1.01). Decoding does not depend on it. See [reverse-engineering notes](docs/reverse-engineering-notes.md).
+* The FSK tone spacing is about **1.64 kHz**. Version 1.01 of the AMSAT-EA document said 1125 Hz; AMSAT-EA
+  confirmed in October 2026 that this was an error and will correct it. Decoding does not depend on it. See [reverse-engineering notes](docs/reverse-engineering-notes.md).
 * See [limitations](docs/limitations-and-roadmap.md) for the full list.
 
 ## Authorship
@@ -179,7 +180,9 @@ been checked against one real pass, so please report anything that looks wrong.
   implementation is tested against.
 * **`hadesr.dll`**, AMSAT-EA's telemetry decoder library, provides the optional labelled output. It is **not**
   included; you supply your own copy.
-* AMSAT-EA has not reviewed or endorsed this project.
+* AMSAT-EA reviewed the attribution in this project in October 2026 and confirmed it is correct, and that they are
+  comfortable with the reuse of their format, key and code credited here. It remains an independent project, not an
+  AMSAT-EA product.
 
 Exactly what was taken, what was changed and the licence terms are in **[NOTICE.md](NOTICE.md)**.
 

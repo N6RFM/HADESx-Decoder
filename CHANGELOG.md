@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+* Documentation updated after AMSAT-EA's reply (October 2026): attribution and the UNNE-1B document's CC BY 4.0 licence confirmed; the 1125 Hz tone spacing in document v1.01 was an error (about 1.64 kHz is right).
 * Per-type output folder (`--outdir`, flowgraph variable `out_dir`): the files of AMSAT-EA's Windows tool, updated in place with unique additions; HADES-SA decoders ported from AMSAT-EA's source and checked on about 7 800 frames against the compiled original; SSDV image packets (CRC-32 checked) and PN9 link tests are recognised.
 * HADES-SA / HADES-L frame support: length-byte layout, automatic 200 + 800 baud detection (`--baud`), per-satellite packet type names, `--emit-unverified`; frames of satellites the DLL does not know are shown as raw bytes. Tested with AMSAT-EA's sample frames and synthetic signals only.
 * Optional time stamp on the deframer's `hex` port (`hex_time`: none, utc, local, unix, stream; `rec_start` for recordings).

@@ -13,8 +13,9 @@
 * **Tracker assumptions:** one two-tone signal, 1.0-2.4 kHz spacing, 1.2 s latency, the whole Doppler range inside the
   recorded band.
 * **Timing:** frame time stamps in the JSON log are accurate to about +-1 s.
-* **Tone spacing** differs from the AMSAT-EA document (1.64 kHz measured vs 1125 Hz); see
-  [reverse-engineering-notes.md](reverse-engineering-notes.md).
+* **Tone spacing:** about 1.64 kHz is received; version 1.01 of the UNNE-1B document said 1125 Hz, which AMSAT-EA has
+  confirmed was a mistake (October 2026). The HADES-SA and HADES-L documents give 1125 Hz at 200 baud and 1600 Hz at 800
+  baud; those values may need the same check on real recordings (the decoder accepts 1.0-2.4 kHz either way).
 * **Not decoded:** the FM voice/transponder audio, store-and-forward, and any command (uplink) traffic.
 
 ## Roadmap ideas

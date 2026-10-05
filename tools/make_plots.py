@@ -102,7 +102,7 @@ def burst_spectrum():
     ax.plot(f[m] / 1000, Pd[m] - Pd.max(), lw=.8)
     ax.set_xlabel('offset (kHz)')
     ax.set_ylabel('relative power (dB)')
-    ax.set_title('Spectrum of the type-1 Power packet burst (200 baud FSK)\nmeasured tone spacing about 1.64 kHz (the PDF says 1125 Hz)')
+    ax.set_title('Spectrum of one burst (type-1 Power packet, 200 baud FSK)\nTone spacing about 1.64 kHz; AMSAT-EA confirmed the 1125 Hz in document v1.01 was an error', fontsize=10)
     ax.grid(alpha=.3)
     fig.tight_layout()
     fig.savefig(os.path.join(IMG, 'burst_spectrum.png'), dpi=110)

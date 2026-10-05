@@ -4,8 +4,9 @@
 Without their transmission document, their open-source HADES-SA decoder and their satellite, this project
 could not have been written. Thank you to the AMSAT-EA team.
 
-This project is independent. **AMSAT-EA has not reviewed or endorsed it**, and nothing here should be read as
-an official AMSAT-EA product or statement.
+This project is independent and is not an official AMSAT-EA product. **AMSAT-EA reviewed the attribution below in
+October 2026 and confirmed it is correct, and that they are comfortable with the reuse of their format, key and code.**
+Nothing here should be read as an official AMSAT-EA statement beyond that.
 
 ---
 
@@ -16,7 +17,7 @@ an official AMSAT-EA product or statement.
 | **Work** | *UNNE-1B - Descripcion de transmisiones* (UNNE-1B transmission description), version 1.01, 10 February 2026 |
 | **Creator** | AMSAT-EA, with the payload software by Universidad Nebrija (Madrid), as stated in the document |
 | **Where** | published by AMSAT-EA; project pages at <https://www.amsat-ea.org/proyectos/> |
-| **Licence** | AMSAT-EA states that the contents it publishes on its website are distributed under Creative Commons CC BY 4.0 (notice quoted in section 2). The PDF itself carries no separate licence text that was checked; it is paraphrased here, not redistributed |
+| **Licence** | Public, CC BY 4.0. AMSAT-EA confirmed in October 2026 that the document may be used freely (they publish under Creative Commons CC BY 4.0, notice quoted in section 2). It is paraphrased here rather than redistributed |
 
 **Used for:** the FSK parameters (200 baud, mark = lower tone), frame layout (training, sync `0xBF35`, type/address
 byte, CRC), the packet types with their sizes and durations, the scrambler polynomial and initial state, the CRC
@@ -24,8 +25,9 @@ definition and its two worked examples (`"EASAT-2"` -> `0x7D58`, `"GENESIS-Genes
 CODEC2 voice packet.
 
 **Changes made:** the information is paraphrased and re-organised in `docs/protocol.md`; the figures in `docs/img/`
-are original drawings. Where measurements disagree with the document (tone spacing about 1.64 kHz measured against
-1125 Hz in the document) this is stated, not silently corrected. The PDF itself is **not** redistributed here.
+are original drawings. The tone spacing in version 1.01 of the document (1125 Hz) differs from what is received
+(about 1.64 kHz); AMSAT-EA confirmed in October 2026 that the document was wrong and will correct it, and this project
+uses the measured value. The PDF itself is **not** redistributed here.
 
 ## 2. AMSAT-EA source code
 
@@ -60,7 +62,8 @@ No other file of that repository is copied into this project. The repository its
   source files that use their material.
 * **Copyright and licence notice, link to the licence, link to the material:** given above.
 * **Changes indicated:** see the table above.
-* **No suggestion of endorsement:** stated at the top of this file and in the README.
+* **No misleading suggestion of endorsement:** what AMSAT-EA confirmed (that the attribution is correct and the reuse is
+  fine) is stated as such, and the project remains independent; see the top of this file and the README.
 * **Disclaimer:** the licensor offers its material "as is" and "as available", without representations or
   warranties (see section 5 of the legal code: <https://creativecommons.org/licenses/by/4.0/legalcode#s5>).
 
