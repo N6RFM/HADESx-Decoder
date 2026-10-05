@@ -1,5 +1,7 @@
 # UNNE-1B Decoder
 
+[![tests](https://github.com/N6RFM/UNNE-1B-Decoder/actions/workflows/ci.yml/badge.svg)](https://github.com/N6RFM/UNNE-1B-Decoder/actions/workflows/ci.yml)
+
 Decode the **UNNE-1B (HADES-E2)** amateur-radio satellite straight from an SDR recording:
 200 baud FSK telemetry (CRC-checked, with the official field-by-field readout) and the
 **CODEC2 voice message** (to a WAV file) - with **automatic Doppler / frequency tracking**,
