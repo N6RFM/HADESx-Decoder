@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+* Per-type output folder (`--outdir`, flowgraph variable `out_dir`): the files of AMSAT-EA's Windows tool, updated in place with unique additions; HADES-SA decoders ported from AMSAT-EA's source and checked on about 7 800 frames against the compiled original; SSDV image packets (CRC-32 checked) and PN9 link tests are recognised.
 * HADES-SA / HADES-L frame support: length-byte layout, automatic 200 + 800 baud detection (`--baud`), per-satellite packet type names, `--emit-unverified`; frames of satellites the DLL does not know are shown as raw bytes. Tested with AMSAT-EA's sample frames and synthetic signals only.
 * Optional time stamp on the deframer's `hex` port (`hex_time`: none, utc, local, unix, stream; `rec_start` for recordings).
 * New `hex` message port on the deframer block: one hex string per decoded frame (the same bytes as the `frames` PDU payload).

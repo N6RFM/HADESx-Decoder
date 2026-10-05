@@ -127,3 +127,17 @@ Suggested citation:
 space-separated bytes). They are used to check this project's scrambler, CRC and frame detection against another
 satellite's frames. The packet-type tables for HADES-SA and HADES-L in `docs/satellites.md` summarise AMSAT-EA's
 documents (the HADES-L transmissions description and the HADES-SA decoder source) in our own words.
+
+---
+
+## 7. The per-type output folder
+
+`src/unne1b/genesis.py` is a **Python port of the decoding and file-writing logic of AMSAT-EA's HADES-SA decoder**
+(`byte_version/main.c` in <https://github.com/AMSAT-EA/HADES-SA_SpinnyONE>, (c) AMSAT EA, CC BY 4.0): the structure layouts,
+scalings, printf formats, file names and the `.dat` / `.bin` formats are the original's, translated to Python, so that the
+folder written by `--outdir` looks and behaves like the one written by AMSAT-EA's Windows tool. The tables of satellite names,
+reset causes, battery states, overflown zones and the PN9 reference pattern, and the voice key, are copied from that source.
+Changes: Python instead of C; times labelled UTC and taken from the recording; unique additions; a divide-by-zero that would crash the
+original prints 0. `tests/data/genesis_golden.json` holds output of that program compiled from source for 69 frames, and
+`tests/data/windows_tool/` holds a few files written by AMSAT-EA's Windows tool (HADES-SA) received by N6RFM; both are used only
+to test the port.

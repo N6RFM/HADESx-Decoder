@@ -9,6 +9,7 @@ flowgraph and the command-line tools always run the same decoder.  Re-run after 
 import os, sys
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 core = open(os.path.join(ROOT, 'src', 'unne1b', 'core.py')).read()
+genesis = open(os.path.join(ROOT, 'src', 'unne1b', 'genesis.py')).read()   # folder output (HADES-SA decoders)
 
 afc_wrapper = '''
 
@@ -74,7 +75,7 @@ class blk(gr.sync_block):
     """UNNE-1B / HADES-SA / HADES-L FSK deframer: complex baseband in, demodulated FSK out, decoded frames printed"""
 
     def __init__(self, samp_rate=10000.0, bauds='200,800', max_flips=3, dll_path='', log_path='', c2_path='',
-                 hex_time='none', rec_start='', delay_s=1.2, emit_unverified=False):
+                 hex_time='none', rec_start='', delay_s=1.2, emit_unverified=False, out_dir='', out_history=True):
         gr.sync_block.__init__(self, name='UNNE-1B / HADES FSK deframer',
                                in_sig=[np.complex64], out_sig=[np.float32])
         self.message_port_register_out(pmt.intern('frames'))
@@ -99,6 +100,7 @@ class blk(gr.sync_block):
                 dt = dt.replace(tzinfo=datetime.timezone.utc)      # a bare time is taken as UTC
             self.rec_start = dt.timestamp()
         self.dll = None
+        self.writer = None
         if dll_path:
             try:
                 self.dll = DllDecoder(dll_path)
@@ -106,6 +108,18 @@ class blk(gr.sync_block):
             except Exception as e:                      # noqa
                 print('[unne1b] could not load %s (%s) - install "unicorn pefile" for full '
                       'decoding; showing raw fields' % (dll_path, e), flush=True)
+
+        if out_dir:           # per-type folder like AMSAT-EA's Windows tool (see docs/output-folder.md)
+            self.writer = FolderWriter(str(out_dir), utc=True, history=bool(out_history),
+                                       fallback=lambda fr: format_frame(fr, self.dll))
+            print('[unne1b] updating the per-type folder %s' % out_dir, flush=True)
+
+    def _epoch(self):
+        """Reception time of the frames found in this call (epoch seconds, UTC)."""
+        stream_t = self.n_in / self.fs_in - self.lookahead
+        if self.rec_start is not None:
+            return self.rec_start + max(stream_t, 0.0)
+        return time.time() - self.lookahead
 
     def _stamp(self):
         """Time stamp for the frames found in this call: the moment they were completed (about +-0.5 s)."""
@@ -144,6 +158,8 @@ class blk(gr.sync_block):
             stamp = self._stamp()
             self.message_port_pub(pmt.intern('hex'),
                                   pmt.intern(stamp + ' ' + fr['plain'] if stamp else fr['plain']))
+            if self.writer is not None:
+                self.writer.write(fr, self._epoch())
             if self.c2_path and fr.get('voice'):
                 with open(self.c2_path, 'ab') as f:
                     f.write(plain)
@@ -255,6 +271,8 @@ blocks:
     var('rec_start', q3 % '', 'Optional start time of a recording, e.g. 2026-10-04T22:48:12Z, so the stamps follow the file', 640, 60)
     var('bauds', q3 % '200,800', 'Baud rates to try: 200, 800 or 200,800 (UNNE-1B sends 200; HADES-SA alternates 800 and 200; HADES-L 800)', 848, 60)
     var('emit_unverified', 'False', 'True = also print length-byte frames whose CRC fails (for exploring new satellites or packet types)', 1056, 60)
+    var('out_dir', q3 % '', 'Folder to update with one file set per frame type (like the Windows SoundModem/KISSGENESIS tool); empty = off', 208, 108)
+    var('out_history', 'True', 'out_dir: keep one .tlm file per reception as well as the latest one', 640, 108)
     o.append('''- name: epy_block_src
   id: epy_block
   parameters:
@@ -310,6 +328,8 @@ blocks:
     _source_code: |
 %s    bauds: bauds
     emit_unverified: emit_unverified
+    out_dir: out_dir
+    out_history: out_history
     comment: 'FSK discriminator / tone detector, clock recovery, sync 0xBF35, descramble, CRC16, decode. Frames are printed to the console.'
     dll_path: dll_path
     log_path: log_path
@@ -321,7 +341,7 @@ blocks:
     minoutbuf: '0'
     rec_start: rec_start
     samp_rate: samp_rate / decim
-%s''' % (indent(core + deframer_wrapper, 6), st(904, 176)))
+%s''' % (indent(core + genesis + deframer_wrapper, 6), st(904, 176)))
     if gui:
         o.append('''- name: qtgui_freq_sink_x_0
   id: qtgui_freq_sink_x

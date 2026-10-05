@@ -32,10 +32,10 @@ import numpy as np
 
 __all__ = [
     'SYNC_BITS', 'TOTAL_BYTES', 'PRE_BYTES', 'TYPE_NAMES', 'DLL_FUNCS', 'SOURCES',
-    'crc16_ccitt_false', 'descramble', 'scramble', 'bits_to_bytes', 'check_frame',
+    'crc16_ccitt_false', 'ssdv_crc_ok', 'descramble', 'scramble', 'bits_to_bytes', 'check_frame',
     'VOICE_PAYLOAD_BYTES', 'VOICE_XOR_KEY', 'voice_unwhiten', 'voice_pad_700c', 'voice_assemble',
     'DllDecoder', 'FskCentreTracker', 'Unne1bDeframer', 'MultiBaudDeframer', 'parse_bauds', 'format_frame',
-    'type_name', 'DLL_SATELLITES', 'LEGACY_SOURCES', 'VOICE_TYPES', 'VOICE_SIZE_BYTE', 'TYPE_NAMES_BY_SOURCE',
+    'type_name', 'DLL_SATELLITES', 'LEGACY_SOURCES', 'VOICE_TYPES', 'VOICE_SIZE_BYTE', 'SSDV_SIZE_BYTE', 'PN9_SIZES', 'TYPE_NAMES_BY_SOURCE',
 ]
 
 SYNC_BITS = '1011111100110101'          # 0xBF35
@@ -84,6 +84,8 @@ def type_name(src, ptype):
 
 # CODEC2 voice packet type: 15 on UNNE-1B, 11 on HADES-SA / HADES-L (all carry size 37 = type/addr + number + 35 bytes)
 VOICE_TYPES = (11, 15)
+SSDV_SIZE_BYTE = 251                   # HADES-SA SSDV image packets: type 10, 251 bytes after the size byte
+PN9_SIZES = (249, 255)                 # PN9 link-test packets (HADES-SA 249; the HADES-L document says 255)
 VOICE_SIZE_BYTE = 37
 
 
@@ -105,6 +107,12 @@ def crc16_ccitt_false(data, init=0xFFFF):
     for b in data:
         c = ((c << 8) & 0xFFFF) ^ _CRC_TAB[((c >> 8) ^ b) & 0xFF]
     return c
+
+
+def ssdv_crc_ok(packet):
+    """Check a 256-byte SSDV packet: CRC-32 over bytes 1..219, stored big-endian at 220..223."""
+    import zlib
+    return len(packet) >= 224 and (zlib.crc32(packet[1:220]) & 0xFFFFFFFF) == int.from_bytes(packet[220:224], 'big')
 
 
 def descramble(data, init=0x2C350000):
@@ -725,14 +733,28 @@ class Unne1bDeframer(object):
             del self.edges[:k]
 
     @staticmethod
-    def _attempt(rawbits, softs, crc_from, nflips, flip_candidates):
-        """Try to make the frame pass its CRC by flipping exactly `nflips` of the least certain bits (0 = as received).
-        Returns (plain, raw, flips) on success, else None.  `plain` = type/address byte + descrambled data."""
+    def _checker(kind, crc_from):
+        """Returns (check(raw) -> bool, plain_of(raw)) for a layout.  `raw` = the bytes after the sync word."""
+        if kind == 'ssdv':                                   # HADES-SA image packet: no CRC16, SSDV's own CRC32
+            def plain_of(raw):
+                return raw[1:2] + descramble(raw[2:])
+
+            def check(raw):
+                return ssdv_crc_ok(b'\x55\x66\xbf\x35' + raw[0:1] + plain_of(raw))
+            return check, plain_of
+
         def check(raw):
             return crc16_ccitt_false(raw[crc_from:-2]) == (raw[-2] << 8 | raw[-1])
 
         def plain_of(raw):
             return raw[crc_from:crc_from + 1] + descramble(raw[crc_from + 1:-2])
+        return check, plain_of
+
+    @classmethod
+    def _attempt(cls, rawbits, softs, crc_from, nflips, flip_candidates, kind='crc16'):
+        """Try to make the frame pass its check by flipping exactly `nflips` of the least certain bits (0 = as
+        received).  Returns (plain, raw, flips) on success, else None.  `plain` = type/address byte + descrambled data."""
+        check, plain_of = cls._checker(kind, crc_from)
         if nflips == 0:
             raw = bits_to_bytes(rawbits)
             return (plain_of(raw), raw, []) if check(raw) else None
@@ -801,10 +823,23 @@ class Unne1bDeframer(object):
                                'sclock': None, 'nocrc': True})
                 self.scan = a + 16 + nbits
                 continue
+            if b0 in PN9_SIZES and (b1 >> 4) == 13 and (b1 & 15) in SOURCES:       # PN9 link test: no CRC
+                nbits = 8 * (1 + b0)
+                if len(self.bits) < a + 16 + nbits:
+                    self.scan = a
+                    break
+                raw = bits_to_bytes(self.bits[a + 16:a + 16 + nbits])
+                plain = raw[1:2] + descramble(raw[2:])
+                self.nframes += 1
+                frames.append(self._frame_dict('sized', plain, raw, [], None))
+                self.scan = a + 16 + nbits
+                continue
             cands = []
             if (b0 >> 4) in TOTAL_BYTES and (b0 & 15) in LEGACY_SOURCES:
                 cands.append(('legacy', 8 * (TOTAL_BYTES[b0 >> 4] - PRE_BYTES), 0))
-            if 3 <= b0 <= 255 and (b1 >> 4) >= 1 and (b1 & 15) in SOURCES:
+            if b0 == SSDV_SIZE_BYTE and (b1 >> 4) == 10 and (b1 & 15) in SOURCES:           # SSDV image packet
+                cands.append(('ssdv', 8 * (1 + b0), 1))
+            elif 3 <= b0 <= 255 and (b1 >> 4) >= 1 and (b1 & 15) in SOURCES:
                 cands.append(('sized', 8 * (1 + b0), 1))
             gidx = self.dropped + a
             cands = [c for c in cands if (gidx, c[0]) not in self.failed]
@@ -813,7 +848,7 @@ class Unne1bDeframer(object):
             pending = len(have) < len(cands)
             hit = None
             for kind, nbits, crc_from in have:                           # 1. exact CRC, shortest layout first
-                r = self._attempt(self.bits[a + 16:a + 16 + nbits], None, crc_from, 0, 0)
+                r = self._attempt(self.bits[a + 16:a + 16 + nbits], None, crc_from, 0, 0, kind)
                 if r:
                     hit = (kind, nbits) + r
                     break
@@ -824,7 +859,7 @@ class Unne1bDeframer(object):
                 for nf in range(1, self.max_flips + 1):
                     for kind, nbits, crc_from in have:
                         r = self._attempt(self.bits[a + 16:a + 16 + nbits], self.soft[a + 16:a + 16 + nbits],
-                                          crc_from, nf, self.flip_candidates)
+                                          crc_from, nf, self.flip_candidates, kind)
                         if r:
                             hit = (kind, nbits) + r
                             break
@@ -833,7 +868,7 @@ class Unne1bDeframer(object):
             if hit is not None:
                 kind, nbits, plain, raw, flips = hit
                 self.nframes += 1
-                frames.append(self._frame_dict(kind, plain, raw, flips, True))
+                frames.append(self._frame_dict('sized' if kind == 'ssdv' else kind, plain, raw, flips, True))
                 self.scan = a + 16 + nbits
                 continue
             for kind, nbits, crc_from in have:

@@ -63,6 +63,11 @@ data (descrambled): ...
 | `--flips 3` | maximum number of bit errors to try to repair (0-4) |
 | `--baud auto\|200\|800\|200,800` | baud rates to try (default `auto` = 200 and 800; UNNE-1B sends 200, HADES-SA alternates 800/200, HADES-L 800) |
 | `--emit-unverified` | also report length-byte frames whose CRC fails, marked `CRC FAIL` (for exploring new satellites) |
+| `--outdir DIR` | update a folder with one file set per frame type (like the Windows tool), adding new frames ([output-folder.md](output-folder.md)) |
+| `--rec-start TIME` | with `--outdir`: start time of the recording, ISO 8601 UTC (default: read from the file name, else now) |
+| `--no-history` | with `--outdir`: do not keep one `.tlm` per reception |
+| `--local-time` | with `--outdir`: label times as local instead of UTC |
+| `--force` | with `--outdir`: add a recording that was already added |
 | `--dll PATH` | decode text from AMSAT-EA's `hadesr.dll` via emulation (see [dll-emulation.md](dll-emulation.md)) |
 | `--log FILE` | append every frame as one JSON line |
 | `--c2out FILE` | write raw voice payloads (35 bytes per packet) |

@@ -68,6 +68,8 @@ IQ file source + end padding --> Throttle --> UNNE-1B adaptive FSK tracker --> L
 | `rec_start` | `''` | start time of a recording, e.g. `'2026-10-04T22:48:12Z'`, so that stamps follow the file's time line |
 | `bauds` | `'200,800'` | baud rates to try: `'200'` (UNNE-1B), `'800'` (HADES-L), or both (HADES-SA alternates); a single rate is a little faster |
 | `emit_unverified` | `False` | `True` also prints length-byte frames whose CRC fails (marked `CRC FAIL`), for exploring new satellites |
+| `out_dir` | `''` | a folder to update with one file set per frame type, like AMSAT-EA's Windows tool ([output-folder.md](output-folder.md)); empty = off |
+| `out_history` | `True` | with `out_dir`: also keep one timestamped `.tlm` per reception |
 
 **Common mistake:** in a variable's dialog the **ID** field is the variable's *name* (`iq_file`, `dll_path`) and must not
 be changed. The path goes in the **Value** field, with quotes: `'/home/me/passes/pass.iq'`. Typing a path into ID gives

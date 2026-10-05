@@ -1,8 +1,11 @@
 """Command line decoder:  unne1b-decode capture.iq --fs 50000"""
 import argparse
+import datetime
 import json
 import os
+import re
 import sys
+import time
 
 import numpy as np
 
@@ -19,6 +22,18 @@ def _read_iq(path, fmt):
         a = np.fromfile(path, dtype=np.uint8).astype(np.float32)
         return ((a[0::2] - 127.5) / 127.5 + 1j * (a[1::2] - 127.5) / 127.5).astype(np.complex64)
     raise SystemExit('unknown --format')
+
+
+def guess_rec_start(path):
+    """Recording start time (epoch seconds, UTC) from a name like unne1b_50000SPS_436888000Hz_2026_10_04_T22-48-12.iq."""
+    m = re.search(r'(\d{4})[_-](\d{2})[_-](\d{2})[_T-]+T?(\d{2})[-:_.]?(\d{2})[-:_.]?(\d{2})', os.path.basename(path))
+    if not m:
+        return None
+    y, mo, d, h, mi, sec = map(int, m.groups())
+    try:
+        return datetime.datetime(y, mo, d, h, mi, sec, tzinfo=datetime.timezone.utc).timestamp()
+    except ValueError:
+        return None
 
 
 def build_parser():
@@ -47,6 +62,13 @@ def build_parser():
     ap.add_argument('--emit-unverified', action='store_true',
                     help='also report length-byte frames whose CRC fails (marked CRC FAIL; for exploring new satellites)')
     ap.add_argument('--voice-wav', help='decode the CODEC2 voice to this WAV (needs c2dec)')
+    ap.add_argument('--outdir', help='folder to update with one file set per frame type, like the Windows '
+                                     'SoundModem/KISSGENESIS tool (see docs/output-folder.md)')
+    ap.add_argument('--rec-start', help='start time of the recording (ISO 8601, UTC) for the time stamps in --outdir; '
+                                        'default: read from the file name (..._2026_10_04_T22-48-12...), else now')
+    ap.add_argument('--no-history', action='store_true', help='--outdir: do not keep one .tlm file per reception')
+    ap.add_argument('--local-time', action='store_true', help='--outdir: label times as local instead of UTC')
+    ap.add_argument('--force', action='store_true', help='--outdir: process a recording that was already added')
     ap.add_argument('--voice-speed', type=float, default=1.0,
                     help='time-stretch the voice WAV, pitch preserved (e.g. 1.15)')
     return ap
@@ -87,6 +109,34 @@ def main(argv=None):
                 print('WARNING: --dll needs "pip install unicorn pefile" - continuing without '
                       'the official decoder.', file=sys.stderr)
 
+    writer, rec_start, ingest_key = None, None, None
+    if a.outdir:
+        from .genesis import FolderWriter
+        if a.rec_start:
+            rec_start = datetime.datetime.fromisoformat(a.rec_start.replace('Z', '+00:00'))
+            if rec_start.tzinfo is None:
+                rec_start = rec_start.replace(tzinfo=datetime.timezone.utc)
+            rec_start = rec_start.timestamp()
+        else:
+            rec_start = guess_rec_start(a.iq)
+        if rec_start is None:
+            rec_start = time.time()
+            print('NOTE: no recording start time (--rec-start, or a date in the file name): frames in %s are stamped '
+                  'with the current time, like the Windows tool does.' % a.outdir, file=sys.stderr)
+        else:
+            print('recording start (UTC): %s' % datetime.datetime.fromtimestamp(rec_start, datetime.timezone.utc)
+                  .strftime('%Y-%m-%d %H:%M:%S'), file=sys.stderr)
+        os.makedirs(a.outdir, exist_ok=True)
+        ingest_key = '%s:%d' % (os.path.basename(a.iq), os.path.getsize(a.iq))
+        ingest_path = os.path.join(a.outdir, '.unne1b_ingested.json')
+        done = json.load(open(ingest_path)) if os.path.exists(ingest_path) else {}
+        if ingest_key in done and not a.force:
+            print('%s was already added to %s on %s - nothing done (use --force to add it again).'
+                  % (os.path.basename(a.iq), a.outdir, done[ingest_key]), file=sys.stderr)
+            return 0
+        writer = FolderWriter(a.outdir, utc=not a.local_time, history=not a.no_history,
+                              fallback=lambda fr: format_frame(fr, dll))
+
     auto = a.center == 'auto'
     tracker = FskCentreTracker(fs, min_db=a.min_db) if auto else None
     fixed = 0.0 if auto else float(a.center)
@@ -108,6 +158,8 @@ def main(argv=None):
             if a.log:
                 with open(a.log, 'a') as f:
                     f.write(json.dumps(fr) + '\n')
+            if writer is not None:
+                writer.write(fr, rec_start + fr['t'])
             if fr.get('voice'):
                 voice.setdefault(fr['number'], bytes.fromhex(fr['payload']))
                 if a.c2out:
@@ -152,6 +204,15 @@ def main(argv=None):
                 g[0][0], g[-1][0], np.median([c_ for _, c_ in g]), g[-1][1] - g[0][1]),
                 file=sys.stderr)
     print('%d valid frame(s)' % state['nf'], file=sys.stderr)
+    if writer is not None:
+        st = writer.stats
+        print('%s updated: %d frame(s) written, %d new data line(s), %d duplicate line(s) skipped, %d file(s) touched'
+              % (a.outdir, st['frames'], st['new_dat_lines'], st['skipped_duplicates'], len(st['files'])), file=sys.stderr)
+        for (src, typ), n in sorted(st['by_type'].items()):
+            print('   satellite %d type %2d: %d' % (src, typ, n), file=sys.stderr)
+        done = json.load(open(ingest_path)) if os.path.exists(ingest_path) else {}
+        done[ingest_key] = time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime()) + ' UTC'
+        json.dump(done, open(ingest_path, 'w'), indent=1)
 
     if a.voice_wav and voice:
         from .voice import write_wav

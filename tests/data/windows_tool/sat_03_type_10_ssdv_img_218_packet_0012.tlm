@@ -1,0 +1,11 @@
+*** SSDV frame received on local time 20260402-14:11:54 ***
+sat_id    : 3 (SpinnyONE HADES-SA)
+image id  : 218
+packet id : 12
+width id  : 320
+height id : 240
+flags     : 024
+mcuOffset : 026
+mcuIndex  : 185
+checksum  : 79B2E9AD
+FEC       : 46EBF11937A2549492622BB79570D2F035C8F2B23E8F519F6986F9194CB33445

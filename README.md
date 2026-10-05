@@ -32,6 +32,7 @@ IQ file / SDR  ->  FSK tracker (finds the signal anywhere in the band, follows i
 * **Decodes CODEC2 voice** (type 15) - 10 x 28-bit Codec2 700C frames per packet - into a WAV,
   with optional pitch-preserving speed-up.
 * **Also understands HADES-SA and HADES-L frames** (length-byte layout, 800 and 200 baud, automatic): framing, CRC and demodulation are tested with AMSAT-EA's sample frames and synthetic signals, but **not yet on a real recording**; see [Supported satellites](docs/satellites.md).
+* **Per-type output folder** (`--outdir`): the same files as AMSAT-EA's Windows tool (labelled `.tlm`, `.dat` data lines, `.bin` voice and image files), and **new frames from later passes are added to the same folder** without duplicates. HADES-SA frames are decoded natively (no DLL); see [Output folder](docs/output-folder.md).
 * **Optional official decode text**: run AMSAT-EA's own `hadesr.dll` inside an x86 emulator
   (no Wine needed) to get the labelled values (battery voltage, temperatures, ...). You supply the DLL.
 * **GNU Radio Companion flowgraph** with live plots, using the very same decoder code.
@@ -112,6 +113,7 @@ Using the single-file release (`unne1b_standalone.py`) on Debian/Ubuntu: `sudo a
 |---|---|
 | [Getting started](docs/getting-started.md) | install, first decode, options, output formats, SDR recording tips |
 | [Supported satellites](docs/satellites.md) | UNNE-1B, HADES-SA, HADES-L: frame layouts, baud rates, what works |
+| [Output folder](docs/output-folder.md) | `--outdir`: one file set per frame type like the Windows tool; add passes to one folder |
 | [Protocol](docs/protocol.md) | air interface, frame layout, scrambler, CRC, every packet type, voice format |
 | [Signal processing](docs/signal-processing.md) | tone detector, clock recovery, sync search, bit-error repair |
 | [Frequency tracking](docs/tracking.md) | how the signal is found and followed automatically |
