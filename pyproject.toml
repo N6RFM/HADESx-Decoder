@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "unne1b-decoder"
-version = "1.0.0"
+version = "1.0.1"
 description = "Decoder for UNNE-1B (HADES-E2) 200 baud FSK telemetry and CODEC2 voice, with automatic Doppler tracking"
 readme = "README.md"
 requires-python = ">=3.9"

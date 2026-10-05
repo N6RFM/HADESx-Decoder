@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.0.1 - 2026-10-05
 
 * Voice message identified by ear (the opening of *Don Quijote*); transcript added, docs and honesty notes updated, notice added about the recording's copyright status.
 * Attribution expanded: NOTICE.md rewritten to the CC BY 4.0 requirements for AMSAT-EA's documents and code (creator, copyright notices, licence link, source links, list of changes), acknowledgements section in the README, credit comments in the source files.
