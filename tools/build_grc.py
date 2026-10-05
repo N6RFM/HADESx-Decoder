@@ -77,6 +77,7 @@ class blk(gr.sync_block):
         gr.sync_block.__init__(self, name='UNNE-1B FSK200 deframer',
                                in_sig=[np.complex64], out_sig=[np.float32])
         self.message_port_register_out(pmt.intern('frames'))
+        self.message_port_register_out(pmt.intern('hex'))
         self.df = Unne1bDeframer(fs=float(samp_rate), baud=float(baud), max_flips=int(max_flips))
         self.log_path = log_path
         self.c2_path = c2_path
@@ -100,6 +101,8 @@ class blk(gr.sync_block):
                                'sclock': fr['sclock'] if fr['sclock'] is not None else -1})
             self.message_port_pub(pmt.intern('frames'),
                                   pmt.cons(meta, pmt.init_u8vector(len(plain), list(plain))))
+            # hex-only port: the same bytes as the PDU payload, as one lower-case hex string
+            self.message_port_pub(pmt.intern('hex'), pmt.intern(fr['plain']))
             if self.c2_path and fr['type'] == 15:
                 with open(self.c2_path, 'ab') as f:
                     f.write(plain)

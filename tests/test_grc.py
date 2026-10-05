@@ -19,3 +19,9 @@ def test_grc_is_valid_yaml():
     d = yaml.safe_load(open(os.path.join(ROOT, 'grc', 'unne1b_decoder.grc')))
     ids = [b['id'] for b in d['blocks']]
     assert ids.count('epy_block') == 3 and 'fir_filter_xxx' in ids
+
+
+def test_deframer_has_hex_port():
+    text = open(os.path.join(ROOT, 'grc', 'unne1b_decoder.grc')).read()
+    assert "message_port_register_out(pmt.intern('hex'))" in text
+    assert "message_port_pub(pmt.intern('hex'), pmt.intern(fr['plain']))" in text

@@ -23,8 +23,14 @@ IQ file source + end padding --> Throttle --> UNNE-1B adaptive FSK tracker --> L
   output 1 is the tracked centre in Hz.
 * **FIR filter** - low-pass 2.35 kHz, decimation 5.
 * **UNNE-1B FSK200 deframer** - demodulation, clock recovery, CRC, decode ([signal-processing.md](signal-processing.md)). Decoded
-  frames are **printed on the console** from which you started Companion/Python, and also published on the
-  `frames` message port (PDU: metadata dictionary + the descrambled bytes) so you can connect other blocks.
+  frames are **printed on the console** from which you started Companion/Python, and also published on two
+  message ports so you can connect other blocks:
+  * `frames` - a PDU: metadata dictionary (`type`, `src`, `sclock`) + the frame bytes as a u8 vector;
+  * `hex` - **only the hex**: one PMT symbol per frame holding the same bytes as lower-case hex with no
+    separators, for example `1c30ef02000000000000002bb66d6ff373533f00f40123001000000000` (a type 1 packet:
+    type/address byte `1c`, then the descrambled data; no training, sync or CRC). Voice packets (type 15)
+    give their 35 payload bytes (70 hex characters) still XOR-whitened. Connect it to a *Message Debug* block to
+    watch it, or to your own block (`pmt.symbol_to_string(msg)` in Python gives the string).
 
 ## Variables (edit them in Companion)
 
