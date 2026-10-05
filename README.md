@@ -46,7 +46,7 @@ A 354 s, 50 ksps recording of the pass of **2026-10-04 22:48:12** decodes to 45 
 | 33 s  | type 14 time series (signal peak) | 192124 s | 30 samples, all 0 dB |
 | 63 s  | type 3 status | 192154 s | antenna deployed, transponder off, battery "fully charged" |
 | 93 s  | type 10 Nebrija game payload | 192184 s | week 0, data `03 00 00 01 02 00 02 01` |
-| 123-182 s | type 15 CODEC2 voice | - | 37 packets -> 14.8 s of audio |
+| 123-182 s | type 15 CODEC2 voice | - | 37 packets -> 14.8 s: the opening of *Don Quijote* (part 1, chapter 1), in Spanish |
 | 213 s | type 1 power | 192304 s | panels 0 mW, battery 4097 mV, 35 mA out |
 | 243 s | type 14 time series (noise) | 192334 s | 30 samples, all 0 dB |
 | 273 s | type 2 temperatures | 192364 s | all sensors -14 ... -4 degC |
@@ -141,9 +141,10 @@ the figures and result files were produced from the full file.
 
 * Telemetry types 1, 2, 3, 10, 12 and 14 were decoded from real signals with a valid CRC; types 4, 5,
   6, 8 and 9 have only been verified on synthetic packets (they were not transmitted during the pass).
-* The voice audio is no longer garbled once the XOR key is applied (the maintainer's listening test: "much
-  better", pace a little slow) but voice packets have **no CRC**, so bit errors cannot be detected. The
-  message content has not been transcribed or verified.
+* The voice message has been **identified by ear**: it is the opening of *Don Quijote de la Mancha*
+  ([transcript](examples/results/voice_transcript.md)). Voice packets have **no CRC**, so bit errors cannot be
+  detected. The pace sounds natural at 115-120 % speed (`--voice-speed 1.15`); whether the original is slow or the
+  time base is slightly off is not known.
 * The measured FSK tone spacing is about **1.64 kHz**, not the 1125 Hz written in the AMSAT-EA
   document (v1.01). Decoding does not depend on it. See [reverse-engineering notes](docs/reverse-engineering-notes.md).
 * See [limitations](docs/limitations-and-roadmap.md) for the full list.

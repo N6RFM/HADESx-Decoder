@@ -52,13 +52,34 @@ payload file written by `--c2out` (35 bytes per packet, in order).
 Output: 8 kHz, 16-bit, mono WAV. Example files from the pass: `examples/results/voice_700C.wav` (14.8 s) and
 `voice_700C_speed1.15.wav` (12.9 s).
 
+## What the message says
+
+It is the opening of Cervantes' *Don Quijote de la Mancha*, read in Spanish. Transcribed by ear by the maintainer
+(listening at 115-120 % speed, so the time stamps are in the sped-up playback):
+
+| Time | Heard |
+|---|---|
+| 0:00 | *Primera parte del Ingenioso Hidalgo Don Quijote de la Mancha. Capítulo primero.* |
+| 0:06 | *Que trata de la condición y ejercicio del famoso y valiente Hidalgo Don Quijote de la Mancha.* |
+| 0:12 | *En un lugar de la Mancha...* |
+
+The decoded audio ends within about a second after that, in mid-sentence: 37 packets x 0.4 s = 14.8 s, and the sister
+satellite HADES-SA stores voice recordings of up to 15 s (its description also mentions a recording of text from Don
+Quixote). So the cut-off is expected. This confirms the mode (Codec2 700C), the XOR key and the padding rule.
+See [examples/results/voice_transcript.md](../examples/results/voice_transcript.md).
+
 ## What the audio is like
 
-* About 0.9 s of silence, then speech with pauses (about 5 s of the 14.8 s are pauses). The measured pitch is a
-  median of about 108 Hz (typical male voice), which suggests the playback rate is right and the message is simply
-  paced slowly. `--speed 1.15` and `--tape` exist because the first listening test called the pace "a little slow".
-* In the maintainer's listening test the result was "much better" than the version without the XOR key (which was
-  garbled). The text of the message has **not** been transcribed or verified.
+* About 0.9 s of silence, then speech with pauses (about 5 s of the 14.8 s are pauses).
+* **Pace:** the maintainer finds it natural at **115-120 %** speed. Whether the satellite's recording is simply a slow
+  reading or the time base of the decoded audio is a little off is **not known**. The measured pitch is a median of
+  about 108 Hz at 1.0x (about 124 Hz with `--tape 1.15`), plausible for a male voice either way; the reading rate works
+  out at about 4.4 syllables per second at 1.0x and about 5.1 at 1.15x (both within the range of Spanish read-aloud
+  speech). So the default output is left at the faithful 1.0x, and `--speed 1.15` / `--voice-speed 1.15` is the
+  recommended listening setting. `--speed` keeps the pitch; `--tape` changes pitch with speed: use whichever sounds
+  more natural to you.
+* Without the XOR key the same data decodes to garble; with it the first listening test said "much better", and the
+  second one identified the text.
 * There is no CRC on voice packets, so bit errors cannot be detected or corrected. A noisy recording gives
   occasional bursts of garbled audio rather than missing frames.
 

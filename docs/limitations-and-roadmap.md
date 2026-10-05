@@ -7,7 +7,8 @@
 * **200 baud only by default.** The satellite can be commanded up to 2400 baud; `--baud` is supported in principle but
   untested on real signals.
 * **Voice has no CRC**, so errors are undetectable; the mode/key were identified from the sister satellite's reference
-  code and from signal statistics, and confirmed only by a listening test. The message text is not transcribed.
+  code and from signal statistics; confirmed by listening: the message is the opening of *Don Quijote*. The
+  correct playback speed is not certain (natural at about 115-120 %).
 * **Field decoding needs the DLL** (types 1-14) for the labelled output; without it you get raw bytes.
 * **Tracker assumptions:** one two-tone signal, 1.0-2.4 kHz spacing, 1.2 s latency, the whole Doppler range inside the
   recorded band.

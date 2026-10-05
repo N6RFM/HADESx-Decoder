@@ -10,7 +10,7 @@
 | `full_pass_tracking.txt` | the tracker's burst report (centre frequency and drift of every burst) |
 | `frames.jsonl` | every frame as one JSON line (raw bytes, descrambled bytes, repaired bits, clock, voice payloads) |
 | `voice_payloads.c2` | the 37 raw voice payloads (35 bytes each, in packet order) |
-| `voice_700C.wav` | decoded voice, 14.8 s, 8 kHz mono |
+| `voice_700C.wav` | decoded voice, 14.8 s, 8 kHz mono - the opening of *Don Quijote* ([transcript](results/voice_transcript.md)) |
 | `voice_700C_speed1.15.wav` | the same, 15 % faster with the same pitch |
 
 Reproduce the small ones yourself:

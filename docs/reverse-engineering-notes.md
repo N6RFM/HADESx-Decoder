@@ -54,7 +54,8 @@ each. These are voice packets:
   convolutional code. These tests used a crude speech-likeness metric, which turned out unreliable.
 * AMSAT-EA's HADES-SA reference decoder (`byte_version/main.c`) contains a fixed **35-byte XOR key** and a "28 bits +
   4 zero bits" padding function, and its merge tool writes a Codec2 header with mode 8 (700C). Applying both gave audio
-  that the user described as "much better".
+  that the user described as "much better" and then identified as the opening of *Don Quijote* (see
+  [voice.md](voice.md)).
 
 ## 6a. A dead end worth recording
 
@@ -78,5 +79,5 @@ pre-fill corrupted the noise-floor estimate. Fixed by seeding the floor only fro
   problem. Worth re-checking with another receiver.
 * **Frequency behaviour:** the FSK centre moves in a V-shaped path while other carriers in the band move monotonically.
 * **Training length:** the document's text says 64 bits, its tables say 128; 128 (about 126 recovered) is received.
-* **Voice message content** and whether the pace is exactly right.
+* **Voice pace:** the message (the opening of *Don Quijote*) sounds natural at 115-120 % speed; whether the satellite's recording is slow or the decoded time base is a little off is unknown.
 * **Types 4, 5, 6, 8, 9** have not been received yet.

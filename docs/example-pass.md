@@ -63,7 +63,7 @@ consistent with the transponder being off and nobody transmitting to it.
 
 **Ephemeris (type 12):** everything zero (no TLE or UTC loaded on board).
 
-**Voice (type 15):** 14.8 s of Codec2 700C audio, see [voice.md](voice.md).
+**Voice (type 15):** 14.8 s of Codec2 700C audio: the opening of *Don Quijote de la Mancha* in Spanish ("Primera parte del Ingenioso Hidalgo Don Quijote de la Mancha. Capítulo primero. Que trata de la condición y ejercicio del famoso y valiente Hidalgo ... En un lugar de la Mancha..."), see [voice.md](voice.md).
 
 ## The three IQ excerpts in `examples/iq/`
 

@@ -92,8 +92,12 @@ follow AMSAT-EA's terms.
 ## 5. This project
 
 * Code: MIT (see `LICENSE`).
-* Documentation, figures and example data (`examples/`): CC BY 4.0. The example IQ recordings are from a real
+* Documentation, figures and the IQ recordings in `examples/iq/`: CC BY 4.0. The IQ recordings are from a real
   reception of UNNE-1B.
+* `examples/results/voice_*.wav` are decodings of the audio the satellite transmits, a reading of the opening of
+  Cervantes' *Don Quijote* (the novel is in the public domain). We do not hold rights in that recording and do not
+  know its copyright status; it is included to demonstrate the decoder and credited to AMSAT-EA as the source. It will
+  be removed on request.
 
 Suggested citation:
 
