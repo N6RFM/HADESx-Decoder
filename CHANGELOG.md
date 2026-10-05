@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+* Notes on the origin of `hadesr.dll` (AMSAT-EA's, not Andy UZ7HO's; SoundModem is his) and the tested DLL version (1.08, compiled 5 January 2025).
 * Authorship statement added (developed by N6RFM with the help of Claude); copyright holder in LICENSE set to N6RFM.
 
 ## 1.0.1 - 2026-10-05

@@ -11,6 +11,13 @@ unne1b-decode pass.iq --fs 50000 --dll /path/to/hadesr.dll
 
 You must obtain `hadesr.dll` from AMSAT-EA yourself; it is **not** in this repository (see [NOTICE.md](../NOTICE.md)).
 
+`hadesr.dll` is AMSAT-EA's own library. Andy UZ7HO's SoundModem is a separate program that demodulates the audio and hands
+frames to AMSAT-EA's decoder; the two are often downloaded together, which is why the DLL can look like part of SoundModem.
+
+**Tested with:** `hadesr.dll`, "Unified Satellite Telemetry Decoder", **version 1.08 (Bytes)**, compiled 5 January 2025 (the
+version and date are in the DLL's own banner). Other versions may print slightly different text or lack some
+`visualiza_*` functions.
+
 ## How it works
 
 * `pefile` loads the DLL's sections into an emulated 32-bit x86 address space (`unicorn`).

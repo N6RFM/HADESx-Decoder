@@ -77,6 +77,18 @@ While developing, the behaviour of the DLL's exported scrambler and CRC function
 interface; it was later confirmed independently against AMSAT-EA's C source (section 2). If you redistribute the DLL,
 follow AMSAT-EA's terms.
 
+**Who made which file.** The Windows files that are usually downloaded together come from different authors:
+
+| File | Author | Evidence in the file |
+|---|---|---|
+| `soundmodem.exe` | **Andy UZ7HO** | version information: "UZ7HO Software", "UZ7HO (c) 2010", "The Soundmodem" |
+| `hadesr.dll` | **AMSAT-EA** | start-up banner "Unified Satellite Telemetry Decoder - AMSAT EA - Free distribution - Version 1.08 (Bytes)", built 5 January 2025; embedded source file names `main.c`, `genesis_crc.c`, `genesis_scrambler.c` match AMSAT-EA's open-source HADES-SA_SpinnyONE repository, whose C files name AMSAT EA and Gabriel Otero as authors |
+| `KISSGENESIS.exe` | **AMSAT-EA** | "KISS Console v0.01", built with Free Pascal / Lazarus; loads `hadesr.dll` |
+
+AMSAT-EA's own decoder describes itself as intended for use with Andy UZ7HO's SoundModem, which is the relationship
+between the two: his modem demodulates the audio and their software decodes the frames. The DLL carries no author or
+copyright field, so the individual who wrote it is not stated in the file itself.
+
 ## 4. Community and other software
 
 * The libre.space (SatNOGS) community forum thread "HADES-SA (SpinnyONE) (SO-127) Transmissions" pointed to AMSAT-EA's
