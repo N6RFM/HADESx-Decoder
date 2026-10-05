@@ -1,0 +1,153 @@
+options:
+  parameters:
+    author: ''
+    catch_exceptions: 'True'
+    category: '[GRC Hier Blocks]'
+    cmake_opt: ''
+    comment: 'Plays unne1b_fsk200_11025.wav into a virtual audio sink so that Wine soundmodem can record it. Start with PULSE_SINK=unne1b (see setup_unne1b_audio.sh).'
+    copyright: ''
+    description: ''
+    gen_cmake: 'On'
+    gen_linking: dynamic
+    generate_options: qt_gui
+    hier_block_src_path: '.:'
+    id: unne1b_to_soundmodem
+    max_nouts: '0'
+    output_language: python
+    placement: (0,0)
+    qt_qss_theme: ''
+    realtime_scheduling: ''
+    run: 'True'
+    run_command: '{python} -u {filename}'
+    run_options: prompt
+    sizing_mode: fixed
+    thread_safe_setters: ''
+    title: UNNE-1B FSK 200 bd to soundmodem
+    window_size: (1000,1000)
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [8, 8]
+    rotation: 0
+    state: enabled
+
+blocks:
+- name: samp_rate
+  id: variable
+  parameters:
+    comment: 'Must match the WAV (11025) and RXSampleRate in soundmodem.ini'
+    value: '11025'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [208, 12]
+    rotation: 0
+    state: enabled
+- name: wav_path
+  id: variable
+  parameters:
+    comment: 'Path to the WAV (relative to the directory you run from, or absolute)'
+    value: '''unne1b_fsk200_11025.wav'''
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [320, 12]
+    rotation: 0
+    state: enabled
+- name: audio_device
+  id: variable
+  parameters:
+    comment: '"pulse" goes through the ALSA pulse plugin and honours PULSE_SINK'
+    value: '''pulse'''
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [464, 12]
+    rotation: 0
+    state: enabled
+- name: gain
+  id: variable_qtgui_range
+  parameters:
+    comment: 'Keep the audio level moderate; soundmodem does not like clipping'
+    gui_hint: ''
+    label: Output gain
+    min_len: '200'
+    orient: QtCore.Qt.Horizontal
+    rangeType: float
+    start: '0'
+    step: '0.01'
+    stop: '1.0'
+    value: '0.5'
+    widget: counter_slider
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [592, 12]
+    rotation: 0
+    state: enabled
+- name: blocks_wavfile_source_0
+  id: blocks_wavfile_source
+  parameters:
+    affinity: ''
+    alias: ''
+    comment: 'Repeats so soundmodem sees the burst over and over'
+    file: wav_path
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    nchan: '1'
+    repeat: 'True'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [48, 176]
+    rotation: 0
+    state: enabled
+- name: blocks_multiply_const_vxx_0
+  id: blocks_multiply_const_vxx
+  parameters:
+    affinity: ''
+    alias: ''
+    comment: ''
+    const: gain
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    type: float
+    vlen: '1'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [320, 184]
+    rotation: 0
+    state: enabled
+- name: audio_sink_0
+  id: audio_sink
+  parameters:
+    affinity: ''
+    alias: ''
+    comment: ''
+    device_name: audio_device
+    num_inputs: '1'
+    ok_to_block: 'True'
+    samp_rate: samp_rate
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [544, 172]
+    rotation: 0
+    state: enabled
+
+connections:
+- [blocks_multiply_const_vxx_0, '0', audio_sink_0, '0']
+- [blocks_wavfile_source_0, '0', blocks_multiply_const_vxx_0, '0']
+
+metadata:
+  file_format: 1
+  grc_version: 3.10.9.2

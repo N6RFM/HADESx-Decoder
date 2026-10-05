@@ -1,0 +1,14 @@
+17707092 samples, 354.1 s at 50000 sps
+FSK signal tracking: 10 burst(s) found
+  t=   3.7-   4.1 s  centre   -2307 Hz  (drift -16 Hz)
+  t=  32.1-  33.9 s  centre   -3087 Hz  (drift +220 Hz)
+  t=  61.9-  63.3 s  centre   -4352 Hz  (drift +121 Hz)
+  t=  91.9-  93.2 s  centre   -6324 Hz  (drift +77 Hz)
+  t= 122.2- 181.7 s  centre   -8437 Hz  (drift +832 Hz)
+  t= 211.9- 213.8 s  centre   -5289 Hz  (drift +283 Hz)
+  t= 242.0- 244.1 s  centre   -3732 Hz  (drift +129 Hz)
+  t= 271.9- 273.2 s  centre   -2816 Hz  (drift +268 Hz)
+  t= 301.9- 305.1 s  centre   -2297 Hz  (drift +266 Hz)
+  t= 331.9- 333.7 s  centre   -2004 Hz  (drift +219 Hz)
+45 valid frame(s)
+37 packets (0..36) -> 14.8 s of audio -> examples/results/voice_700C.wav

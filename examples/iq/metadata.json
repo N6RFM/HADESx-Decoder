@@ -1,0 +1,15 @@
+{
+  "format": "complex float32 little endian (I,Q interleaved)",
+  "sample_rate_hz": 50000,
+  "centre_frequency_hz": 436888000,
+  "source_recording": "unne1b_50000SPS_436888000Hz_2026_10_04_T22-48-12.iq",
+  "source_recording_start": "2026-10-04 22:48:12 (time zone not recorded)",
+  "files": [
+    {"name": "pass_t032s_type14.iq", "offset_samples": 1597440, "offset_s": 31.949, "duration_s": 2.98,
+     "expect": [{"type": 14, "sclock": 192124}]},
+    {"name": "pass_t122s_voice.iq", "offset_samples": 6084608, "offset_s": 121.692, "duration_s": 10.67,
+     "expect": [{"type": 15, "numbers": [0, 1, 2, 3, 4, 5]}]},
+    {"name": "pass_t211s_type01.iq", "offset_samples": 10556928, "offset_s": 211.139, "duration_s": 3.43,
+     "expect": [{"type": 1, "sclock": 192304}]}
+  ]
+}

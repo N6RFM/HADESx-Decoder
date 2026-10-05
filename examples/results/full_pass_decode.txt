@@ -1,0 +1,319 @@
+=== UNNE-1B packet type 14 (Time series) from UNNE-1B  [CRC OK] ===
+sclock: 192124 s  (2d 05:22:04 since boot)
+*** Time series packet ***
+sat_id      : 12 (UNNE-1)
+sclock	    : 192124 seconds (2 days and 05:22:04 hh:mm:ss)
+Variable    : 0 (signal_peak)
+Data [000]  :  00 (000 dB) Sampled (T-087) minutes
+Data [001]  :  00 (000 dB) Sampled (T-084) minutes
+Data [002]  :  00 (000 dB) Sampled (T-081) minutes
+Data [003]  :  00 (000 dB) Sampled (T-078) minutes
+Data [004]  :  00 (000 dB) Sampled (T-075) minutes
+Data [005]  :  00 (000 dB) Sampled (T-072) minutes
+Data [006]  :  00 (000 dB) Sampled (T-069) minutes
+Data [007]  :  00 (000 dB) Sampled (T-066) minutes
+Data [008]  :  00 (000 dB) Sampled (T-063) minutes
+Data [009]  :  00 (000 dB) Sampled (T-060) minutes
+Data [010]  :  00 (000 dB) Sampled (T-057) minutes
+Data [011]  :  00 (000 dB) Sampled (T-054) minutes
+Data [012]  :  00 (000 dB) Sampled (T-051) minutes
+Data [013]  :  00 (000 dB) Sampled (T-048) minutes
+Data [014]  :  00 (000 dB) Sampled (T-045) minutes
+Data [015]  :  00 (000 dB) Sampled (T-042) minutes
+Data [016]  :  00 (000 dB) Sampled (T-039) minutes
+Data [017]  :  00 (000 dB) Sampled (T-036) minutes
+Data [018]  :  00 (000 dB) Sampled (T-033) minutes
+Data [019]  :  00 (000 dB) Sampled (T-030) minutes
+Data [020]  :  00 (000 dB) Sampled (T-027) minutes
+Data [021]  :  00 (000 dB) Sampled (T-024) minutes
+Data [022]  :  00 (000 dB) Sampled (T-021) minutes
+Data [023]  :  00 (000 dB) Sampled (T-018) minutes
+Data [024]  :  00 (000 dB) Sampled (T-015) minutes
+Data [025]  :  00 (000 dB) Sampled (T-012) minutes
+Data [026]  :  00 (000 dB) Sampled (T-009) minutes
+Data [027]  :  00 (000 dB) Sampled (T-006) minutes
+Data [028]  :  00 (000 dB) Sampled (T-003) minutes
+Data [029]  :  00 (000 dB) Sampled (T-000) minutes
+
+=== UNNE-1B packet type 3 (Status) from UNNE-1B  [CRC OK, corrected bits [182]] ===
+sclock: 192154 s  (2d 05:22:34 since boot)
+*** Status packet ***
+sat_id              :         12 (UNNE-1)
+sclock              :     192154 seconds satellite has been active (2 days and 05:22:34 hh:mm:ss)
+uptime              :     192154 seconds since the last CPU reset  (2 days and 05:22:34 hh:mm:ss)
+nrun                :          1 times satellite CPU was started
+npayload            :         52 times payload was activated
+nwire               :          5 times antenna deployment was tried
+ntransponder        :          0 times transponder was activated
+nPayloadsFails 	    :  	       OK
+last_reset_cause    :          5 Power-on reset (POR) / Power-down reset (PDR)
+bate (battery)      :          0 Fully charged (4200 mV)
+mote (transponder)  :          0 Disabled
+nTasksNotExecuted   :          OK
+nExtEepromErrors    :          OK
+antennaDeployed     :          OK (Antenna has been deployed)
+last_failed_task_id : 
+messaging enabled   :          No
+strfwd0 (id)        :         FF (255)
+strfwd1 (key)       :       FFFF (65535)
+strfwd2 (value)     :       FFFF (65535)
+strfwd3 (num_tcmds) :          0 (0)
+
+=== UNNE-1B packet type 10 (Nebrija game payload) from UNNE-1B  [CRC OK] ===
+sclock: 192184 s  (2d 05:23:04 since boot)
+*** UNNE-1 (Nebrija) Payload data packet ***
+sat_id           : 12 (UNNE-1)
+Tx clock         : 192184 seconds (satellite clock was 2 days and 05:23:04 hh:mm:ss)
+Week number      : 0
+Stored status    : 0
+Data [000]       : 03 (003)
+Data [001]       : 00 (000)
+Data [002]       : 00 (000)
+Data [003]       : 01 (001)
+Data [004]       : 02 (002)
+Data [005]       : 00 (000)
+Data [006]       : 02 (002)
+Data [007]       : 01 (001)
+
+=== UNNE-1B packet type 15 (CODEC2 voice) frame #0 from UNNE-1B [no CRC in this packet type] ===
+payload (35 bytes, 280 bits): 238b5529b888e1a764c3916c9628eb3a9e856e7ebda9c1dd722c5fca9eced9a614bc0d
+
+=== UNNE-1B packet type 15 (CODEC2 voice) frame #1 from UNNE-1B [no CRC in this packet type] ===
+payload (35 bytes, 280 bits): 23b15539b848e0bf12039544162a0d6c9e8daa16bd7c791d250e53cb78cd599b4cbc08
+
+=== UNNE-1B packet type 15 (CODEC2 voice) frame #2 from UNNE-1B [no CRC in this packet type] ===
+payload (35 bytes, 280 bits): 23ea5571c474e7ce93ba3492993a897ae39b8eb5ed3aa4b9902c001713c927ef48d352
+
+=== UNNE-1B packet type 15 (CODEC2 voice) frame #3 from UNNE-1B [no CRC in this packet type] ===
+payload (35 bytes, 280 bits): 4686e8db949b3627925b5dde25f0a3fae080d06d1d7e57f0b91cceba0b354e8ec627d0
+
+=== UNNE-1B packet type 15 (CODEC2 voice) frame #4 from UNNE-1B [no CRC in this packet type] ===
+payload (35 bytes, 280 bits): f40b6c4aa5cbf4be2ffef4e6c9fa938bae7088d12ff9d5a8616ed043527d310f51ef0d
+
+=== UNNE-1B packet type 15 (CODEC2 voice) frame #5 from UNNE-1B [no CRC in this packet type] ===
+payload (35 bytes, 280 bits): aefa200f0913abc7bcab5113497f0c3fa3fa58f1621bc060aadd050e4b0c75c2c7575d
+
+=== UNNE-1B packet type 15 (CODEC2 voice) frame #6 from UNNE-1B [no CRC in this packet type] ===
+payload (35 bytes, 280 bits): 063961ef0f0bed608463214a01f43be22360d3e1635d0dacd89a559a0db7645bae33db
+
+=== UNNE-1B packet type 15 (CODEC2 voice) frame #7 from UNNE-1B [no CRC in this packet type] ===
+payload (35 bytes, 280 bits): b0e6c9fce5f331949abb6e8c7ca3c0c2caf4ed903a9415a98325c88450b0744ef20759
+
+=== UNNE-1B packet type 15 (CODEC2 voice) frame #8 from UNNE-1B [no CRC in this packet type] ===
+payload (35 bytes, 280 bits): e00de8287326cd542d1558b485faa30126492cf1336fff61c8ceb4c41d55a16ebfcaa9
+
+=== UNNE-1B packet type 15 (CODEC2 voice) frame #9 from UNNE-1B [no CRC in this packet type] ===
+payload (35 bytes, 280 bits): e2f9392f16ba218dc123b37c4f75e63a9e1bce7cfe79197956a020cf42f6793162741c
+
+=== UNNE-1B packet type 15 (CODEC2 voice) frame #10 from UNNE-1B [no CRC in this packet type] ===
+payload (35 bytes, 280 bits): eab955cb4ed4e8564801e10d5e2f593f9e9fa992bc9d36ddfc49bbcfbe9299555aac0f
+
+=== UNNE-1B packet type 15 (CODEC2 voice) frame #11 from UNNE-1B [no CRC in this packet type] ===
+payload (35 bytes, 280 bits): d89815086960e1331f03e2575228d2cddece367ebb90109d3c48abc846f3a51a1e9b87
+
+=== UNNE-1B packet type 15 (CODEC2 voice) frame #12 from UNNE-1B [no CRC in this packet type] ===
+payload (35 bytes, 280 bits): 9c5b6590a525c27b75938a12fd7dd6dbf3c2e51e5fd11588457a4cdb147fa8f9c9139c
+
+=== UNNE-1B packet type 15 (CODEC2 voice) frame #13 from UNNE-1B [no CRC in this packet type] ===
+payload (35 bytes, 280 bits): f814b83eeb3866cea32f67131525397af620557b246b90b11cc1b94cbeaf35c9c6f20e
+
+=== UNNE-1B packet type 15 (CODEC2 voice) frame #14 from UNNE-1B [no CRC in this packet type] ===
+payload (35 bytes, 280 bits): 758088c90aecfaceecc3abd91e3534d85e1a274abc76159d6e6e07deaa5a19b55ca40d
+
+=== UNNE-1B packet type 15 (CODEC2 voice) frame #15 from UNNE-1B [no CRC in this packet type] ===
+payload (35 bytes, 280 bits): 884e55386abce0d801439c31422eeb001eee3136bba99e5d722823ce9edb19c6174c0b
+
+=== UNNE-1B packet type 15 (CODEC2 voice) frame #16 from UNNE-1B [no CRC in this packet type] ===
+payload (35 bytes, 280 bits): c5c055544490e6d50143cc348229eb3a9e84ecd2bb4fae9d750e3bcfb9a96dcec2afd8
+
+=== UNNE-1B packet type 15 (CODEC2 voice) frame #17 from UNNE-1B [no CRC in this packet type] ===
+payload (35 bytes, 280 bits): e5f5e47030e9e67b75be214a417cc4cde3c92e91ee7e6b8754d3d8118a6fac02939b58
+
+=== UNNE-1B packet type 15 (CODEC2 voice) frame #18 from UNNE-1B [no CRC in this packet type] ===
+payload (35 bytes, 280 bits): f407a8335d77ad1cedff6162416059804fc9f8d1ec7221a03780f89fce81b5395fdd87
+
+=== UNNE-1B packet type 15 (CODEC2 voice) frame #19 from UNNE-1B [no CRC in this packet type] ===
+payload (35 bytes, 280 bits): aeefa1d1fbd6e88111df7a13482e662c23ed362160d716236304512e9ad0705b32d7d4
+
+=== UNNE-1B packet type 15 (CODEC2 voice) frame #20 from UNNE-1B [no CRC in this packet type] ===
+payload (35 bytes, 280 bits): 46f5edc5d9a760b91bf6afcd71a2cb39f69faeb89d9d287d716844ec13997c7d3699ef
+
+=== UNNE-1B packet type 15 (CODEC2 voice) frame #21 from UNNE-1B [no CRC in this packet type] ===
+payload (35 bytes, 280 bits): 1e24f93f09133fe8b07a38b450bfa301a66aa0b5b7d719752c4851c5b2c3acc026cb47
+
+=== UNNE-1B packet type 15 (CODEC2 voice) frame #22 from UNNE-1B [no CRC in this packet type] ===
+payload (35 bytes, 280 bits): e16a71b57ccfafd5e0f6d874b9baf07df68c1bf47d8c032c1390811fd3d360fd8c7b99
+
+=== UNNE-1B packet type 15 (CODEC2 voice) frame #23 from UNNE-1B [no CRC in this packet type] ===
+payload (35 bytes, 280 bits): 5d51f86f36ba33be3bba90c241611fa83782e422ef7e0ba43305891b6a2974ab6c2201
+
+=== UNNE-1B packet type 15 (CODEC2 voice) frame #24 from UNNE-1B [no CRC in this packet type] ===
+payload (35 bytes, 280 bits): aa3968741ebb32bbc8f77504e46778154e320789a972636811f0359a1475b4ebae96c7
+
+=== UNNE-1B packet type 15 (CODEC2 voice) frame #25 from UNNE-1B [no CRC in this packet type] ===
+payload (35 bytes, 280 bits): b0ebf1489326e8c798da6c3298ae591732857e45f67819699a89c582f0ec297baa7302
+
+=== UNNE-1B packet type 15 (CODEC2 voice) frame #26 from UNNE-1B [no CRC in this packet type] ===
+payload (35 bytes, 280 bits): d9771894888be0f57eb9514fa00b295928a2a06dde7e76341f89f9160dbeb47662c7dd
+
+=== UNNE-1B packet type 15 (CODEC2 voice) frame #27 from UNNE-1B [no CRC in this packet type] ===
+payload (35 bytes, 280 bits): 91146a3890b2be18f496394efeeec678f686cfa46a6904b88826b78493c3191be92c2d
+
+=== UNNE-1B packet type 15 (CODEC2 voice) frame #28 from UNNE-1B [no CRC in this packet type] ===
+payload (35 bytes, 280 bits): fc79151a2598f7ec84438e37522f51055e9faf4abc52885d4e490bce9eea99c611ac01
+
+=== UNNE-1B packet type 15 (CODEC2 voice) frame #29 from UNNE-1B [no CRC in this packet type] ===
+payload (35 bytes, 280 bits): 23e4d53e9a2ce0e69203925566283e831e821fb6ba4fbadd7e9dfbcb12ffd9c870b40d
+
+=== UNNE-1B packet type 15 (CODEC2 voice) frame #30 from UNNE-1B [no CRC in this packet type] ===
+payload (35 bytes, 280 bits): f66a5539b888e0cb01439256f22eeb525e84ab12bda9f49d2f0263cea77259a58d880a
+
+=== UNNE-1B packet type 15 (CODEC2 voice) frame #31 from UNNE-1B [no CRC in this packet type] ===
+payload (35 bytes, 280 bits): b4b15577db64e6334e039387c229d299dee31e7ebaa98bdd7c4b3bc80a8e99c6163c0a
+
+=== UNNE-1B packet type 15 (CODEC2 voice) frame #32 from UNNE-1B [no CRC in this packet type] ===
+payload (35 bytes, 280 bits): f6181537de38e0d51e43fc34be2e7c19ded3ccdebda9b65d122f8bce9e8559c614b00d
+
+=== UNNE-1B packet type 15 (CODEC2 voice) frame #33 from UNNE-1B [no CRC in this packet type] ===
+payload (35 bytes, 280 bits): 239a9535e490e05a0b038255662e10249e821a12bd39ac1d3c4f8bce9ebbd9cf53d00d
+
+=== UNNE-1B packet type 15 (CODEC2 voice) frame #34 from UNNE-1B [no CRC in this packet type] ===
+payload (35 bytes, 280 bits): f180e81f09c733be6036bbde69b7782863549c415dd766a77134705193fce83f243793
+
+=== UNNE-1B packet type 15 (CODEC2 voice) frame #35 from UNNE-1B [no CRC in this packet type] ===
+payload (35 bytes, 280 bits): 0841a4eeef2e77bac13e44aa29f062fae35d56b5a65455e4c8cbd8964936e46296275b
+
+=== UNNE-1B packet type 15 (CODEC2 voice) frame #36 from UNNE-1B [no CRC in this packet type] ===
+payload (35 bytes, 280 bits): db396878053334ec84723bdcb1cf3cc8e0c2e2e99c5d363cd80fdcce9aa0a701c98fd0
+
+=== UNNE-1B packet type 1 (Power) from UNNE-1B  [CRC OK] ===
+sclock: 192304 s  (2d 05:25:04 since boot)
+*** Power packet ***
+sat_id          : 12 (UNNE-1)
+sclock          : 192304 seconds (2 days and 05:25:04 hh:mm:ss)
+spi             :    0 mW (total instant power)
+spa		:    0 mW (last 3 mins peak)
+spb             :    0 mW (last 3 mins peak)
+spc             :    0 mW (last 3 mins peak)
+spd             :    0 mW (last 3 mins peak)
+
+vbus1		: 4079 mV bus voltage read in CPU.ADC
+vbus2       	: 4044 mV bus voltage read in EPS.I2C
+vbus3       	: 4052 mV bus voltage read in CPU.I2C
+
+vbat1		: 4097 mV bat voltage read in EPS.ADC
+vbat2		: 4048 mV bat voltage read in EPS.I2C
+
+vbus1-vbat1	:  -18 mV 
+vbus3-vbus2	:    8 mV 
+
+vcpu		: 2830 mV
+
+icpu		:   17 mA @DCDCinput
+icpu		:   24 mA @DCDCoutput (estimation)
+ipl		:    0 mA (Last payload current)
+ibat		:   35 mA (Current flowing out from the battery)
+
+peaksignal	:    0 dB
+modasignal	:    0 dB
+lastcmdsignal	:    0 dB
+lastcmdnoise	:    0 dB
+
+=== UNNE-1B packet type 14 (Time series) from UNNE-1B  [CRC OK] ===
+sclock: 192334 s  (2d 05:25:34 since boot)
+*** Time series packet ***
+sat_id      : 12 (UNNE-1)
+sclock	    : 192334 seconds (2 days and 05:25:34 hh:mm:ss)
+Variable    : 1 (moda_noise)
+Data [000]  :  00 (000 dB) Sampled (T-087) minutes
+Data [001]  :  00 (000 dB) Sampled (T-084) minutes
+Data [002]  :  00 (000 dB) Sampled (T-081) minutes
+Data [003]  :  00 (000 dB) Sampled (T-078) minutes
+Data [004]  :  00 (000 dB) Sampled (T-075) minutes
+Data [005]  :  00 (000 dB) Sampled (T-072) minutes
+Data [006]  :  00 (000 dB) Sampled (T-069) minutes
+Data [007]  :  00 (000 dB) Sampled (T-066) minutes
+Data [008]  :  00 (000 dB) Sampled (T-063) minutes
+Data [009]  :  00 (000 dB) Sampled (T-060) minutes
+Data [010]  :  00 (000 dB) Sampled (T-057) minutes
+Data [011]  :  00 (000 dB) Sampled (T-054) minutes
+Data [012]  :  00 (000 dB) Sampled (T-051) minutes
+Data [013]  :  00 (000 dB) Sampled (T-048) minutes
+Data [014]  :  00 (000 dB) Sampled (T-045) minutes
+Data [015]  :  00 (000 dB) Sampled (T-042) minutes
+Data [016]  :  00 (000 dB) Sampled (T-039) minutes
+Data [017]  :  00 (000 dB) Sampled (T-036) minutes
+Data [018]  :  00 (000 dB) Sampled (T-033) minutes
+Data [019]  :  00 (000 dB) Sampled (T-030) minutes
+Data [020]  :  00 (000 dB) Sampled (T-027) minutes
+Data [021]  :  00 (000 dB) Sampled (T-024) minutes
+Data [022]  :  00 (000 dB) Sampled (T-021) minutes
+Data [023]  :  00 (000 dB) Sampled (T-018) minutes
+Data [024]  :  00 (000 dB) Sampled (T-015) minutes
+Data [025]  :  00 (000 dB) Sampled (T-012) minutes
+Data [026]  :  00 (000 dB) Sampled (T-009) minutes
+Data [027]  :  00 (000 dB) Sampled (T-006) minutes
+Data [028]  :  00 (000 dB) Sampled (T-003) minutes
+Data [029]  :  00 (000 dB) Sampled (T-000) minutes
+
+=== UNNE-1B packet type 2 (Temperature) from UNNE-1B  [CRC OK] ===
+sclock: 192364 s  (2d 05:26:04 since boot)
+*** Temp packet ***
+sat_id : 12 (UNNE-1)
+sclock : 192364 seconds (2 days and 05:26:04 hh:mm:ss)
+tpa    : -14.0 degC temperature in SPA.I2C
+tpb    : -12.0 degC temperature in SPB.I2C
+tpc    : -13.0 degC temperature in SPC.I2C
+tpd    : -14.0 degC temperature in SPD.I2C
+teps   :  -8.0 degC temperature in EPS.I2C
+ttx    : -10.0 degC temperature in  TX.I2C
+ttx2   :  -9.0 degC temperature in  TX.NTC
+trx    : -10.0 degC temperature in  RX.NTC
+tcpu   :  -4.0 degC temperature in CPU.ADC
+
+=== UNNE-1B packet type 12 (Ephemeris) from UNNE-1B  [CRC OK] ===
+*** Ephemeris packet ***
+sat_id      : 12 (UNNE-1)
+UTC time    : 0 seconds (1970-01-01 00:00:00) (on board) YYYY-MM-DD HH24:MI:SS
+lat         : 0 degrees
+lon         : 0 degrees
+alt         : 0 km
+zone        : unknown
+Adr         : 0
+Ful         : 0
+Fdl         : 0
+Epoch       : 0 seconds (1970-01-01 00:00:00) (TLE time) YYYY-MM-DD HH24:MI:SS
+Xndt2o      : 0.000000
+Xndd6o      : 0.000000
+Bstar       : 0.000000
+Xincl       : 0.000000
+Xnodeo      : 0.000000
+Eo          : 0.000000
+Omegao      : 0.000000
+Xmo         : 0.000000
+Xno         : 0.000000
+
+=== UNNE-1B packet type 3 (Status) from UNNE-1B  [CRC OK] ===
+sclock: 192424 s  (2d 05:27:04 since boot)
+*** Status packet ***
+sat_id              :         12 (UNNE-1)
+sclock              :     192424 seconds satellite has been active (2 days and 05:27:04 hh:mm:ss)
+uptime              :     192424 seconds since the last CPU reset  (2 days and 05:27:04 hh:mm:ss)
+nrun                :          1 times satellite CPU was started
+npayload            :         52 times payload was activated
+nwire               :          5 times antenna deployment was tried
+ntransponder        :          0 times transponder was activated
+nPayloadsFails 	    :  	       OK
+last_reset_cause    :          5 Power-on reset (POR) / Power-down reset (PDR)
+bate (battery)      :          0 Fully charged (4200 mV)
+mote (transponder)  :          0 Disabled
+nTasksNotExecuted   :          OK
+nExtEepromErrors    :          OK
+antennaDeployed     :          OK (Antenna has been deployed)
+last_failed_task_id : 
+messaging enabled   :          No
+strfwd0 (id)        :         FF (255)
+strfwd1 (key)       :       FFFF (65535)
+strfwd2 (value)     :       FFFF (65535)
+strfwd3 (num_tcmds) :          0 (0)
+
