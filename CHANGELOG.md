@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+* Authorship statement added (developed by N6RFM with the help of Claude); copyright holder in LICENSE set to N6RFM.
+
 ## 1.0.1 - 2026-10-05
 
 * Voice message identified by ear (the opening of *Don Quijote*); transcript added, docs and honesty notes updated, notice added about the recording's copyright status.

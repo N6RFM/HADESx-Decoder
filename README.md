@@ -12,6 +12,8 @@ downlink **436.888 MHz**. This project is an independent, open-source ground-sta
 not an AMSAT-EA product, and AMSAT-EA has not endorsed it. It is built on the open documentation and
 source code that AMSAT-EA publishes - see [Acknowledgements](#acknowledgements-and-licence).
 
+Developed by **N6RFM** with help from Claude (Anthropic) - see [Authorship](#authorship).
+
 ```
 IQ file / SDR  ->  FSK tracker (finds the signal anywhere in the band, follows its drift)
                ->  demodulator + clock recovery -> sync 0xBF35 -> descramble -> CRC16
@@ -148,6 +150,18 @@ the figures and result files were produced from the full file.
 * The measured FSK tone spacing is about **1.64 kHz**, not the 1125 Hz written in the AMSAT-EA
   document (v1.01). Decoding does not depend on it. See [reverse-engineering notes](docs/reverse-engineering-notes.md).
 * See [limitations](docs/limitations-and-roadmap.md) for the full list.
+
+## Authorship
+
+UNNE-1B Decoder was developed by **N6RFM**, with the help of **Claude**, an AI assistant made by Anthropic.
+
+* **N6RFM** supplied the recordings and the AMSAT-EA documents, ran and tested everything against real signals,
+  listened to the decoded voice and identified what it says, and published and maintains the project.
+* **Claude** helped write the decoder, the tests and the documentation, and worked out the packet format and
+  the voice layout from those recordings and AMSAT-EA's published material.
+
+The code is tested (see [docs/development.md](docs/development.md)), but it was written with AI assistance and has
+been checked against one real pass, so please report anything that looks wrong.
 
 ## Acknowledgements and licence
 

@@ -9,6 +9,7 @@ description = "Decoder for UNNE-1B (HADES-E2) 200 baud FSK telemetry and CODEC2 
 readme = "README.md"
 requires-python = ">=3.9"
 license = { text = "MIT" }
+authors = [{ name = "N6RFM" }]
 keywords = ["amateur radio", "satellite", "UNNE-1B", "HADES-E2", "AMSAT-EA", "FSK", "codec2", "gnuradio"]
 dependencies = ["numpy>=1.21", "scipy>=1.7"]
 

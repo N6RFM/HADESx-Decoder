@@ -91,6 +91,7 @@ follow AMSAT-EA's terms.
 
 ## 5. This project
 
+* Developed by N6RFM with the help of Claude (an AI assistant made by Anthropic).
 * Code: MIT (see `LICENSE`).
 * Documentation, figures and the IQ recordings in `examples/iq/`: CC BY 4.0. The IQ recordings are from a real
   reception of UNNE-1B.
@@ -101,5 +102,5 @@ follow AMSAT-EA's terms.
 
 Suggested citation:
 
-> UNNE-1B Decoder contributors, *UNNE-1B Decoder* (2026), <https://github.com/N6RFM/UNNE-1B-Decoder>,
-> built on documentation and software by AMSAT-EA.
+> N6RFM, *UNNE-1B Decoder* (2026), <https://github.com/N6RFM/UNNE-1B-Decoder>, developed with the help of
+> Claude (Anthropic) and built on documentation and software by AMSAT-EA.
