@@ -57,6 +57,7 @@ A 354 s, 50 ksps recording of the pass of **2026-10-04 22:48:12** decodes to 45 
 ```bash
 git clone https://github.com/N6RFM/UNNE-1B-Decoder.git
 cd UNNE-1B-Decoder
+python3 -m venv --system-site-packages .venv && . .venv/bin/activate
 pip install -e .                      # numpy + scipy
 sudo apt install codec2               # only needed for the voice WAV (provides c2dec)
 
@@ -98,6 +99,8 @@ unne1b-decode your_pass.iq --log frames.jsonl --voice-wav voice.wav --voice-spee
 
 GNU Radio: open `grc/unne1b_decoder.grc`, set the `iq_file` variable (see
 [docs/gnuradio.md](docs/gnuradio.md)), run.
+
+Using the single-file release (`unne1b_standalone.py`) on Debian/Ubuntu: `sudo apt install python3-numpy python3-scipy`, then run it with `python3`.
 
 ## Documentation
 

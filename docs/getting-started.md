@@ -13,6 +13,7 @@
 ```bash
 git clone https://github.com/N6RFM/UNNE-1B-Decoder.git
 cd UNNE-1B-Decoder
+python3 -m venv --system-site-packages .venv && . .venv/bin/activate
 pip install -e .            # or: pip install -e ".[dll]"   or   ".[dev]" for the test tools
 unne1b-decode --help
 ```
