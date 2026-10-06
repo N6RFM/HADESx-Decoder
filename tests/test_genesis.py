@@ -28,12 +28,22 @@ def normalise(name, data):
     return name, data
 
 
+def loose(files):
+    """The Linux reference program prints "-nan" and 64-bit dates, the Windows tool "nan" and 32-bit dates (test_dll_golden.py
+    checks the Windows tool itself): compare this older, glibc-based golden without those two differences."""
+    out = {}
+    for n, d in files.items():
+        d = d.replace(b'-nan', b'nan')
+        out[n] = re.sub(rb'(UTC time|Epoch)( +: -?\d+ seconds \()[^)]*\)', rb'\1\2DATE)', d)
+    return out
+
+
 def ours(frame, t=1775074700):
     ptype, source = frame[0] >> 4, frame[0] & 15
     ctx = g.Ctx(t, utc=False)
     text, dat, (n_hist, n_tlm, n_dat, mode) = g.decode_frame(ptype, source, frame, ctx)
     files = {n_hist: text.encode('latin-1'), n_tlm: text.encode('latin-1'), n_dat: dat}
-    return dict(normalise(n, d) for n, d in files.items())
+    return loose(dict(normalise(n, d) for n, d in files.items()))
 
 
 @pytest.mark.parametrize('case', range(len(GOLD)))
@@ -42,7 +52,7 @@ def test_matches_the_reference_program(case):
     reference decoder compiled from AMSAT-EA's source (clock strings and epoch columns excluded)."""
     entry = GOLD[case]
     frame = bytes.fromhex(entry['hex'])
-    expected = {n: bytes.fromhex(d) for n, d in entry['files'].items()}
+    expected = loose({n: bytes.fromhex(d) for n, d in entry['files'].items()})
     got = ours(frame)
     assert got.keys() == expected.keys()
     for name in expected:
@@ -90,7 +100,7 @@ def test_pn9_and_bbs_formats_match_real_files():
 def test_c_style_arithmetic_helpers():
     assert g.cdiv(-7, 2) == -3 and g.cdiv(7, -2) == -3 and g.cdiv(5, 0) == 0
     assert g.s32(0xFFFFFFFF) == -1 and g.s16(0x8000) == -32768
-    assert g.cf(float('nan')) == 'nan' and g.cf(-float('nan')) == '-nan'
+    assert g.cf(float('nan')) == 'nan' and g.cf(-float('nan')) == 'nan'                # the Windows tool never prints a sign
 
 
 # ---- folder behaviour -----------------------------------------------------------------------------------------------

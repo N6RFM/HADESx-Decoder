@@ -72,8 +72,8 @@ LEGACY_SOURCES = (0xC, 0xB, 2)
 TYPE_NAMES_BY_SOURCE = {
     3: {7: 'Experiment payload', 8: 'Antenna deploy', 9: 'Extended power (INA)', 10: 'SSDV image packet',
         11: 'CODEC2 voice', 12: 'Ephemeris', 13: 'PN9 link test', 14: 'Time series', 15: 'BBS message'},
-    5: {7: 'Lofith experiment', 8: 'Antenna deploy', 9: 'Extended power (INA)', 11: 'CODEC2 voice', 12: 'Ephemeris',
-        13: 'PN9 link test', 14: 'Time series', 15: 'ICM story message'},
+    5: {7: 'Lofith payload', 8: 'Antenna deploy', 9: 'Extended power (INA)', 11: 'CODEC2 voice', 12: 'Ephemeris',
+        13: 'PN9 link test', 14: 'Time series', 15: 'ICM message'},
 }
 
 
@@ -773,7 +773,7 @@ class Unne1bDeframer(object):
     @staticmethod
     def _has_sclock(src, ptype):
         if src in (3, 5):                                   # HADES-SA / HADES-L
-            return ptype in (1, 2, 3, 4, 5, 14)
+            return ptype in ((1, 2, 3, 4, 5, 14, 15) if src == 5 else (1, 2, 3, 4, 5, 14))
         return ptype in (1, 2, 3, 4, 5, 10, 14)             # UNNE-1B family
 
     def _frame_dict(self, framing, plain, raw, flips, crc_ok):
@@ -781,7 +781,8 @@ class Unne1bDeframer(object):
         fr = {'type': ptype, 'src': src, 'src_name': SOURCES.get(src, 'unknown'),
               'type_name': type_name(src, ptype), 'framing': framing, 'baud': int(self.baud),
               'raw': raw.hex(), 'plain': plain.hex(), 'flips': flips, 'crc_ok': crc_ok,
-              'sclock': (struct.unpack('<I', plain[1:5])[0] if self._has_sclock(src, ptype) and len(plain) >= 5 else None)}
+              'sclock': (struct.unpack('<I', plain[1:5])[0] if self._has_sclock(src, ptype) and len(plain) >= 5 else
+                         (struct.unpack('<I', plain[2:6])[0] if (src, ptype) == (5, 7) and len(plain) >= 6 else None))}
         if framing == 'sized':
             fr['size'] = raw[0]
         return fr

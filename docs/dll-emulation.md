@@ -11,6 +11,10 @@ unne1b-decode pass.iq --fs 50000 --dll /path/to/hadesr.dll
 
 You must obtain `hadesr.dll` from AMSAT-EA yourself; it is **not** in this repository (see [NOTICE.md](../NOTICE.md)).
 
+`--dll` is for `hadesr.dll`, the decoder of the **UNNE-1B package**. The HADES-SA and HADES-L packages have their own DLLs
+(`hadessa.dll`, `hadesl.dll`) that write files instead of printing; this project decodes those two satellites natively, and
+uses the DLLs only as references in tests (`tools/dll_oracle.py`, `tools/compare_with_dll.py`).
+
 `hadesr.dll` is AMSAT-EA's own library. Andy UZ7HO's SoundModem is a separate program that demodulates the audio and hands
 frames to AMSAT-EA's decoder; the two are often downloaded together, which is why the DLL can look like part of SoundModem.
 

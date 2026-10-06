@@ -144,3 +144,15 @@ Changes: Python instead of C; times labelled UTC and taken from the recording; u
 original prints 0. `tests/data/genesis_golden.json` holds output of that program compiled from source for 69 frames, and
 `tests/data/windows_tool/` holds a few files written by AMSAT-EA's Windows tool (HADES-SA) received by N6RFM; both are used only
 to test the port.
+
+---
+
+## 8. The three packages and the decoder DLLs used as test references
+
+AMSAT-EA publishes a separate UZ7HO SoundModem package for each satellite (UNNE-1B / MARIA-G / GENESIS-M, HADES-SA, HADES-L).
+Their decoder DLLs (`hadesr.dll`, `hadessa.dll`, `hadesl.dll`, (c) AMSAT EA) are **not** redistributed. The maintainer ran the
+HADES-SA and HADES-L ones in an x86 emulator (`tools/dll_oracle.py`) to produce `tests/data/dll_golden_hades_sa.json` and
+`dll_golden_hades_l.json`: the files each DLL's own frame-processing routine writes for a fixed set of frames (seeded random frames,
+AMSAT-EA's HADES-SA sample frames, and real HADES-L frames received by N6RFM). That output is AMSAT-EA's program output (CC BY 4.0) and is
+used only to test the Python decoders in `src/unne1b/genesis.py`, which are written to match it. The HADES-L packet layouts (Lofith,
+ICM message, status) were read from that decoder's behaviour and from AMSAT-EA's HADES-L transmissions description.

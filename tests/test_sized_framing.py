@@ -117,8 +117,8 @@ def test_type_names_depend_on_the_satellite():
     assert type_name(0xC, 15) == 'CODEC2 voice'
     assert type_name(3, 10) == 'SSDV image packet'
     assert type_name(3, 15) == 'BBS message'
-    assert type_name(5, 15) == 'ICM story message'
-    assert type_name(5, 7) == 'Lofith experiment'
+    assert type_name(5, 15) == 'ICM message'
+    assert type_name(5, 7) == 'Lofith payload'
     assert type_name(9, 99) == '?'
 
 

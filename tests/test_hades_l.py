@@ -60,7 +60,8 @@ def test_hades_l_status_and_antenna_packets_decode_with_sensible_values():
 def test_hades_l_recording_to_per_type_folder(tmp_path):
     import numpy as np
     pieces = []
-    for f in [x for x in GOOD if x['type'] in (3, 8, 14)]:
+    lofith = [x for x in GOOD if x['type'] == 7][:1]
+    for f in [x for x in GOOD if x['type'] in (3, 8, 14)] + lofith:
         pieces.append(synth.fsk_iq(synth.make_sized_packet(f['type'], 5, bytes.fromhex(f['plain'])[1:]), baud=800,
                                    shift=1600, center=-3300, snr_db=32, drift=100))
     pieces.append(synth.fsk_iq(b'\xaa' * 16 + b'\xbf\x35' + bytes.fromhex(PN9[0]['raw']), baud=800, shift=1600,
@@ -70,7 +71,82 @@ def test_hades_l_recording_to_per_type_folder(tmp_path):
     out = tmp_path / 'out'
     assert main([str(path), '--fs', '50000', '--outdir', str(out)]) == 0
     names = set(os.listdir(out))
-    for need in ('sat_05_type_03.tlm', 'sat_05_type_03.dat', 'sat_05_type_08.tlm', 'sat_05_type_13.tlm'):
+    for need in ('sat_05_type_03.tlm', 'sat_05_type_03.dat', 'sat_05_type_08.tlm', 'sat_05_type_13.tlm',
+                 'sat_05_type_07_lofith_frame_014.tlm', 'sat_05_type_07_lofith_frame_014.dat'):
         assert need in names, need
+    assert 'Lofith payload packet' in (out / 'sat_05_type_07_lofith_frame_014.tlm').read_text()
     assert any(n.startswith('sat_05_type_14_') and n.endswith('.dat') for n in names)
     assert 'received on UTC time 20261004-10:3' in (out / 'sat_05_type_03.tlm').read_text()      # from the file name
+
+
+# ---- what the HADES-L package's own decoder (hadesl.dll) prints for these real frames --------------------------------------
+
+def lines(text):
+    return {l.split(':')[0].strip(): l.split(':', 1)[1].strip() for l in text.split('\n') if ':' in l and not l.startswith('***')}
+
+
+def test_real_lofith_frame_reads_like_the_vendor_decoder():
+    f = [x for x in REAL if x['type'] == 7][0]
+    text, dat = g.decode_lofith(bytes.fromhex(f['plain']) + b'\0\0', 5, g.Ctx(1775074700, utc=True))
+    v = lines(text)
+    assert v['total frames'] == '128' and v['frame number'] == '14'
+    assert v['timestamp'] == '64179 seconds (satellite clock was 0 days and 17:49:39 hh:mm:ss)'
+    assert (v['gaugue value'], v['gauge ref value'], v['vbus ref voltage'], v['payload ref']) == ('22957', '22983', '22867', '-99')
+    assert v['satellite temp'] == '+9.0 degC' and v['radiation cont 1'] == '0' and v['radiation cont 2'] == '0'
+    assert text.endswith('radiation cont 2 : 0\n\n')                                         # the vendor prints a blank line
+    assert dat == b'1775074700 0 128 64179 14 22957 22983 22867 -99 9.000000 0 0\n'
+
+
+def test_lofith_special_cases():
+    rx = bytearray(bytes.fromhex('7580b3fa00000ead59c75953599dff620000000000') + b'\0\0')
+    rx[15:17] = bytes([255, 0])                                                              # raw temperature 255: no value
+    assert 'satellite temp   :\n' in g.decode_lofith(bytes(rx), 5, g.Ctx(1775074700))[0]
+    rx[15:17] = bytes([255, 1])                                                              # 0x01ff = 511: a value
+    assert 'satellite temp   : +215.5 degC' in g.decode_lofith(bytes(rx), 5, g.Ctx(1775074700))[0]
+    rx[17:21] = bytes([0x34, 0x12, 0xff, 0xff])                                              # radiation counters, 16 bits each
+    v = lines(g.decode_lofith(bytes(rx), 5, g.Ctx(1775074700))[0])
+    assert v['radiation cont 1'] == str(0x1234) and v['radiation cont 2'] == '65535'
+
+
+def test_lofith_files_are_one_set_per_frame_number():
+    f = [x for x in REAL if x['type'] == 7][0]
+    ctx = g.Ctx(1775074700, utc=True)
+    n_hist, n_tlm, n_dat, mode = g.names_for(7, 5, bytes.fromhex(f['plain']) + b'\0\0', ctx)
+    assert (n_tlm, n_dat, mode) == ('sat_05_type_07_lofith_frame_014.tlm', 'sat_05_type_07_lofith_frame_014.dat', 'ab')
+    assert n_hist == '20260401-201820_sat_05_type_07_lofith_frame_014.tlm'
+
+
+def test_icm_message_like_the_vendor_decoder():
+    rx = bytearray(101)
+    rx[0] = 0xF5
+    rx[1:5] = (86400 + 3661).to_bytes(4, 'little')
+    rx[5] = 7
+    msg = b'Hello from HADES-L'
+    rx[6:6 + len(msg)] = msg
+    text, dat = g.decode_icm(bytes(rx), 5, g.Ctx(1775074700, utc=True))
+    assert 'tx time        : 90061 seconds (satellite clock was 1 days and 01:01:01 hh:mm:ss)' in text
+    assert 'Message number : 007' in text
+    assert text.split('Message        : ')[1] == 'Hello from HADES-L' + '\0' * 75 + '\n'    # all 93 characters, as the vendor prints them
+    assert dat == b''
+    assert g.frame_size(5, 15) == 101 and g.frame_size(5, 7) == 23 and g.frame_size(3, 15) == 73
+
+
+def test_real_hades_l_status_has_the_hades_l_lines():
+    f = [x for x in REAL if x['type'] == 3][0]
+    text, dat = g.decode_status(bytes.fromhex(f['plain']) + b'\0\0', 5, g.Ctx(1775074700, utc=True))
+    assert 'RX board status     :          Unavailable' in text and 'RX board            :' not in text.replace('RX board status', '')
+    assert 'stored_frames       :        128' in text and 'frames_last batch   :         15' in text
+    assert 'payload frames' not in text
+    assert dat == (b'1775074700 0 148235 148235 1 13 5 0 0 5 0 0 255 1 0 0 0 255 65535 65535 0 0 12 0 12 0 5 0 50 128 15\n')
+
+
+def test_the_two_packages_differ_where_the_dlls_differ():
+    ctx = g.Ctx(1775074700, utc=True)
+    ts = bytes([0xE5, 0, 0, 0, 0, 4, 0x62]) + bytes(31)                                        # time series, variable 4
+    assert 'Variable    : 4 (tpc)' in g.decode_time_series(ts, 5, ctx)[0] and 'SPC.I2C' in g.decode_time_series(ts, 5, ctx)[0]
+    ts_sa = bytes([0xE3]) + ts[1:]
+    assert 'Variable    : 4 (tpb)' in g.decode_time_series(ts_sa, 3, ctx)[0]
+    assert g.decode_ssdv(bytes([0xA5]) + bytes(250), 5, ctx)[0] == ''                          # HADES-L's decoder writes no image text
+    assert g.decode_ssdv(bytes([0xA3]) + bytes(250), 3, ctx)[0].startswith('*** SSDV frame')
+    assert 'USB->FM' in g.transponder_mode(1, True) and 'USB->FM' not in g.transponder_mode(1)
+

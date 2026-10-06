@@ -14,6 +14,21 @@ CRC-16. The decoder recognises the variants automatically (by the frame itself, 
 Sources: AMSAT-EA's transmission documents (UNNE-1B v1.01, HADES-L), AMSAT-EA's open-source HADES-SA decoder and the
 AMSAT-EA projects page. See [NOTICE.md](../NOTICE.md).
 
+## The three AMSAT-EA packages (they are not the same program)
+
+Each satellite has its **own** UZ7HO SoundModem package from AMSAT-EA, with its own modem, console and decoder DLL:
+
+| Package | Modem modes | Decoder DLL | Writes per-type files |
+|---|---|---|---|
+| **UNNE-1B / MARIA-G / GENESIS-M** | "FSK UNNE-1B 200bd" and "800bd" | `hadesr.dll` v1.08 | no (it only prints text) |
+| **HADES-SA** | "FSK GENESIS 200bd" and "800bd" | `hadessa.dll` v1.05 | yes |
+| **HADES-L** | "FSK HADES-L 800bd" (only one) | `hadesl.dll` v1.05 | yes, plus one file set per Lofith frame |
+
+The three DLLs have different decoders (the UNNE-1B one has the Nebrija, Fraunhofer, SMART-IR and ICM payloads, the HADES-SA one
+adds ranges, BBS, SSDV, PN9 and CODEC2, the HADES-L one adds Lofith and ICM messages). The per-type output folder described in
+[output-folder.md](output-folder.md) is what the **HADES-SA and HADES-L** packages leave; the UNNE-1B package leaves nothing.
+This project's decoders for HADES-SA and HADES-L were checked against the matching package's own DLL (see the end of this page).
+
 ## Layouts the decoder recognises
 
 After each sync word the decoder looks at the next two bytes and tries every layout that fits, shortest first,
@@ -113,7 +128,7 @@ Two recordings by N6RFM (50 ksps, 800 baud), decoded with this project:
 | 9 extended power, 12 ephemeris | 1 each, CRC failed | long frames; see below |
 
 The HADES-SA decoders (a port of AMSAT-EA's code) produce sensible text for HADES-L types 3, 8 and 14, so the per-type folder
-works for HADES-L too (`sat_05_...`). Type 7 (Lofith) has no field decoder yet: it is stored as raw data.
+works for HADES-L too (`sat_05_...`), including its Lofith data and ICM messages (see the end of this page).
 
 **HADES-SA**, 2026-10-05 14:24 UTC (436.875 MHz, 285 s): 12 frames at 800 baud: status, power ranges, BBS and 9 voice frames
 (numbers 0-8, bit-identical to known good copies). The satellite clock (16 352 478 s) is exactly 189 days after the launch.
@@ -126,3 +141,45 @@ Short packets (23-41 bytes) usually survive thanks to bit repair; long ones (64-
 re-learning the tones per burst, a higher sample rate and a lower strength threshold were all tried on the HADES-L recording
 and none recovered more frames, because the information is not in the signal. Image (SSDV) packets, which carry their own
 Reed-Solomon repair, will need that repair; it is not implemented yet.
+
+
+## HADES-L specifics (from the HADES-L package's own decoder, `hadesl.dll`)
+
+**Lofith experiment, type 7** (23 bytes: type/address, 20 data bytes, CRC). Fields, in order after the type/address byte:
+
+| Bytes | Field | Notes |
+|---|---|---|
+| 1 | total frames | |
+| 2-5 | timestamp | satellite clock in seconds, little endian |
+| 6 | frame number | each frame number has its own files |
+| 7-8, 9-10, 11-12 | gauge value, gauge reference, bus-voltage reference | signed 16 bit |
+| 13-14 | payload reference | signed 16 bit |
+| 15-16 | satellite temperature | signed 16 bit, half-degrees minus 40; blank when the raw value is 255 |
+| 17-18, 19-20 | radiation counters 1 and 2 | 16 bit |
+
+Example (a real frame): 128 frames in total, frame 14, clock 64179 s (17:49:39), gauge 22957, reference 22983, bus reference
+22867, payload reference -99, temperature +9.0 degC, radiation counters 0 and 0.
+Files: `sat_05_type_07_lofith_frame_014.tlm` (latest), `..._lofith_frame_014.dat` (one line per reception of that frame number)
+and a timestamped `.tlm` per reception.
+
+**ICM message, type 15** (101 bytes): transmit time (4 bytes), message number, 93 characters, CRC. No `.dat` data (the empty file is
+created, as the Windows tool does).
+
+**Status, type 3** differs from HADES-SA's: the receiver board has an *enabled* flag (bit 4) and a *status* flag (bit 6, "OK" or
+"Unavailable"), transponder mode 1 reads "Enabled in USB->FM mode", and the last lines are `stored_frames` and `frames_last
+batch` instead of the three payload counters (the `.dat` line has one more column).
+
+**Time series, type 14**: variable 4 is the temperature of panel C (`tpc`, SPC.I2C); HADES-SA's is panel A/B.
+**Image packets (type 10)**: HADES-L has no camera; its decoder keeps the packet but writes no text.
+**Frame sizes** (type/address byte to last byte): as HADES-SA's, except type 7 = 23, type 15 = 101, type 6 unused.
+
+## How these decoders were checked
+
+`genesis.py` was run against each package's own decoder: `hadessa.dll` for HADES-SA and `hadesl.dll` for HADES-L, each executing
+its frame-processing routine in an x86 emulator (`tools/dll_oracle.py`). On random frames of every packet type, edge cases
+(all-0xFF frames, infinite and not-a-number values, extreme times) and the real frames of the recordings, the files written by
+the DLL and by this project are **identical** (names, contents, and the modes the files are opened in): HADES-SA types 1-5 and
+8-15, HADES-L types 1-5 and 7-15. All 39 verifiable real frames of the HADES-L recording match. Frames on which the DLL itself
+crashes (a division by zero in an all-zero power packet) are the only ones skipped.
+`tests/data/dll_golden_*.json` hold the DLLs' output for 82 and 81 frames and are checked on every test run;
+`tools/compare_with_dll.py` repeats the comparison on fresh random frames if you have the DLLs.

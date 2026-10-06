@@ -1,7 +1,7 @@
 # Per-type output folder (`--outdir`)
 
-AMSAT-EA's Windows tool (UZ7HO SoundModem + KISSGENESIS + `hadessa.dll`) leaves a folder with **one set of files per frame
-type**. `unne1b-decode --outdir DIR` does the same, so you can look at frames by type, hand a folder to somebody else, and
+The **HADES-SA and HADES-L** packages of AMSAT-EA's Windows tool (UZ7HO SoundModem + KISSGENESIS + `hadessa.dll` / `hadesl.dll`;
+the UNNE-1B package leaves nothing) leave a folder with **one set of files per frame type**. `unne1b-decode --outdir DIR` does the same, so you can look at frames by type, hand a folder to somebody else, and
 **add new frames from later passes to the same folder** (voice, images, telemetry) without duplicates.
 
 ```bash
@@ -26,7 +26,8 @@ For satellite `NN` (the source address: `03` HADES-SA, `12` UNNE-1B) and packet 
 | `sat_NN_type_10_ssdv_img_III_packet_PPPP.bin` | one 256-byte SSDV image packet (image `III`, packet `PPPP`) | replaced by the newest copy |
 | `sat_NN_type_10_ssdv_img_III_packet_PPPP.tlm` | the packet header as text | |
 | `sat_NN_type_13.dat` | PN9 link test: received bytes in hex, appended; `.tlm` shows the matching rate | |
-| `sat_NN_type_15.tlm` | BBS contents (callsign, message, CODEC2 frames) | |
+| `sat_NN_type_15.tlm` | BBS contents (callsign, message, CODEC2 frames); on HADES-L (`sat_05`) the ICM message | |
+| `sat_05_type_07_lofith_frame_FFF.tlm` / `.dat` | HADES-L Lofith experiment: one file set per frame number `FFF` (`.dat`: one line per reception) | |
 | `.unne1b_ingested.json` | which recordings were already added (see below) | |
 
 The file names, the text, the `.dat` columns and the `.bin` layouts are those of AMSAT-EA's tool.
@@ -106,10 +107,12 @@ uses the best pass (`--list-passes`, `--pass N`, `--combine`; see [voice.md](voi
 * **Unique additions** (above) and the **recording-start time** are new; the tool has neither.
 * Times are labelled UTC.
 * Frames whose CRC failed (shown only with `--emit-unverified`) are never written to the folder.
-* **UNNE-1B** (`sat_12_...`): the file names are the same, but the packet layouts differ from HADES-SA's, so for telemetry
-  the `.tlm` holds our usual text (the field-by-field text from `hadesr.dll` if you pass `--dll`) and the `.dat` holds the
-  descrambled frame in hex. UNNE-1B voice frames are written exactly like HADES-SA's.
-* HADES-L (`sat_05`) is assumed to share HADES-SA's layouts until real frames confirm it.
+* **UNNE-1B** (`sat_12_...`): the UNNE-1B package writes no files at all, so this is an extension. The file names follow the
+  same pattern, but the packet layouts differ from HADES-SA's, so for telemetry the `.tlm` holds our usual text (the
+  field-by-field text from `hadesr.dll` if you pass `--dll`) and the `.dat` holds the descrambled frame in hex. UNNE-1B voice
+  frames are written exactly like HADES-SA's.
+* **HADES-SA and HADES-L** (`sat_03_...`, `sat_05_...`) are decoded natively and match each package's own decoder
+  (`hadessa.dll`, `hadesl.dll`) file for file; see the end of [satellites.md](satellites.md).
 * The `.bin` of a voice frame is the newest copy received. Voice has no CRC, so a corrupted copy can overwrite a good one;
   a "keep the most frequent copy" option is planned (in one real HADES-SA folder the same voice frame had been received up to
   23 times, in several different versions).

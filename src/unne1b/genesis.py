@@ -60,9 +60,9 @@ def cdiv(a, b):
 
 
 def cf(v):
-    """printf("%f") like glibc: NaN keeps its sign ("-nan"), infinities are "inf" / "-inf"."""
+    """printf("%f") as the Windows tool (MinGW) prints it: NaN is "nan" whatever its sign (glibc would print "-nan")."""
     if v != v:
-        return '-nan' if math.copysign(1.0, v) < 0 else 'nan'
+        return 'nan'
     return '%f' % v
 
 
@@ -73,7 +73,15 @@ SAT_DESC = ['Unknown', 'Unknown', 'HADES-ICM', 'SpinnyONE HADES-SA', 'Unknown', 
 # (the original has "Unknown" at 5; HADES-L = 5 is this project's assumption, see docs/satellites.md)
 
 # bytes in a frame of each packet type as the original takes it: type/address .. last byte (CRC included where present)
-BYTES_UTILES = [2, 31, 17, 41, 35, 27, 135, 45, 31, 123, 251, 37, 64, 249, 38, 73]
+BYTES_UTILES = [2, 31, 17, 41, 35, 27, 135, 45, 31, 123, 251, 37, 64, 249, 38, 73]            # HADES-SA (and the default)
+# HADES-L (hadesl.dll): type 7 is the 23-byte Lofith packet, type 15 the 101-byte ICM message, type 6 is not used
+BYTES_UTILES_L = [2, 31, 17, 41, 35, 27, 1, 23, 31, 123, 251, 37, 64, 249, 38, 101]
+SIZES_BY_SOURCE = {3: BYTES_UTILES, 5: BYTES_UTILES_L}
+
+
+def frame_size(source, ptype):
+    table = SIZES_BY_SOURCE.get(source, BYTES_UTILES)
+    return table[ptype] if ptype < len(table) else None
 
 PACKET_DESC = ['-', 'pwr', 'tmp', 'status', 'pwr_ranges', 'tmp_ranges', 'unknown', 'unknown', 'antenna',
                'extended power - ina219', 'SSDV', 'CODEC2 voice', 'ephemeris', 'PN9 random data', 'time series', 'BBS']
@@ -81,6 +89,7 @@ PACKET_DESC = ['-', 'pwr', 'tmp', 'status', 'pwr_ranges', 'tmp_ranges', 'unknown
 INE_NAMES = ['SPA ', 'SPB ', 'SPC ', 'SPD ', 'SUN ', 'BAT ', 'BATP', 'BATN', 'CPU ', 'PL  ']
 TIME_SERIES_DESC = ['signal_peak', 'moda_noise', 'vbat1 - bat voltage read in EPS.ADC', 'tcpu', 'tpb',
                     'tpa-tpd mean_temp']
+TIME_SERIES_DESC_L = TIME_SERIES_DESC[:4] + ['tpc'] + TIME_SERIES_DESC[5:]       # HADES-L: variable 4 is temperature of panel C
 
 VOICE_XOR_KEY = bytes([
     0xed, 0x15, 0xd5, 0x3b, 0x34, 0x70, 0xe0, 0xfd, 0xed, 0x83, 0x90, 0xdb, 0xaa, 0x2e, 0x25, 0xd6, 0x5e, 0x81, 0x41,
@@ -119,8 +128,8 @@ def battery_status(v):
             6: 'Battery damaged (Below 2500 mV) - Battery disconnected'}.get(v, 'Unknown')
 
 
-def transponder_mode(v):
-    return {0: '         Disabled', 1: '         Enabled in FM mode',
+def transponder_mode(v, hades_l=False):
+    return {0: '         Disabled', 1: '         Enabled in USB->FM mode' if hades_l else '         Enabled in FM mode',
             2: '         Enabled in FSK regenerative mode'}.get(v, '         Unknown')
 
 
@@ -279,6 +288,7 @@ def decode_status(rx, sat, ctx):
     sf1, sf2, sf3 = u16(rx, 23), u16(rx, 25), rx[27]
     pct = rx[28:36]
     pframes, pparams, pimg = rx[36], rx[37], rx[38]
+    hades_l = (sat == 5)
     d, h, m, s = _dhms(sclock)
     du, hu, mu, su = _dhms(uptime)
     out = _header(ctx, 'Status packet')
@@ -306,9 +316,16 @@ def decode_status(rx, sat, ctx):
         out += 'power amplifier     :          Disabled\n'
     out += 'high speed uplink   :          %s\n' % ('OK' if (subsys >> 2) & 1 else 'Disabled')
     out += 'tx temp compensat   :          %s\n' % ('OK' if (subsys >> 3) & 1 else 'Disabled')
-    out += 'RX board            :          %s\n' % ('OK' if (subsys >> 4) & 1 else 'Disabled')
+    if hades_l:                                      # HADES-L: the receiver board has an enable flag and a status flag
+        if (subsys >> 4) & 1:
+            out += 'RX board enabled    :          OK\n'
+        else:
+            out += 'RX board            :          Disabled\n'
+        out += 'RX board status     :          %s\n' % ('OK' if (subsys >> 6) & 1 else 'Unavailable')
+    else:
+        out += 'RX board            :          %s\n' % ('OK' if (subsys >> 4) & 1 else 'Disabled')
     out += 'Variable messaging  :          %s\n' % ('OK' if (subsys >> 5) & 1 else 'Disabled')
-    out += 'mote (transponder)  : %s\n' % transponder_mode(bate_mote & 0x0f)
+    out += 'mote (transponder)  : %s\n' % transponder_mode(bate_mote & 0x0f, hades_l)
     if ntasks == 0:
         out += 'nTasksNotExecuted   :          OK\n'
     else:
@@ -336,12 +353,16 @@ def decode_status(rx, sat, ctx):
                        'ptt_lp_percent      ', 'ple_percent         ', 'bwe_percent         ',
                        'vbat_higher_vbus_p  '), pct):
         out += '%s: %10d%%\n' % (lab, v)
-    out += 'payload frames      : %10d\n' % pframes
-    out += 'payload params      : %10d\n' % pparams
-    out += 'payload current img : %10d\n' % pimg
+    if hades_l:                                      # HADES-L: the Lofith store replaces the payload counters
+        out += 'stored_frames       : %10d\n' % pframes
+        out += 'frames_last batch   : %10d\n' % pimg
+    else:
+        out += 'payload frames      : %10d\n' % pframes
+        out += 'payload params      : %10d\n' % pparams
+        out += 'payload current img : %10d\n' % pimg
     vals = [s32(sclock), s32(uptime), nrun, npayload, nwire, ntransponder, nplr >> 4, nplr & 0x0F, bate_mote >> 4,
             bate_mote & 0x0f, ntasks, antenna, neeprom, failed_task >> 6, niot, sf0, sf1, sf2, sf3] + list(pct) + \
-        [pframes]
+        ([pframes, pimg] if hades_l else [pframes])
     dat = '%d %d ' % (ctx.t, 0) + ' '.join('%d' % v for v in vals) + '\n'
     return out, dat.encode('latin-1')
 
@@ -484,6 +505,8 @@ def ssdv_file(rx):
 
 
 def decode_ssdv(rx, sat, ctx):
+    if sat == 5:                                     # HADES-L has no camera: its decoder keeps the packet but writes no text
+        return '', ssdv_file(rx)
     image_id = rx[1]
     packet_id = (rx[2] << 8) | rx[3]
     width, height, flags, mcu_off = rx[4], rx[5], rx[6], rx[7]
@@ -543,6 +566,7 @@ def decode_ephemeris(rx, sat, ctx, tle_big_endian=False):
     alt = be16(rx, 59)
 
     def stamp(sec):
+        sec = s32(sec)                      # the Windows tool's time_t is a signed 32-bit number
         d = datetime.datetime.fromtimestamp(sec, datetime.timezone.utc)
         return '%04d-%02d-%02d %02d:%02d:%02d' % (d.year, d.month, d.day, d.hour, d.minute, d.second)
     out = _header(ctx, 'Ephemeris packet')
@@ -575,7 +599,8 @@ def decode_time_series(rx, sat, ctx):
     out = _header(ctx, 'Time series packet')
     out += 'sat_id      : %d (%s)\n' % (sat, source_desc(sat))
     out += 'sclock\t    : %d seconds (%d days and %02d:%02d:%02d hh:mm:ss)\n' % (s32(clock), d, h, m, s)
-    out += 'Variable    : %d (%s)\n' % (variable, TIME_SERIES_DESC[variable] if variable < 6 else 'Unknown')
+    desc = TIME_SERIES_DESC_L if sat == 5 else TIME_SERIES_DESC
+    out += 'Variable    : %d (%s)\n' % (variable, desc[variable] if variable < 6 else 'Unknown')
     dat = '%d %d ' % (ctx.t, 0)
     for i, v in enumerate(data):
         age = (29 - i) * 3
@@ -591,6 +616,8 @@ def decode_time_series(rx, sat, ctx):
                     5: 'degC temperature mean 4 panels (SPA-SPD).I2C'}[variable]
             blank = {3: 'degC temperature in CPU.ADC', 4: 'degC temperature in SPB.I2C',
                      5: 'degC temperature mean 4 panels (SPA-SPD).I2C'}[variable]
+            if sat == 5 and variable == 4:                       # HADES-L: panel C in both lines
+                text = blank = 'degC temperature in SPC.I2C'
             if v == 255:
                 out += 'Data [%03d]  :       %s - Sampled at (T-%03d) minutes\n' % (i, blank, age)
             else:
@@ -603,9 +630,53 @@ def decode_time_series(rx, sat, ctx):
     return out, dat.encode('latin-1')
 
 
+def decode_lofith(rx, sat, ctx):
+    """HADES-L type 7: one frame of the Lofith experiment (23 bytes: type/address, 20 data bytes, CRC)."""
+    total, ts, number = rx[1], u32(rx, 2), rx[6]
+    gauge, gref, vref, pref = s16(u16(rx, 7)), s16(u16(rx, 9)), s16(u16(rx, 11)), s16(u16(rx, 13))
+    temp, rad1, rad2 = s16(u16(rx, 15)), u16(rx, 17), u16(rx, 19)
+    d, h, m, sec = _dhms(ts)
+    out = _header(ctx, 'Lofith payload packet')
+    out += 'sat_id           : %d (%s)\n' % (sat, source_desc(sat))
+    out += 'total frames     : %d\n' % total
+    out += 'timestamp        : %d seconds (satellite clock was %d days and %02d:%02d:%02d hh:mm:ss)\n' % (s32(ts), d, h, m, sec)
+    out += 'frame number     : %d\n' % number
+    out += 'gaugue value     : %d\n' % gauge
+    out += 'gauge ref value  : %d\n' % gref
+    out += 'vbus ref voltage : %d\n' % vref
+    out += 'payload ref      : %d\n' % pref
+    if temp == 255:
+        out += 'satellite temp   :\n'
+    else:
+        out += 'satellite temp   : %+5.1f degC\n' % (temp / 2.0 - 40.0)
+    out += 'radiation cont 1 : %d\n' % rad1
+    out += 'radiation cont 2 : %d\n\n' % rad2
+    dat = '%d %d %d %d %d %d %d %d %d %f %d %d\n' % (ctx.t, 0, total, s32(ts), number, gauge, gref, vref, pref,
+                                                      temp / 2.0 - 40.0, rad1, rad2)
+    return out, dat.encode('latin-1')
+
+
+def decode_icm(rx, sat, ctx):
+    """HADES-L type 15: an ICM story message (101 bytes: type/address, tx time, message number, 93 characters, CRC)."""
+    ts, number = u32(rx, 1), rx[5]
+    d, h, m, sec = _dhms(ts)
+    out = '*** ICM message received on %s %s ***\n' % (ctx.zone, ctx.fecha)
+    out += 'sat_id         : %d (%s)\n' % (sat, source_desc(sat))
+    out += 'tx time        : %d seconds (satellite clock was %d days and %02d:%02d:%02d hh:mm:ss)\n' % (s32(ts), d, h, m, sec)
+    out += 'Message number : %03d\n' % number
+    out += 'Message        : ' + ''.join(chr(b) for b in rx[6:99]) + '\n'
+    return out, b''
+
+
 DECODERS = {1: decode_power, 2: decode_temp, 3: decode_status, 4: decode_power_ranges, 5: decode_temp_ranges,
             8: decode_deploy, 9: decode_ine, 10: decode_ssdv, 11: decode_codec2, 12: decode_ephemeris,
             13: decode_pn9, 14: decode_time_series, 15: decode_bbs}
+DECODERS_L = {**DECODERS, 7: decode_lofith, 15: decode_icm}               # HADES-L: Lofith data and ICM messages
+DECODERS_BY_SOURCE = {3: DECODERS, 5: DECODERS_L}
+
+
+def decoders_for(source):
+    return DECODERS_BY_SOURCE.get(source, DECODERS)
 
 # ---- file names and writing --------------------------------------------------------------------------------------
 
@@ -614,7 +685,7 @@ def frame_for_decoder(ptype, source, plain):
     """Build the byte string the decoders take (`rx`) from a deframer frame (type/address + descrambled data, no CRC),
     padding the CRC bytes the original expects so offsets and lengths match."""
     rx = bytes(plain)
-    want = BYTES_UTILES[ptype] if ptype < len(BYTES_UTILES) else len(rx)
+    want = frame_size(source, ptype) or len(rx)
     if len(rx) < want:
         rx = rx + bytes(want - len(rx))
     return rx
@@ -628,6 +699,9 @@ def names_for(ptype, source, rx, ctx, as_type=None):
     if ptype == 11:
         key = 'sat_%02d_type_%02d_codec2_frame_%03d' % (source, as_type if as_type is not None else ptype, rx[1])
         return ('%s_%s.tlm' % (ctx.fecha_fichero, key), key + '.tlm', key + '.bin', 'wb')
+    if ptype == 7 and source == 5:                       # HADES-L Lofith: one file set per frame number
+        key = 'sat_%02d_type_%02d_lofith_frame_%03d' % (source, ptype, rx[6])
+        return ('%s_%s.tlm' % (ctx.fecha_fichero, key), key + '.tlm', key + '.dat', 'ab')
     if ptype == 14:
         key = 'sat_%02d_type_%02d_%02d' % (source, ptype, rx[5])
         return ('%s_%s.tlm' % (ctx.fecha_fichero, key), key + '.tlm', key + '.dat', 'ab')
@@ -641,7 +715,7 @@ def decode_frame(ptype, source, plain, ctx, voice=False):
         rx = bytes(plain)
         text, dat = decode_codec2(rx, source, ctx)
         return text, dat, names_for(11, source, rx, ctx, as_type=ptype)
-    fn = DECODERS.get(ptype)
+    fn = decoders_for(source).get(ptype)
     if fn is None:
         return None
     rx = frame_for_decoder(ptype, source, plain)
@@ -649,7 +723,8 @@ def decode_frame(ptype, source, plain, ctx, voice=False):
     return text, dat, names_for(ptype, source, rx, ctx)
 
 
-# satellites whose frames the decoders above understand (HADES-SA = 3; HADES-L = 5 is assumed to share the layouts)
+# satellites whose frames the decoders above understand: HADES-SA (3) and HADES-L (5), each checked against its own
+# package's decoder DLL (hadessa.dll / hadesl.dll)
 NATIVE_SOURCES = (3, 5)
 
 
@@ -727,7 +802,7 @@ class FolderWriter(object):
         voice = bool(frame.get('voice'))
         if voice:                                                 # voice payload only: rebuild type/number/payload
             plain = bytes([(ptype << 4) | source, frame['number']]) + plain
-        if not voice and (source not in NATIVE_SOURCES or ptype not in DECODERS):
+        if not voice and (source not in NATIVE_SOURCES or ptype not in decoders_for(source)):
             touched = self._write_generic(frame, t)
             self._count(source, ptype, touched)
             return touched
