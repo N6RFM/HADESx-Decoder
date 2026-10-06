@@ -720,6 +720,9 @@ class FolderWriter(object):
         """frame: a deframer frame dict (type, src, plain, voice ...).  t: reception time (epoch seconds).
         Returns the list of files touched."""
         ptype, source = frame['type'], frame['src']
+        if frame.get('crc_ok') is False:                          # shown with --emit-unverified: never stored
+            self.stats['unverified_skipped'] = self.stats.get('unverified_skipped', 0) + 1
+            return []
         plain = bytes.fromhex(frame['plain'])
         voice = bool(frame.get('voice'))
         if voice:                                                 # voice payload only: rebuild type/number/payload

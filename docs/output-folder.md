@@ -104,6 +104,7 @@ Voice frames that never arrived leave a gap: `c2dec` would then play the followi
 
 * **Unique additions** (above) and the **recording-start time** are new; the tool has neither.
 * Times are labelled UTC.
+* Frames whose CRC failed (shown only with `--emit-unverified`) are never written to the folder.
 * **UNNE-1B** (`sat_12_...`): the file names are the same, but the packet layouts differ from HADES-SA's, so for telemetry
   the `.tlm` holds our usual text (the field-by-field text from `hadesr.dll` if you pass `--dll`) and the `.dat` holds the
   descrambled frame in hex. UNNE-1B voice frames are written exactly like HADES-SA's.

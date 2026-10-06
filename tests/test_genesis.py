@@ -174,8 +174,8 @@ def test_hades_sa_recording_to_folder_through_the_command_line(tmp_path):
         b = sample[ptype]
         pieces.append(synth.fsk_iq(synth.make_sized_packet(ptype, 3, b[1:-2]), baud=800, shift=1600, center=-6000,
                                    snr_db=32, drift=80))
-    # an SSDV packet: size byte, type/address, scrambled data, no CRC16
-    body = bytes([0xA3]) + core.scramble(ssdv_packet[6:])
+    # an SSDV packet: size byte, type/address, data as is (not scrambled), no CRC16
+    body = ssdv_packet[5:]
     pieces.append(synth.fsk_iq(b'\xaa' * 16 + b'\xbf\x35' + bytes([251]) + body, baud=800, shift=1600, center=-6000,
                                snr_db=32))
     pkt, pay = synth.make_sized_voice(3, addr=3, vtype=11)         # three voice frames
@@ -200,3 +200,14 @@ def test_hades_sa_recording_to_folder_through_the_command_line(tmp_path):
     assert {n: (out / n).read_bytes() for n in os.listdir(out) if n.endswith('.dat')} == before
     assert main([str(path), '--fs', '50000', '--outdir', str(out), '--force']) == 0
     assert (out / 'sat_03_type_01.dat').read_bytes() == first
+
+
+def test_frames_that_failed_their_crc_are_never_written_to_the_folder(tmp_path):
+    w = g.FolderWriter(str(tmp_path))
+    bad = hades_frame(1, bytes(range(28)))
+    bad['crc_ok'] = False                                       # what --emit-unverified reports
+    assert w.write(bad, 1775074700) == []
+    assert os.listdir(tmp_path) == [] and w.stats['unverified_skipped'] == 1
+    good = dict(bad, crc_ok=True)
+    assert w.write(good, 1775074700) != []
+

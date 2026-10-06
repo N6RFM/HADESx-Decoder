@@ -737,7 +737,7 @@ class Unne1bDeframer(object):
         """Returns (check(raw) -> bool, plain_of(raw)) for a layout.  `raw` = the bytes after the sync word."""
         if kind == 'ssdv':                                   # HADES-SA image packet: no CRC16, SSDV's own CRC32
             def plain_of(raw):
-                return raw[1:2] + descramble(raw[2:])
+                return raw[1:]                               # sent without the scrambler (like PN9: see docs/satellites.md)
 
             def check(raw):
                 return ssdv_crc_ok(b'\x55\x66\xbf\x35' + raw[0:1] + plain_of(raw))
@@ -829,7 +829,7 @@ class Unne1bDeframer(object):
                     self.scan = a
                     break
                 raw = bits_to_bytes(self.bits[a + 16:a + 16 + nbits])
-                plain = raw[1:2] + descramble(raw[2:])
+                plain = raw[1:]                              # the PN9 pattern goes out as is (no scrambler): verified on air
                 self.nframes += 1
                 frames.append(self._frame_dict('sized', plain, raw, [], None))
                 self.scan = a + 16 + nbits

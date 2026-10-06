@@ -1,0 +1,94 @@
+{
+ "source": "Frames decoded by this project from a real HADES-L recording made by N6RFM: hadesl_50000SPS_436665000Hz_2026_10_04_T10-35-21.iq (2026-10-04 10:35:21 UTC, 436.665 MHz, 50 ksps, 800 baud). Only the decoded frame bytes are stored.",
+ "note": "plain = type/address byte + descrambled data (no size byte, no CRC); raw = bytes after the sync word as received (size byte, type/address, scrambled data, CRC). PN9 frames are not scrambled: raw[2:] is the pattern itself.",
+ "frames": [
+  {
+   "type": 3,
+   "crc_ok": true,
+   "size": 41,
+   "plain": "350b4302000b43020001000d050005003bff01000200ffffffffff00000c000c0005003280000f",
+   "raw": "29358b4738b0891132c2c936155b302766a50fe57e6cb4a7fd3571eb88b098527cc0ddde5e20926f2eb9",
+   "t_in_file_s": 112.6
+  },
+  {
+   "type": 8,
+   "crc_ok": true,
+   "size": 31,
+   "plain": "85780f0c0000000000e02e6c0ff0ff9024eb1b00008c000102010004d4",
+   "raw": "1f85f809f2a652ae268c986adc2d3a8bbab8b149542a56eef5c02958a23a0db0",
+   "t_in_file_s": 32.6
+  },
+  {
+   "type": 14,
+   "crc_ok": true,
+   "size": 38,
+   "plain": "e54743020001c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0",
+   "raw": "26e5c7450078432c40560a928c3ec0f83e3ebedac8545a18e204d4f6cc408a0cf856fc144ecc5b",
+   "t_in_file_s": 172.6
+  },
+  {
+   "type": 14,
+   "crc_ok": true,
+   "size": 38,
+   "plain": "e55b43020002bbbcbbb8babbbabbb8b7bab8b9b9bab9bab9b7b7b9b5b7b8babcb9b6bab9",
+   "raw": "26e5db4572ba80610e378080cfac9ff81ba4569fafb4f19a23cd9db513b1b64870f3fe6a7dbb0f",
+   "t_in_file_s": 192.6
+  },
+  {
+   "type": 7,
+   "crc_ok": true,
+   "size": 23,
+   "plain": "7580b3fa00000ead59c75953599dff620000000000",
+   "raw": "177500b3fed8c09231032151f51553ef6686706aaca04c7a",
+   "t_in_file_s": 3.6
+  },
+  {
+   "type": 7,
+   "crc_ok": true,
+   "size": 23,
+   "plain": "7580d125010000ac57f9571e5995ff570000000000",
+   "raw": "177500d1235b8e4626a701bb7aa5d7dd530882049834025b",
+   "t_in_file_s": 4.6
+  },
+  {
+   "type": 7,
+   "crc_ok": true,
+   "size": 23,
+   "plain": "7580f025010001a459ef59fa5994ff530000000000",
+   "raw": "177500f023df8a477eeb7f0fac85d43959a4ee02e4eea37d",
+   "t_in_file_s": 5.6
+  },
+  {
+   "type": 7,
+   "crc_ok": true,
+   "size": 23,
+   "plain": "7580b35401000b9559db59f3599aff5e0000000000",
+   "raw": "177500b350dd6c63eb1b4f9167e90823fe0ac6cea6444de4",
+   "t_in_file_s": 19.6
+  },
+  {
+   "type": 7,
+   "crc_ok": true,
+   "size": 23,
+   "plain": "7580ed5401000cb159295a575a9aff650000000000",
+   "raw": "177500ed52af86845d3b1374bfa0308ba73c2c967088ed44",
+   "t_in_file_s": 20.6
+  },
+  {
+   "type": 13,
+   "crc_ok": null,
+   "size": 249,
+   "plain": "d5394cd2dc635c47dd5ab5234f86d67f083194f4b483edde9b68f2e91b57c2540f4bc58a38d50139e96492dc635c47dd3ee846e21fb909208afff2d27159796bc81b8946e4b3d1b193e58a38d501396092cabd9494e84f69117eac7f372f72e19e31b2e858f777565b8946e4b3d15ff4ba5021e1ea611b699a34377117f378f40ceb26c6c5be037e31b2e858f7da9897c1194147ec6739f0beab682a9c7399ce9e32c95525b8f40ceb26c6c5b7aa9bfb63d2eeeb49c24eda1b52cb17a4b5140f909bbb8a3d59ce9e32c95587e90fd83cf93f9c24670933acb4897ec2f1a252eeaf85adc275140f909bbb0f61c9ae14f740391fadbacec26610",
+   "raw": "f9d5b94826747de0ff87b859b7a1cc24575e218694b8a55fd8aff6d8c907ef5c9291d5b1c4a8d9f3c5b94826747de0ff87dc064c38479d9d2628a332ce995de997b0d5390c42011191d5b1c4a8d9f3c530ba48411e1c92d9f54d32d4775fbb64fda49bf2d4289d97b0d5390c4201117fb448744bbd8e23f3036c1eabcf4d71a2fe96298c066564fda49bf2d4289d3a7abb8343fb61384bdd56763bdea25a0ddb582ef8f34d71a2fe96298c06656d546563bd122861cfc8680037d21325ce0774f528155f5a0ddb582ef8f34dd3f79b3a26b707325ccb55c150eec5dc2cdbd0e6122baf25ce0774f528155fdf5549167c2fde439f49f200944250",
+   "t_in_file_s": 145.6
+  },
+  {
+   "type": 13,
+   "crc_ok": null,
+   "size": 249,
+   "plain": "d5394cd2dc634c4fad7afba2ff17111b05a5a424bcc1cdf61b4872e91357e2d40f4bc58a38d50139e96492dc635c47dd3ee846e21fb909208afff2d27159796bc81b8946e4b3d1b193e58a38d501396092cabd9494e84f69117eac7f372f72e19e31b2e858f777565b8946e4b3d15ff4ba5021e1ea611b699a34377117f378f40ceb26c6c5be037e31b2e858f7da9897c1194147ec6739f0beab682a9c7399ce9e32c95525b8f40ceb26c6c5b7aa9bfb63d2eeeb49c24eda1b52cb17a4b5140f909bbb8a3d59ce9e32c95587e90fd83cf93f9c24670933acb4897ec2f1a252eeaf85adc275140f909bbb0f61c9ae14f740391fadb8ceaa56bd",
+   "raw": "f9d5b94826747df0f7b5b8591615cd25735321c686b8ad5fd0aff6d8c90fef5c9291d5b1c4a8d9f3c5b94826747de0ff87dc064c38479d9d2628a332ce995de997b0d5390c42011191d5b1c4a8d9f3c530ba48411e1c92d9f54d32d4775fbb64fda49bf2d4289d97b0d5390c4201117fb448744bbd8e23f3036c1eabcf4d71a2fe96298c066564fda49bf2d4289d3a7abb8343fb61384bdd56763bdea25a0ddb582ef8f34d71a2fe96298c06656d546563bd122861cfc8680037d21325ce0774f528155f5a0ddb582ef8f34dd3f79b3a26b707325ccb55c150eec5dc2cdbd0e6122baf25ce0774f528155fdf5549167c2fde439f49f000f45071",
+   "t_in_file_s": 140.6
+  }
+ ]
+}

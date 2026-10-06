@@ -32,7 +32,7 @@ IQ file / SDR  ->  FSK tracker (finds the signal anywhere in the band, follows i
   soft-decision repair of up to 3 bit errors.
 * **Decodes CODEC2 voice** (type 15) - 10 x 28-bit Codec2 700C frames per packet - into a WAV,
   with optional pitch-preserving speed-up.
-* **Also understands HADES-SA and HADES-L frames** (length-byte layout, 800 and 200 baud, automatic): framing, CRC and demodulation are tested with AMSAT-EA's sample frames and synthetic signals, but **not yet on a real recording**; see [Supported satellites](docs/satellites.md).
+* **Also understands HADES-SA and HADES-L frames** (length-byte layout, 800 and 200 baud, automatic): tested on **real recordings** of HADES-SA and HADES-L (telemetry and voice decode; image packets are not decoded yet) and with AMSAT-EA's sample frames; see [Supported satellites](docs/satellites.md).
 * **Per-type output folder** (`--outdir`): the same files as AMSAT-EA's Windows tool (labelled `.tlm`, `.dat` data lines, `.bin` voice and image files), and **new frames from later passes are added to the same folder** without duplicates. HADES-SA frames are decoded natively (no DLL); see [Output folder](docs/output-folder.md).
 * **Optional official decode text**: run AMSAT-EA's own `hadesr.dll` inside an x86 emulator
   (no Wine needed) to get the labelled values (battery voltage, temperatures, ...). You supply the DLL.
