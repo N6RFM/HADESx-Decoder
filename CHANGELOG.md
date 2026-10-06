@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+* Documentation brought up to date (layout and tests, limitations and roadmap, the signal chain at any sample rate, README introduction) and `tests/test_docs.py`, which keeps every option, tool, module and link documented.
 * `unne1b-report FOLDER`: print the telemetry of a per-type output folder on the console, oldest first (`--summary`, `--brief`, `--sat`, `--type`, `--since`, `--until`; `--dll` renders UNNE-1B packets with all their fields from the saved data).
 * Example: `examples/iq/sdrconsole_two_satellites.wav`, an excerpt of an SDR Console recording of UNNE-1B and HADES-L shared by José Elías Díaz, EB1AO (WAV, two satellites, two baud rates), with a test.
 * `tools/cut_excerpt.py`: cut a small excerpt (segments, filtering to a lower rate, frequency shift for two distant satellites) out of a big recording as a labelled I/Q WAV; `unne1b.iqfile.write_iq_wav`.

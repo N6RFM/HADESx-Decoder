@@ -90,6 +90,7 @@ data (descrambled): ...
 |---|---|
 | `--fs 50000` | IQ sample rate in Hz: read from a WAV header or a file name like `..._50000SPS_...`, else 50000; `--fs guess` works it out from the signal |
 | `--format auto\|cf32\|cs16\|cu8\|wav` | sample format (default `auto`: a `.wav` file is read as WAV, anything else as `cf32`) |
+| `--guess-samples N` | with `--fs guess`: how many samples from the start of the file to examine for each candidate rate (default 24 million, which is 24 s at 1 Msps) |
 | `--swap-iq` | exchange I and Q (for recordings that decode nothing: some recorders write Q first) |
 | `--center auto\|HZ` | `auto` (default) = adaptive tracker; or a fixed centre offset in Hz |
 | `--min-db 15` | tracker detection threshold above the noise floor; lower = more sensitive, more false alarms |

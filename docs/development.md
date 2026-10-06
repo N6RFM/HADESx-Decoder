@@ -3,36 +3,52 @@
 ## Layout
 
 ```
-src/unne1b/core.py     protocol constants, CRC, scrambler, voice helpers, DLL emulation,
-                       FskCentreTracker, Unne1bDeframer, format_frame     (ONE self-contained file)
-src/unne1b/cli.py      unne1b-decode
-src/unne1b/voice.py    unne1b-voice (WSOLA speed change, c2dec wrapper)
-grc/unne1b_decoder.grc generated flowgraph
-tools/build_grc.py     generates grc/ from core.py
-tools/build_standalone.py  core + voice + cli -> dist/unne1b_standalone.py
-tools/make_plots.py    regenerates docs/img
-tests/                 pytest suite
+src/unne1b/core.py       protocol constants, CRC, scrambler, voice helpers, hadesr.dll emulation, FskCentreTracker,
+                         Unne1bDeframer / MultiBaudDeframer, format_frame            (ONE self-contained file)
+src/unne1b/genesis.py    HADES-SA and HADES-L decoders (ports of AMSAT-EA's code, checked against the DLLs of the HADES-SA and
+                         HADES-L packages) and the per-type output folder                (self-contained as well)
+src/unne1b/iqfile.py     reading IQ recordings: raw files and WAV (header, sample formats, file names); sample-rate guess;
+                         write_iq_wav
+src/unne1b/frontend.py   the signal chain at any sample rate: tracker -> staged decimation -> channel filter -> deframers
+src/unne1b/cli.py        unne1b-decode
+src/unne1b/voice.py      unne1b-voice (one WAV per satellite with tags inside, folder input, WSOLA speed change, c2dec wrapper)
+src/unne1b/report.py     unne1b-report (prints what a per-type folder holds)
+grc/unne1b_decoder.grc   generated flowgraph
+tools/                   survey/probe/excerpt tools, builders, DLL comparison tools: see tools/README.md
+tests/                   pytest suite (tests/data holds the golden files and real frames)
+examples/                small real recordings and what they decode to
 ```
 
-`core.py` stays a single file with only numpy as a hard dependency because it is embedded verbatim in the
-GNU Radio Embedded Python blocks. Do not add imports of sibling modules to it.
+`core.py` and `genesis.py` are embedded verbatim in the GNU Radio Embedded Python blocks, so they stay single files that import
+nothing from the package (`core.py` needs only numpy). The other modules import them. Do not add imports of sibling modules to those two.
 
 ## Tests
 
 ```bash
 pip install -e ".[dev]"
-pytest -q                # 64 tests, about 15 s
+pytest -q                # several hundred tests, about a minute
 ```
 
 | File | What it checks |
 |---|---|
 | `tests/test_protocol.py` | CRC vector, PDF scrambler example, equality with AMSAT-EA's reference C output, voice helpers |
 | `tests/test_deframer.py` | every packet type at several band positions (tracker + decoder), bit-repair, voice burst, noise-only, corrupted CRC rejection |
-| `tests/test_examples.py` | the bundled IQ excerpts through the CLI, with known `sclock` values and bytes |
-| `tests/test_voice.py` | WSOLA, `c2dec` length (skipped if codec2 is absent), JSON loading |
-| `tests/test_grc.py` | the committed `.grc` equals what `build_grc.py` generates; valid YAML |
+| `tests/test_sized_framing.py` | HADES-SA / HADES-L style frames (length byte), 800 and 200 baud, automatic baud detection, console text |
+| `tests/test_genesis.py` | the per-type decoders and the folder writer against AMSAT-EA's compiled reference program and real Windows-tool files |
+| `tests/test_dll_golden.py` | `genesis.py` against the files the HADES-SA and HADES-L packages' own DLLs write (82 + 81 frames, every type) |
+| `tests/test_dll_check.py` | `--dll` accepts only the UNNE-1B package's `hadesr.dll` and says which package a wrong DLL belongs to |
+| `tests/test_hades_l.py` | frames from a real HADES-L recording: Lofith, ICM, status, PN9, the per-type folder |
+| `tests/test_wav.py` | WAV and raw recordings: header, every sample format, any sample rate with the signal off-centre, swapped I/Q, file names, `--fs guess` |
+| `tests/test_standalone.py` | the single-file build decodes raw and WAV recordings and writes voice WAVs |
+| `tests/test_cut_excerpt.py` | `tools/cut_excerpt.py` on a two-satellite recording: labelled, small, still decodes |
+| `tests/test_voice.py`, `tests/test_voice_sat.py` | WSOLA and `c2dec` (skipped if codec2 is absent); per-satellite WAVs, tags, stray frame numbers, passes in a folder, a real HADES-SA folder |
+| `tests/test_report.py` | `unne1b-report`: order, filters, summary, UNNE-1B through a DLL |
+| `tests/test_examples.py`, `tests/test_example_sdrconsole.py` | the bundled recordings through the command line, with known clocks and bytes |
+| `tests/test_hexport.py`, `tests/test_grc.py` | the flowgraph block's hex port; the committed `.grc` equals what `build_grc.py` generates |
+| `tests/test_docs.py` | the documentation stays honest: every command-line option is documented, every tool and module is listed, links resolve |
 
-`tests/synth.py` contains a small 200 baud FSK modulator and packet builder, handy for experiments:
+`tests/synth.py` contains a small FSK modulator and packet builder (200 and 800 baud), handy for experiments, and `tests/wavhelp.py`
+writes WAV files in any format:
 
 ```python
 import synth
@@ -42,7 +58,7 @@ print(synth.decode_iq(x))
 
 ## Regenerating generated files
 
-After changing `core.py`:
+After changing `core.py` or `genesis.py`:
 
 ```bash
 python3 tools/build_grc.py            # grc/unne1b_decoder.grc (the test fails otherwise)
@@ -51,10 +67,20 @@ python3 tools/make_plots.py [FULL_PASS.iq]
 ```
 
 To check the flowgraph compiles and runs (needs GNU Radio): `grcc -o /tmp/out grc/unne1b_decoder.grc`.
+The golden test data (`tests/data/*golden*.json`) is regenerated with the tools described in [tools/README.md](../tools/README.md); that
+needs AMSAT-EA's decoder DLLs or reference program, which are not in the repository.
 
-## Cross-checking against the reference C code
+## Cross-checking against AMSAT-EA's decoders
 
-`tests/data/reference_vectors.json` was generated with:
+Three layers, from the oldest to the strictest:
+
+1. `tests/data/reference_vectors.json`: CRC, scrambler and voice helpers against AMSAT-EA's C functions (below).
+2. `tests/data/genesis_golden.json`: every packet type of HADES-SA through AMSAT-EA's open-source reference program compiled from
+   source (Linux).
+3. `tests/data/dll_golden_hades_sa.json` and `dll_golden_hades_l.json`: the files the DLLs of the two Windows packages write for the same
+   frames, which is the behaviour users see. These win where the Linux program differs (32-bit times, `nan` without a sign).
+
+The first was generated with:
 
 ```bash
 git clone https://github.com/AMSAT-EA/HADES-SA_SpinnyONE
@@ -67,7 +93,7 @@ gcc -o harness harness.c genesis_scrambler.c genesis_crc.c
 
 ## Style
 
-Plain Python, numpy/scipy only, no type-annotation requirements. Keep the GNU Radio embedding constraint above in mind.
+Plain Python, numpy/scipy only, no type-annotation requirements. Keep the embedding constraint above in mind.
 
 ## Releasing
 

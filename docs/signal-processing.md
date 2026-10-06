@@ -1,12 +1,14 @@
 # Signal processing
 
-From IQ samples to verified frames. Everything is in `src/unne1b/core.py` (`FskCentreTracker`,
-`Unne1bDeframer`); the command-line tool and the GNU Radio flowgraph run the same code.
+From IQ samples to verified frames. The tracker and the deframers are in `src/unne1b/core.py` (`FskCentreTracker`,
+`Unne1bDeframer`, `MultiBaudDeframer`) and the chain that joins them is `src/unne1b/frontend.py` (`FrontEnd`); the command-line tool
+and the GNU Radio flowgraph run the same code.
 
 ```
-IQ (50 ksps)
+IQ (any sample rate from 48 kHz; 50 ksps is the reference case)
   -> FskCentreTracker      finds the two FSK tones anywhere in the band, mixes the centre to 0 Hz
-  -> low-pass 2.35 kHz, decimate by 5 (10 ksps = 50 samples per symbol)
+  -> staged decimation to about 50 kHz (only above 75 kHz)
+  -> low-pass 2.35 kHz, decimate to about 10 ksps (50 samples per symbol at 200 baud, 12.5 at 800 baud)
   -> Unne1bDeframer
        FM discriminator + slow DC removal
        zero-crossing clock recovery (DPLL)
@@ -18,11 +20,30 @@ IQ (50 ksps)
 
 The frequency tracker has its own page: [tracking.md](tracking.md).
 
+## 0. Any sample rate
+
+Recordings come at 48 kHz, 192 kHz, 1 Msps and more, and the satellite can be anywhere in the band. The chain therefore works in
+this order:
+
+1. **Tracker first, at the full rate.** Its FFT grows with the sample rate (8192 points up to 80 ksps, then proportional, at most 2^18),
+   so the bins stay about 6 Hz wide and the signal is found as well at 1 Msps as at 50 ksps. It mixes the centre of the FSK pair to 0 Hz,
+   wherever it was.
+2. **Staged decimation** to about 50 kHz: the factor `round(fs / 50 kHz)` is split into stages of at most 10, each with its own
+   low-pass (`8q + 1` taps, cut-off 0.4 of its output rate), for example 1 Msps = 10 x 2, 2 Msps = 10 x 4, 192 kHz = 4. At 75 ksps and
+   below there is no coarse stage, so the chain is exactly the one described next.
+3. The **channel filter** below.
+
+In an experiment with a real UNNE-1B packet at 10-24 dB signal-to-noise ratio in the channel, 1 Msps decoded exactly as often as 50 ksps,
+also with a strong carrier outside the channel. Rates below 48 kHz are untested. If a WAV header has no sample rate,
+`iqfile.guess_sample_rate` finds it from the signal: only the true rate decodes with the nominal 1.6 kHz tone spacing and a symbol clock
+at its nominal value.
+
 ## 1. Channel filter and decimation
 
-A 129-tap low-pass (`firwin(129, 2350 Hz)`) at the input rate, then decimation to about 50 samples per symbol
-(`decim = round(fs / (50 * baud))`, so 5 at 50 ksps). The pass-band must contain both tones (about +-820 Hz around the
-centre) and the 200 baud sidebands; 2.35 kHz leaves room for the tracker's few-hundred-hertz residual error.
+A 129-tap low-pass (`firwin(129, 2350 Hz)`) at about 50 kHz, then decimation to about 10 ksps (`decim = round(fs1 / 10 kHz)`, so 5 at
+50 ksps): 50 samples per symbol at 200 baud and 12.5 at 800 baud, which the multi-baud deframer handles together. The pass-band must contain both
+tones (about +-820 Hz around the centre at 200 baud, +-800 Hz plus sidebands at 800 baud) and the sidebands; 2.35 kHz leaves room for the
+tracker's few-hundred-hertz residual error.
 
 ## 2. Discriminator
 

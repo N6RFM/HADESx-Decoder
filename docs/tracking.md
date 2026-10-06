@@ -8,7 +8,8 @@ decoder needs constant retuning. `FskCentreTracker` removes that chore.
 
 ## What it does
 
-1. Every **0.1 s** it takes an 8192-point FFT (0.164 s of signal, 6.1 Hz bins) of the wideband IQ.
+1. Every **0.1 s** it takes an 8192-point FFT (at 50 ksps: 0.164 s of signal, 6.1 Hz bins) of the wideband IQ. Above 80 ksps the FFT
+   grows with the sample rate (at most 2^18 points), so the bins stay about 6 Hz wide.
 2. It looks for the **two-tone signature** of the FSK: two spectral peaks, both at least 15 dB above the noise floor
    (median of the spectrum), 1.0-2.4 kHz apart, the weaker no more than 10 dB below the stronger. Peaks are refined
    with parabolic interpolation. The midpoint of the pair is the **FSK centre**.

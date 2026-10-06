@@ -2,13 +2,13 @@
 
 [![tests](https://github.com/N6RFM/UNNE-1B-Decoder/actions/workflows/ci.yml/badge.svg)](https://github.com/N6RFM/UNNE-1B-Decoder/actions/workflows/ci.yml)
 
-Decode the **UNNE-1B (HADES-E2)** amateur-radio satellite straight from an SDR recording:
-200 baud FSK telemetry (CRC-checked, with the official field-by-field readout) and the
-**CODEC2 voice message** (to a WAV file) - with **automatic Doppler / frequency tracking**,
+Decode the **UNNE-1B (HADES-E2)**, **HADES-SA** and **HADES-L** amateur-radio satellites straight from an SDR recording (raw IQ, or a WAV
+file from SDR#, HDSDR or SDR Console, at any sample rate): 200 and 800 baud FSK telemetry (CRC-checked, with field-by-field readouts)
+and the **CODEC2 voice message** (to a WAV file named after its satellite) - with **automatic Doppler / frequency tracking**,
 so you never have to chase the signal by hand.
 
 UNNE-1B is a 1.5P PocketQube built by [AMSAT-EA](https://www.amsat-ea.org/) with Universidad Nebrija,
-downlink **436.888 MHz**. This project is an independent, open-source ground-station decoder; it is
+downlink **436.888 MHz**; HADES-SA (436.875 MHz) and HADES-L (436.665 MHz) are sister satellites that share the signal format. This project is an independent, open-source ground-station decoder; it is
 not an AMSAT-EA product; AMSAT-EA has reviewed the credit given here and confirmed it is correct (October 2026).
 It is built on the open documentation and
 source code that AMSAT-EA publishes - see [Acknowledgements](#acknowledgements-and-licence).
