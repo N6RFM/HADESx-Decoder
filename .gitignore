@@ -12,3 +12,5 @@ dist/
 *.dll
 *.exe
 grc/*.py
+decode.txt
+frames.jsonl
