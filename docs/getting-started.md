@@ -27,12 +27,36 @@ A single-file build for copying to another machine: `python3 tools/build_standal
 * **Complex baseband IQ** around the downlink, **436.888 MHz**, at any sample rate. The decoder was developed
   at **50 000 samples/s**, which is enough to cover the whole Doppler excursion of a pass (the signal moved
   between -2 and -9 kHz in the example recording).
-* Sample format `cf32` (little-endian float32 I,Q - GNU Radio's "complex" / a `.cfile`) by default.
+* **WAV files** from SDR programs (stereo I/Q) are read directly, at any sample rate: see "Recordings from SDR programs" below.
+* Sample format `cf32` (little-endian float32 I,Q - GNU Radio's "complex" / a `.cfile`) for other files.
   Use `--format cs16` or `--format cu8` for 16-bit / 8-bit interleaved I/Q.
 * Keep the antenna/receiver setup simple: UNNE-1B's FSK burst was 30-40 dB above the noise floor in the example,
   and the weakest burst (a fading one) still decoded.
 * Any recorder works as long as the sample rate you pass with `--fs` is right. If your rate is not 50 ksps, use
   your own: the decoder derives its internal rate (about 50 samples per symbol) from `--fs`.
+
+## Recordings from SDR programs (WAV files)
+
+Many recorders (SDR#, HDSDR, SDR Console, SpectraVue, ...) write IQ as a **stereo WAV file**: left channel = I, right channel =
+Q. The decoder reads these directly and takes what it needs from the file itself:
+
+```bash
+unne1b-decode recording.wav                     # sample rate, format and (usually) centre frequency come from the header
+file recording.wav                              # Linux: shows e.g. "Microsoft PCM, 16 bit, stereo 192000 Hz"
+python3 tools/iq_survey.py --decode folder/     # what is in each file: rate, frequency, satellite, packet types
+```
+
+* **Sample rate:** read from the header; no `--fs` needed. Any rate works (tested from 48 kHz to 2 MHz); the signal can be
+  anywhere in the recorded band, because the tracker finds it first and the rate is brought down in stages afterwards.
+* **Formats:** 8, 16, 24 and 32-bit PCM and 32/64-bit float, also "extensible" headers, streamed files whose data size field is
+  0, and RF64. A mono WAV is audio, not IQ, and is refused with a message.
+* **Centre frequency and start time:** recorders such as SDR#, HDSDR and SpectraVue store them in the header (an `auxi` chunk);
+  names such as `..._436875000Hz_...` or `..._436.875MHz_...` also work. The start time (header or a date in the name) is what
+  the `--outdir` folder uses for its time stamps. `--rec-start` overrides both.
+* **If a recording decodes nothing:** add `--swap-iq`. Some recorders write Q first; that mirrors the spectrum and turns every
+  bit round, so the tracker sees bursts but no frame passes its CRC. (`tools/iq_survey.py --decode` reports "needs --swap-iq".)
+* Raw files have no header: give `--fs`, or put the rate in the name (`..._50000SPS_...`); `--format cs16` / `cu8` for
+  interleaved 16-bit / 8-bit I/Q.
 
 ## Decode a recording
 
@@ -56,8 +80,9 @@ data (descrambled): ...
 
 | Option | Meaning |
 |---|---|
-| `--fs 50000` | IQ sample rate in Hz |
-| `--format cf32\|cs16\|cu8` | sample format |
+| `--fs 50000` | IQ sample rate in Hz: read from a WAV header or a file name like `..._50000SPS_...`, else 50000 |
+| `--format auto\|cf32\|cs16\|cu8\|wav` | sample format (default `auto`: a `.wav` file is read as WAV, anything else as `cf32`) |
+| `--swap-iq` | exchange I and Q (for recordings that decode nothing: some recorders write Q first) |
 | `--center auto\|HZ` | `auto` (default) = adaptive tracker; or a fixed centre offset in Hz |
 | `--min-db 15` | tracker detection threshold above the noise floor; lower = more sensitive, more false alarms |
 | `--flips 3` | maximum number of bit errors to try to repair (0-4) |

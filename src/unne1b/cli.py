@@ -10,6 +10,8 @@ import time
 import numpy as np
 
 from .core import (DllDecoder, FskCentreTracker, MultiBaudDeframer, format_frame, parse_bauds)
+from .frontend import FrontEnd
+from .iqfile import IQFile, IQFormatError
 
 
 def _read_iq(path, fmt):
@@ -41,10 +43,16 @@ def build_parser():
         prog='unne1b-decode',
         description='Decode UNNE-1B (HADES-E2) 200 bd FSK telemetry and voice from an IQ recording. '
                     'The FSK centre is tracked automatically (Doppler), no tuning needed.')
-    ap.add_argument('iq', help='IQ file (complex float32 by default)')
-    ap.add_argument('--fs', type=float, default=50000, help='IQ sample rate in Hz (default 50000)')
-    ap.add_argument('--format', default='cf32', choices=['cf32', 'cs16', 'cu8'],
-                    help='sample format (default cf32 = GNU Radio / SDR complex float)')
+    ap.add_argument('iq', help='IQ recording: a WAV file (stereo I/Q: the sample rate is read from it), or a raw file '
+                               '(complex float32 by default)')
+    ap.add_argument('--fs', type=float, default=None,
+                    help='IQ sample rate in Hz. Read from a WAV header or a file name like ..._50000SPS_..., else 50000')
+    ap.add_argument('--format', default='auto', choices=['auto', 'cf32', 'cs16', 'cu8', 'wav'],
+                    help='sample format: auto (default: a .wav file is read as WAV, anything else as cf32 = GNU Radio / SDR '
+                         'complex float), cs16 / cu8 = 16-bit / 8-bit interleaved I/Q')
+    ap.add_argument('--swap-iq', action='store_true',
+                    help='exchange I and Q (use it if a recording decodes nothing: some recorders write Q first, which mirrors '
+                         'the spectrum and turns every bit round)')
     ap.add_argument('--center', default='auto',
                     help='"auto" (default): adaptive tracking of the FSK centre; '
                          'or a fixed offset in Hz')
@@ -80,23 +88,14 @@ def main(argv=None):
     from scipy import signal
     a = build_parser().parse_args(argv)
 
-    fs = a.fs
     bauds = parse_bauds(a.baud)
-    dec = max(1, int(round(fs / 10000.0)))                    # about 10 kHz after decimation
-    fs2 = fs / dec
-    if a.format == 'cf32':
-        mm = np.memmap(a.iq, dtype=np.complex64, mode='r')
-        total = len(mm)
-
-        def block(i, n):
-            return np.asarray(mm[i:i + n])
-    else:
-        x_all = _read_iq(a.iq, a.format)
-        total = len(x_all)
-
-        def block(i, n):
-            return x_all[i:i + n]
+    try:
+        src = IQFile(a.iq, fmt=a.format, fs=a.fs, swap=a.swap_iq)
+    except (IQFormatError, OSError) as e:
+        raise SystemExit('cannot read %s: %s' % (a.iq, e))
+    fs, total = src.fs, len(src)
     print('%d samples, %.1f s at %.0f sps' % (total, total / fs, fs), file=sys.stderr)
+    print('file: %s%s' % (src.describe(), (' (%s)' % src.fs_note) if src.fs_note else ''), file=sys.stderr)
 
     dll = None
     if a.dll:
@@ -121,6 +120,9 @@ def main(argv=None):
             rec_start = rec_start.timestamp()
         else:
             rec_start = guess_rec_start(a.iq)
+            if rec_start is None and src.start is not None:
+                rec_start = src.start
+                print('NOTE: recording start time taken from the WAV header (as the recorder wrote it).', file=sys.stderr)
         if rec_start is None:
             rec_start = time.time()
             print('NOTE: no recording start time (--rec-start, or a date in the file name): frames in %s are stamped '
@@ -139,20 +141,15 @@ def main(argv=None):
         writer = FolderWriter(a.outdir, utc=not a.local_time, history=not a.no_history,
                               fallback=lambda fr: format_frame(fr, dll))
 
-    auto = a.center == 'auto'
-    tracker = FskCentreTracker(fs, min_db=a.min_db) if auto else None
-    fixed = 0.0 if auto else float(a.center)
-    taps = signal.firwin(129, 2350, fs=fs)
-    zi = np.zeros(len(taps) - 1, dtype=np.complex128)
-    df = MultiBaudDeframer(fs=fs2, bauds=bauds, max_flips=a.flips, emit_unverified=a.emit_unverified)
-    state = {'nf': 0, 'consumed': 0}
+    fe = FrontEnd(fs, bauds=bauds, center=a.center, min_db=a.min_db, max_flips=a.flips, emit_unverified=a.emit_unverified)
+    state = {'nf': 0}
     voice = {}                                  # {source address: VoiceSet}: voice is kept per satellite
-    rec_t0 = guess_rec_start(a.iq)
+    rec_t0 = guess_rec_start(a.iq) or src.start
 
     def handle(frames):
         # approximate time of the frame in the recording (seconds, +-1 s: frames are found
         # once per 1 s block; the tracker delays the stream by its look-ahead)
-        t_now = state['consumed'] / fs - (tracker.delay / fs if tracker is not None else 0.0)
+        t_now = fe.time_now()
         for fr in frames:
             fr['t'] = round(max(t_now, 0.0), 1)
             state['nf'] += 1
@@ -173,30 +170,15 @@ def main(argv=None):
                     with open(a.c2out, 'ab') as f:
                         f.write(bytes.fromhex(fr['payload']))
 
-    def process(y):
-        nonlocal zi
-        if len(y) == 0:
-            return
-        out, zi = signal.lfilter(taps, 1.0, y, zi=zi)
-        idx = np.arange((-state['consumed']) % dec, len(out), dec)
-        state['consumed'] += len(out)
-        _, frames = df.push(out[idx].astype(np.complex64))
-        handle(frames)
-
     chunk = int(fs)                              # 1 s per block
     pos = 0
     while pos < total:
-        x = block(pos, chunk)
+        x = src.read(pos, chunk)
         pos += len(x)
-        if auto:
-            y, _ = tracker.push(x)
-        else:
-            n = np.arange(len(x))
-            y = (x * np.exp(-2j * np.pi * fixed * (n + pos - len(x)) / fs)).astype(np.complex64)
-        process(y)
-    if auto:
-        y, _ = tracker.flush()
-        process(y)
+        handle(fe.push(x))
+    handle(fe.flush())
+    tracker = fe.tracker
+    if fe.auto:
         tags = np.array(tracker.acc_tags) / fs
         cents = np.array(tracker.acc_cent)
         groups = []

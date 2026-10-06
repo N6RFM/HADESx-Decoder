@@ -1,46 +1,51 @@
 #!/usr/bin/env python3
-"""Build a single-file decoder (dist/unne1b_standalone.py) = core + voice + cli.
+"""Build a single-file decoder (dist/unne1b_standalone.py) = core + folder output + voice + IQ reader + front end + cli.
 
     python3 tools/build_standalone.py
-    python3 dist/unne1b_standalone.py capture.iq --fs 50000 --dll hadesr.dll --voice-wav voice.wav
+    python3 dist/unne1b_standalone.py recording.wav --outdir ~/hades-sa --voice-wav voice.wav
 """
 import os
 import re
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SRC = os.path.join(ROOT, 'src', 'unne1b')
+ORDER = ['core', 'genesis', 'voice', 'iqfile', 'frontend', 'cli']
+TITLES = {'genesis': "per-type folder output (port of AMSAT-EA's HADES-SA decoder)", 'voice': 'voice', 'iqfile': 'IQ files (raw and WAV)',
+          'frontend': 'signal chain', 'cli': 'command line'}
 
 
 def read(name):
-    return open(os.path.join(SRC, name)).read()
+    return open(os.path.join(SRC, name + '.py')).read()
+
+
+def strip_module(text, name):
+    """Remove the module docstring and turn every intra-package import into `pass` (the names are all in one namespace now)."""
+    if name != 'core':
+        text = re.sub(r'^"""[\s\S]*?"""\n', '', text, count=1)
+    text = re.sub(r'^([ \t]*)from \.\w+ import (?:\([^)]*\)|[^\n]*)\n', r'\1pass\n', text, flags=re.M)
+    return text
+
+
+def build(path):
+    parts = {n: strip_module(read(n), n) for n in ORDER}
+    # voice's command line entry would clash with cli.main
+    parts['voice'] = parts['voice'].replace('def main(argv=None):', 'def voice_main(argv=None):')
+    parts['voice'] = parts['voice'].replace("if __name__ == '__main__':\n    main()\n", '')
+    out = ['#!/usr/bin/env python3\n'
+           '"""UNNE-1B / HADES-SA / HADES-L decoder - single-file build of the unne1b package.\n'
+           'Usage: python3 unne1b_standalone.py recording.wav [--fs 50000] [--outdir DIR] [--dll hadesr.dll] '
+           '[--voice-wav out.wav] [--log frames.jsonl]\n"""\n', parts['core']]
+    for n in ORDER[1:]:
+        out.append('\n\n# ===== %s =====\n' % TITLES[n])
+        out.append(parts[n])
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    open(path, 'w').write(''.join(out))
+    os.chmod(path, 0o755)
+    return path
 
 
 def main():
-    core = read('core.py')
-    voice = read('voice.py')
-    cli = read('cli.py')
-    genesis = read('genesis.py')
-    # drop intra-package imports
-    voice = re.sub(r'from \.core import [^\n]*\n', '', voice)
-    cli = re.sub(r'from \.core import \([^)]*\)\n', '', cli)
-    cli = cli.replace('        from .genesis import FolderWriter\n', '')
-    genesis = re.sub(r'^"""[\s\S]*?"""\n', '', genesis, count=1)
-    cli = cli.replace("        from .voice import write_wav\n", '')
-    # voice's CLI entry would clash with cli.main
-    voice = voice.replace('def main(argv=None):', 'def voice_main(argv=None):')
-    voice = voice.replace("if __name__ == '__main__':\n    main()\n", '')
-    voice = re.sub(r'^"""[\s\S]*?"""\n', '', voice, count=1)
-    cli = re.sub(r'^"""[\s\S]*?"""\n', '', cli, count=1)
-    out = ['#!/usr/bin/env python3\n'
-           '"""UNNE-1B (HADES-E2) decoder - single-file build of the unne1b package.\n'
-           'Usage: python3 unne1b_standalone.py capture.iq --fs 50000 [--dll hadesr.dll] '
-           '[--voice-wav out.wav] [--log frames.jsonl]\n"""\n',
-           core, '\n\n# ===== per-type folder output (port of AMSAT-EA\'s HADES-SA decoder) =====\n', genesis, '\n\n# ===== voice =====\n', voice, '\n\n# ===== command line =====\n', cli]
-    os.makedirs(os.path.join(ROOT, 'dist'), exist_ok=True)
-    path = os.path.join(ROOT, 'dist', 'unne1b_standalone.py')
-    open(path, 'w').write(''.join(out))
-    os.chmod(path, 0o755)
-    print('wrote', path)
+    print('wrote', build(os.path.join(ROOT, 'dist', 'unne1b_standalone.py')))
 
 
 if __name__ == '__main__':

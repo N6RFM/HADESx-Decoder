@@ -4,6 +4,8 @@
 |---|---|
 | `0 valid frame(s)`, tracking report says `0 burst(s)` | no two-tone signal above threshold: check the recording is complex baseband around 436.888 MHz and `--fs` is right; try `--min-db 10` |
 | Tracker finds bursts but 0 frames | weak/short bursts, or a different baud rate (the decoder assumes 200 baud; `--baud 400` etc. if a telecommand changed it); try `--flips 4` |
+| `cannot read ...: ... mono WAV is audio` | the WAV has one channel: it is not an IQ recording |
+| Tracker finds bursts, **0 frames**, in a recording from an SDR program | I and Q may be swapped (the spectrum is mirrored): add `--swap-iq`. `python3 tools/iq_survey.py --decode FILE` tells you |
 | Frames appear with `[CRC OK, corrected bits [...]]` | normal on weak signals; the CRC still matched after the repair |
 | Burst at the very end of a file is missing | the tracker's 1.2 s look-ahead; `unne1b-decode` flushes, the GRC file source pads. In your own flowgraph append silence |
 | `WARNING: hadesr.dll not found` | give the full path: `--dll /home/me/hadesr.dll`. The decode continues without it |

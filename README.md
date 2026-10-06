@@ -34,6 +34,7 @@ IQ file / SDR  ->  FSK tracker (finds the signal anywhere in the band, follows i
   with optional pitch-preserving speed-up.
 * **Also understands HADES-SA and HADES-L frames** (length-byte layout, 800 and 200 baud, automatic): tested on **real recordings** of HADES-SA and HADES-L (telemetry and voice decode; image packets are not decoded yet) and with AMSAT-EA's sample frames; HADES-L Lofith data and ICM messages are decoded too, and both satellites' decoders match their package's own DLL; see [Supported satellites](docs/satellites.md).
 * **Per-type output folder** (`--outdir`): the same files as AMSAT-EA's Windows tool (labelled `.tlm`, `.dat` data lines, `.bin` voice and image files), and **new frames from later passes are added to the same folder** without duplicates. HADES-SA frames are decoded natively (no DLL); see [Output folder](docs/output-folder.md).
+* **Reads WAV I/Q recordings** from SDR programs at any sample rate (rate, format and centre frequency from the header; `--swap-iq` if I and Q are swapped) and raw files; see [getting started](docs/getting-started.md).
 * **Optional official decode text**: run AMSAT-EA's own `hadesr.dll` inside an x86 emulator
   (no Wine needed) to get the labelled values (battery voltage, temperatures, ...). You supply the DLL.
 * **GNU Radio Companion flowgraph** with live plots, using the very same decoder code.

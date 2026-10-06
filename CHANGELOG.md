@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+* WAV I/Q recordings (sample rate, format, centre frequency and start time from the header), any sample rate from 48 kHz to several MHz, `--swap-iq`, rate and frequency from a raw file's name, `tools/iq_survey.py`; the single-file build includes all modules again.
 * Console output shows the decoded fields of HADES-SA and HADES-L frames; PN9 packets are labelled "no CRC in this packet type" instead of "CRC FAIL - unverified".
 * HADES-L: Lofith (type 7) and ICM message (type 15) decoders, HADES-L status and time-series variants, per-Lofith-frame files; HADES-SA and HADES-L decoders verified against each package's own decoder DLL (golden data, `tools/dll_oracle.py`, `tools/compare_with_dll.py`); times are 32-bit and NaN prints as `nan`, like the Windows tool; docs distinguish the three packages.
 * Voice WAVs are identified by satellite (file name and tags inside the file) and never mix satellites; `unne1b-voice FOLDER` builds the WAV from a per-type output folder (best pass, `--list-passes`, `--pass`, `--combine`, `--pick`); isolated corrupted frame numbers are dropped; `--voice-wav` output names now end in the satellite name.
