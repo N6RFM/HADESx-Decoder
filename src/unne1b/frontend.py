@@ -13,7 +13,10 @@ from .core import FskCentreTracker, MultiBaudDeframer
 def pick_nfft(fs):
     """FFT size for the tracker: 8192 up to 80 ksps, then proportional to the sample rate (about 6 Hz per bin), at most 2^18."""
     if fs <= 80000.0:
-        return 8192
+        n = 8192
+        while n > 256 and 2 * n > 1.2 * fs:           # the tracker's look-ahead (1.2 s) must hold two FFTs: matters below 14 kHz
+            n //= 2
+        return n
     return int(min(2 ** 18, 2 ** round(np.log2(8192.0 * fs / 50000.0))))
 
 

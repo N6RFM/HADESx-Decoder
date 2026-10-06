@@ -165,3 +165,53 @@ def test_raw_formats_still_work(tmp_path):
     p8 = tmp_path / 'a.cu8'
     np.clip(np.round(np.stack([x.real, x.imag], axis=1).ravel() * 127.5 + 127.5), 0, 255).astype(np.uint8).tofile(p8)
     assert decode(p8, tmp_path, '--format', 'cu8')[1][0]['plain'] == plain
+
+
+# ---- recordings whose header has no usable sample rate (SDR Console writes such files) -------------------------------------
+
+def zero_rate_wav(tmp_path, fs, offset, name='sdrconsole.wav'):
+    from math import gcd
+    x, plain = packet_iq()
+    g = gcd(fs, 50000)
+    y = signal.resample_poly(x, fs // g, 50000 // g).astype(np.complex64)
+    y = (y * np.exp(2j * np.pi * offset * np.arange(len(y)) / fs)).astype(np.complex64)
+    y = y / np.sqrt(np.mean(np.abs(y) ** 2)) / 12
+    p = tmp_path / name
+    wavhelp.write_wav(str(p), y, fs, bits=16)
+    raw = bytearray(p.read_bytes())
+    i = raw.index(b'fmt ') + 12
+    raw[i:i + 4] = struct.pack('<I', 0)                                                     # header sample rate = 0
+    p.write_bytes(bytes(raw))
+    return p, plain
+
+
+def test_unusable_header_rate_is_reported_with_the_way_out(tmp_path):
+    p, _ = zero_rate_wav(tmp_path, 96000, 10000)
+    with pytest.raises(iqfile.BadSampleRate, match='--fs guess'):
+        iqfile.IQFile(str(p))
+    with pytest.raises(SystemExit) as e:
+        main([str(p)])
+    assert '--fs HZ' in str(e.value) and '--fs guess' in str(e.value)
+    assert iqfile.IQFile(str(p), fs=96000).fs == 96000.0                                    # giving the rate always works
+
+
+def test_fs_guess_works_the_rate_out_from_the_signal(tmp_path, capsys):
+    p, plain = zero_rate_wav(tmp_path, 96000, 10000)
+    rc, fr = decode(p, tmp_path, '--fs', 'guess')
+    assert rc == 0 and [f['plain'] for f in fr] == [plain]
+    assert 'sample rate: 96000 Hz' in capsys.readouterr().err
+
+
+def test_guess_prefers_the_true_rate_over_its_decodable_neighbours(tmp_path):
+    for fs in (192000, 250000):                                                              # 200000 / 256000 also decode the frame
+        p, _ = zero_rate_wav(tmp_path, fs, 25000, 'g%d.wav' % fs)
+        best, table = iqfile.guess_sample_rate(str(p))
+        assert best == fs and sum(1 for v in table.values() if v) >= 2
+
+
+def test_guess_gives_up_on_noise(tmp_path):
+    rng = np.random.default_rng(2)
+    noise = ((rng.normal(size=300000) + 1j * rng.normal(size=300000)) * 0.05).astype(np.complex64)
+    p = tmp_path / 'noise.wav'
+    wavhelp.write_wav(str(p), noise, 96000, bits=16)
+    assert iqfile.guess_sample_rate(str(p), candidates=(48000, 96000))[0] is None

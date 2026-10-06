@@ -27,7 +27,7 @@ sys.path.insert(0, os.path.join(os.getcwd(), 'src'))
 try:
     from unne1b import FskCentreTracker
     from unne1b.frontend import FrontEnd, pick_nfft
-    from unne1b.iqfile import IQFile, IQFormatError
+    from unne1b.iqfile import BadSampleRate, IQFile, IQFormatError, guess_sample_rate
 except ImportError:
     raise SystemExit('Run this from the UNNE-1B-Decoder folder, after the WAV update has been applied (the survey needs '
                      'unne1b.iqfile and unne1b.frontend).')
@@ -97,12 +97,21 @@ def satellite_at(freq):
 def survey(path, args, summary):
     name = os.path.basename(path)
     label = name[:38]
+    guessed = ''
     try:
-        src = IQFile(path, fmt=args.format, fs=args.fs, center_freq=args.fc)
+        try:
+            src = IQFile(path, fmt=args.format, fs=args.fs, center_freq=args.fc)
+        except BadSampleRate:                      # e.g. SDR Console: the header has no usable rate; work it out from the signal
+            best, _ = guess_sample_rate(path, fmt=args.format)
+            if best is None:
+                print('%-38s  header has no sample rate and none could be worked out (try --fs HZ or --swap-iq)' % label)
+                return
+            src = IQFile(path, fmt=args.format, fs=best, center_freq=args.fc)
+            guessed = ' (rate worked out from the signal)'
     except (IQFormatError, OSError, ValueError) as e:
         print('%-38s  not usable: %s' % (label, e))
         return
-    rate = '%d kHz' % round(src.fs / 1e3) if src.fs >= 1e4 else '%d Hz' % src.fs
+    rate = ('%d kHz' % round(src.fs / 1e3) if src.fs >= 1e4 else '%d Hz' % src.fs) + guessed
     head = '%-38s %7.1f MB %6.0f s  %s' % (label, os.path.getsize(path) / 1e6, len(src) / src.fs,
                                            rate + (', WAV %d-bit' % src.header['bits'] if src.header else ', raw %s' % src.kind))
     if len(src) < src.fs:

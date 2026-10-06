@@ -24,6 +24,10 @@ class IQFormatError(ValueError):
     pass
 
 
+class BadSampleRate(IQFormatError):
+    """The WAV header carries no usable sample rate (0 or nonsense): give --fs HZ or --fs guess."""
+
+
 def parse_wav(path):
     """Header of a WAV file -> dict(channels, rate, bits, tag, data_offset, data_bytes, center_freq, start, stop)."""
     size = os.path.getsize(path)
@@ -113,6 +117,10 @@ class IQFile(object):
                 raise IQFormatError(
                     '%s has %s channel(s). IQ recordings are stereo WAV files (left = I, right = Q); a mono WAV is audio. '
                     'If this is a real-valued recording it cannot be used directly.' % (name, h['channels']))
+            if not fs and not 1000 <= h['rate'] <= 1e9:
+                raise BadSampleRate(
+                    '%s: the WAV header gives no usable sample rate (%s). Give it with --fs HZ, or let the decoder work it out '
+                    'from the signal with --fs guess' % (name, h['rate']))
             self.fs = float(fs or h['rate'])
             if fs and abs(fs - h['rate']) > 1:
                 self.fs_note = 'the header says %d Hz, using the %.0f Hz you gave' % (h['rate'], fs)
@@ -218,3 +226,62 @@ def _looks_like_wav(path):
         return h[:4] in (b'RIFF', b'RF64') and h[8:12] == b'WAVE'
     except OSError:
         return False
+
+
+STANDARD_RATES = (44100, 48000, 50000, 62500, 64000, 80000, 96000, 100000,
+                  125000, 128000, 160000, 192000, 200000, 250000, 256000, 384000, 400000, 500000, 512000, 625000, 768000,
+                  800000, 1000000, 1024000, 1250000, 1500000, 1536000, 1920000, 2000000, 2048000, 2400000, 2500000, 2560000,
+                  3000000, 3072000)
+
+
+def guess_sample_rate(path, fmt='auto', swap=False, max_samples=24000000, candidates=STANDARD_RATES, report=None):
+    """Work out the sample rate of a recording whose header does not give it.
+
+    The FSK signal is the ruler: its two tones are 1.6 kHz apart and the baud rate is 800 (or 200), so only the true sample
+    rate lets the frames decode with a valid CRC. Standard rates are tried; for each the tracker must find FSK bursts and the
+    decoder then counts the frames that pass their CRC. Returns (rate, {candidate: frames}); rate is None when nothing decodes.
+    `report(text)` receives a progress line per candidate."""
+    from .core import FskCentreTracker
+    from .frontend import FrontEnd, pick_nfft
+    table, clock_dev, spacing_of = {}, {}, {}
+    for cand in candidates:
+        src = IQFile(path, fmt=fmt, fs=cand, swap=swap)
+        n = min(len(src), max_samples)
+        if n < cand:
+            continue
+        tr = FskCentreTracker(cand, nfft=pick_nfft(cand))
+        step = int(cand)
+        for i in range(0, n, step):
+            tr.push(src.read(i, min(step, n - i)))
+        tr.flush()
+        if not tr.acc_tags:
+            if report:
+                report('  %8d Hz: no FSK burst' % cand)
+            continue
+        spacings = [v[2] for h, v in tr.raw.items() if h in tr.acc_hops]
+        spacing_of[cand] = float(np.median(spacings)) if spacings else 0.0
+        fe = FrontEnd(cand)
+        frames, devs = 0, []
+        chunks = [src.read(i, min(step, n - i)) for i in range(0, n, step)]
+        for x in chunks + [None]:
+            before = [d.nframes for d in fe.df.deframers]
+            got = fe.flush() if x is None else fe.push(x)
+            frames += sum(1 for f in got if f.get('crc_ok') is not False)
+            # the symbol clock the receiver locked to, whenever frames were found: at the true sample rate it sits at the nominal
+            # value (the satellite's clock is good to about 100 ppm), a rate that is 2 % off pulls it 2 % away
+            devs += [abs(d.T / d.sps0 - 1.0) for d, b in zip(fe.df.deframers, before) if d.nframes > b]
+        table[cand] = frames
+        clock_dev[cand] = float(np.median(devs)) if devs else 1.0
+        if report:
+            report('  %8d Hz: FSK bursts found (tone spacing %.0f Hz), %d frame(s) decoded, symbol clock off by %.2f %%' % (
+                cand, spacing_of[cand], frames, 100 * clock_dev[cand]))
+    decoded = [c for c, v in table.items() if v]
+    if not decoded:
+        return None, table
+    # 1. the tone spacing must be the known one (1.6 kHz at 800 baud, 1.64 kHz measured at 200 baud on UNNE-1B): a rate that is
+    #    4x too low makes 800 baud look like 200 baud and the tracker then locks onto the sidebands (1.2 kHz or 400 Hz apart)
+    # 2. neighbouring rates (2-4 % off) still decode the same frames; the true one has the symbol clock at its nominal value
+    # 3. only if nothing has the known spacing (a satellite or mode we do not know), fall back to all candidates that decode
+    pool = [c for c in decoded if 1550.0 <= spacing_of[c] <= 1700.0] or decoded
+    best = max(table[c] for c in pool)
+    return min((c for c in pool if table[c] == best), key=lambda c: (clock_dev[c], c)), table

@@ -55,6 +55,10 @@ python3 tools/iq_survey.py --decode folder/     # what is in each file: rate, fr
   the `--outdir` folder uses for its time stamps. `--rec-start` overrides both.
 * **If a recording decodes nothing:** add `--swap-iq`. Some recorders write Q first; that mirrors the spectrum and turns every
   bit round, so the tracker sees bursts but no frame passes its CRC. (`tools/iq_survey.py --decode` reports "needs --swap-iq".)
+* **A header without a usable sample rate** (SDR Console writes such files; `file` then shows no "Hz"): the decoder says so
+  and asks for `--fs HZ`. If you do not know the rate, `--fs guess` works it out from the signal: the FSK tones are 1.6 kHz
+  apart and the baud rate is 800 (or 200), so only the true rate decodes cleanly. It tries the standard rates from 44.1 kHz to
+  3 MHz and prints what it found for each, which takes a minute or two for a long file.
 * Raw files have no header: give `--fs`, or put the rate in the name (`..._50000SPS_...`); `--format cs16` / `cu8` for
   interleaved 16-bit / 8-bit I/Q.
 
@@ -80,7 +84,7 @@ data (descrambled): ...
 
 | Option | Meaning |
 |---|---|
-| `--fs 50000` | IQ sample rate in Hz: read from a WAV header or a file name like `..._50000SPS_...`, else 50000 |
+| `--fs 50000` | IQ sample rate in Hz: read from a WAV header or a file name like `..._50000SPS_...`, else 50000; `--fs guess` works it out from the signal |
 | `--format auto\|cf32\|cs16\|cu8\|wav` | sample format (default `auto`: a `.wav` file is read as WAV, anything else as `cf32`) |
 | `--swap-iq` | exchange I and Q (for recordings that decode nothing: some recorders write Q first) |
 | `--center auto\|HZ` | `auto` (default) = adaptive tracker; or a fixed centre offset in Hz |

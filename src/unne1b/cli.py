@@ -45,8 +45,9 @@ def build_parser():
                     'The FSK centre is tracked automatically (Doppler), no tuning needed.')
     ap.add_argument('iq', help='IQ recording: a WAV file (stereo I/Q: the sample rate is read from it), or a raw file '
                                '(complex float32 by default)')
-    ap.add_argument('--fs', type=float, default=None,
-                    help='IQ sample rate in Hz. Read from a WAV header or a file name like ..._50000SPS_..., else 50000')
+    ap.add_argument('--fs', default=None,
+                    help='IQ sample rate in Hz. Read from a WAV header or a file name like ..._50000SPS_..., else 50000. '
+                         '"guess" works it out from the signal (for files whose header has no usable rate)')
     ap.add_argument('--format', default='auto', choices=['auto', 'cf32', 'cs16', 'cu8', 'wav'],
                     help='sample format: auto (default: a .wav file is read as WAV, anything else as cf32 = GNU Radio / SDR '
                          'complex float), cs16 / cu8 = 16-bit / 8-bit interleaved I/Q')
@@ -89,8 +90,22 @@ def main(argv=None):
     a = build_parser().parse_args(argv)
 
     bauds = parse_bauds(a.baud)
+    fs_arg = a.fs
+    if fs_arg == 'guess':
+        from .iqfile import guess_sample_rate
+        print('working out the sample rate from the signal (tries the standard rates) ...', file=sys.stderr)
+        fs_arg, table = guess_sample_rate(a.iq, fmt=a.format, swap=a.swap_iq, report=lambda t: print(t, file=sys.stderr))
+        if fs_arg is None:
+            raise SystemExit('could not work out the sample rate: no standard rate made any frame decode. Try --swap-iq, or give '
+                             '--fs HZ if you know it')
+        print('sample rate: %d Hz' % fs_arg, file=sys.stderr)
+    else:
+        try:
+            fs_arg = float(fs_arg) if fs_arg is not None else None
+        except ValueError:
+            raise SystemExit('--fs must be a number of Hz or the word guess')
     try:
-        src = IQFile(a.iq, fmt=a.format, fs=a.fs, swap=a.swap_iq)
+        src = IQFile(a.iq, fmt=a.format, fs=fs_arg, swap=a.swap_iq)
     except (IQFormatError, OSError) as e:
         raise SystemExit('cannot read %s: %s' % (a.iq, e))
     fs, total = src.fs, len(src)
