@@ -148,6 +148,8 @@ def report_main(argv=None):
             dll = DllDecoder(a.dll)
         except ImportError:
             raise SystemExit('--dll needs: pip install unicorn pefile')
+        except ValueError as e:
+            raise SystemExit(str(e))
     recs = load(a.folder, dll)
     want_sat = parse_sat(a.sat) if a.sat else None
     want_type = {int(x) for x in a.type.split(',')} if a.type else None

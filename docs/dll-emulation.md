@@ -15,6 +15,15 @@ You must obtain `hadesr.dll` from AMSAT-EA yourself; it is **not** in this repos
 (`hadessa.dll`, `hadesl.dll`) that write files instead of printing; this project decodes those two satellites natively, and
 uses the DLLs only as references in tests (`tools/dll_oracle.py`, `tools/compare_with_dll.py`).
 
+**Which DLL, and how the program chooses.** Only `hadesr.dll` is ever passed to `--dll`, and it is used **per frame, by the
+satellite's source address**: UNNE-1B (12), MARIA-G (11) and HADES-ICM (2) frames go to it, HADES-SA (3) and HADES-L (5) frames never do
+(they are decoded natively), so one `--dll` serves a recording or folder that holds several satellites. Passing `hadessa.dll` or
+`hadesl.dll` is refused with a message saying which package it belongs to.
+
+**Where to keep them:** outside the repository (it is public and the DLLs are AMSAT-EA's), one folder per package, for example
+`~/amsat-ea-packages/unne-1b/hadesr.dll`, `.../hades-sa/hadessa.dll`, `.../hades-l/hadesl.dll`. Always give the full path.
+`*.dll` and `*.exe` are in `.gitignore` as a safety net.
+
 `hadesr.dll` is AMSAT-EA's own library. Andy UZ7HO's SoundModem is a separate program that demodulates the audio and hands
 frames to AMSAT-EA's decoder; the two are often downloaded together, which is why the DLL can look like part of SoundModem.
 

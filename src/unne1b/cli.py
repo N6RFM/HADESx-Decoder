@@ -122,6 +122,8 @@ def main(argv=None):
             except ImportError:
                 print('WARNING: --dll needs "pip install unicorn pefile" - continuing without '
                       'the official decoder.', file=sys.stderr)
+            except ValueError as e:                  # a DLL of another package: say so and carry on without it
+                print('WARNING: %s Continuing without it.' % e, file=sys.stderr)
 
     writer, rec_start, ingest_key = None, None, None
     if a.outdir:

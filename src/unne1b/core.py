@@ -35,7 +35,7 @@ __all__ = [
     'crc16_ccitt_false', 'ssdv_crc_ok', 'descramble', 'scramble', 'bits_to_bytes', 'check_frame',
     'VOICE_PAYLOAD_BYTES', 'VOICE_XOR_KEY', 'voice_unwhiten', 'voice_pad_700c', 'voice_assemble',
     'DllDecoder', 'FskCentreTracker', 'Unne1bDeframer', 'MultiBaudDeframer', 'parse_bauds', 'format_frame',
-    'type_name', 'DLL_SATELLITES', 'LEGACY_SOURCES', 'VOICE_TYPES', 'VOICE_SIZE_BYTE', 'SSDV_SIZE_BYTE', 'PN9_SIZES', 'TYPE_NAMES_BY_SOURCE',
+    'type_name', 'check_unne_dll', 'DLL_SATELLITES', 'LEGACY_SOURCES', 'VOICE_TYPES', 'VOICE_SIZE_BYTE', 'SSDV_SIZE_BYTE', 'PN9_SIZES', 'TYPE_NAMES_BY_SOURCE',
 ]
 
 SYNC_BITS = '1011111100110101'          # 0xBF35
@@ -219,6 +219,23 @@ def voice_assemble(packets):
 # Optional: use the real hadesr.dll (AMSAT-EA) inside an x86 emulator so that the
 # official text decoder can be used on Linux without Wine.  Needs: unicorn, pefile
 # ----------------------------------------------------------------------------
+def check_unne_dll(path, export_names):
+    """--dll takes hadesr.dll, the decoder of the UNNE-1B package. The HADES-SA and HADES-L packages have DLLs with the same style of
+    names but different functions: refuse them with a clear message instead of printing nonsense."""
+    names = set(export_names)
+    if 'visualiza_nebrijapayload_data_packet' in names:
+        return
+    base = path.replace('\\', '/').split('/')[-1]
+    if 'visualiza_lofith' in names:
+        what = "%s is the HADES-L package's decoder" % base
+    elif 'visualiza_ssdv' in names:
+        what = "%s is the HADES-SA package's decoder" % base
+    else:
+        what = '%s is not the UNNE-1B package\'s hadesr.dll' % base
+    raise ValueError('%s. --dll takes hadesr.dll from the UNNE-1B package; HADES-SA and HADES-L need no DLL (this program decodes '
+                     'them itself).' % what)
+
+
 class DllDecoder:
     def __init__(self, path):
         import pefile
@@ -236,6 +253,7 @@ class DllDecoder:
             mu.mem_write(base + s.VirtualAddress, s.get_data())
         self.exp = {e.name.decode(): base + e.address
                     for e in pe.DIRECTORY_ENTRY_EXPORT.symbols if e.name}
+        check_unne_dll(path, self.exp)
         self.FAKE = 0x10000000
         mu.mem_map(self.FAKE, 0x10000)
         self.imp = {}
