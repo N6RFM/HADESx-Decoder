@@ -1,7 +1,8 @@
 # Examples
 
 * `iq/` - three short recordings cut from a real pass of UNNE-1B (complex float32, 50 000 samples/s, centred on
-  436.888 MHz): see [iq/README.md](iq/README.md).
+  436.888 MHz), and a WAV excerpt of a recording of UNNE-1B and HADES-L together shared by José Elías Díaz, EB1AO: see
+  [iq/README.md](iq/README.md).
 * `results/` - what the decoder produces from the **full** 354 s pass (the full file is not in the repository):
 
 | File | Contents |

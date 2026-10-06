@@ -133,6 +133,12 @@ works for HADES-L too (`sat_05_...`), including its Lofith data and ICM messages
 **HADES-SA**, 2026-10-05 14:24 UTC (436.875 MHz, 285 s): 12 frames at 800 baud: status, power ranges, BBS and 9 voice frames
 (numbers 0-8, bit-identical to known good copies). The satellite clock (16 352 478 s) is exactly 189 days after the launch.
 
+**UNNE-1B and HADES-L in one recording** (an SDR Console WAV at 1 Msps, 250 s, 5 October 2026, shared by José Elías Díaz, EB1AO): the two
+satellites 222 kHz apart in one file, UNNE-1B in 30 s slots and HADES-L in 20 s slots, 16 bursts. The decoder reads the rate from
+the header and finds both. 12 frames passed their CRC: HADES-L 4 power and 3 temperature packets (the first power packets we
+saw from it), UNNE-1B 1 power, 2 temperature, 1 status and 1 type 10. UNNE-1B's offset falls from +222.5 to +220.1 kHz over
+210 s: the Doppler shift. A 5.6 s excerpt is in `examples/iq/`.
+
 **Why long frames often fail.** In the four PN9 packets the received power **ramps up over roughly the first half second of
 each packet** (at the start it is 10 dB or more below its later level; it may be the transmitter's power amplifier or the
 antenna pattern). The first 100-400 bits after the sync word therefore carry bit errors, sometimes with a one- or two-bit clock

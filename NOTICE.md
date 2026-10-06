@@ -156,3 +156,13 @@ HADES-SA and HADES-L ones in an x86 emulator (`tools/dll_oracle.py`) to produce 
 AMSAT-EA's HADES-SA sample frames, and real HADES-L frames received by N6RFM). That output is AMSAT-EA's program output (CC BY 4.0) and is
 used only to test the Python decoders in `src/unne1b/genesis.py`, which are written to match it. The HADES-L packet layouts (Lofith,
 ICM message, status) were read from that decoder's behaviour and from AMSAT-EA's HADES-L transmissions description.
+
+---
+
+## 9. Recording shared by José Elías Díaz, EB1AO
+
+`examples/iq/sdrconsole_two_satellites.wav` is a 5.6 s excerpt of a recording of UNNE-1B and HADES-L (5 October 2026, 1 Msps, written by
+SDR Console) that **José Elías Díaz, EB1AO**, shared for testing. The excerpt was cut with `tools/cut_excerpt.py` (three bursts, filtered and
+resampled to 250 kHz, band shifted by +111 kHz) and is used only by `tests/test_example_sdrconsole.py` and the documentation. The recording
+remains its author's work; the CC BY 4.0 licence of this repository's own example excerpts does not extend to it. The burst times and header
+values quoted in `tools/README.md` and `docs/satellites.md` come from the same recording.

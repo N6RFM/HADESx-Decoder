@@ -95,7 +95,8 @@ It needs nothing but numpy and prints, in this order:
 | `SPECTRUM` | the strongest narrow lines (about 25 Hz bins, averaged), with absolute frequencies |
 | `BURSTS` | times of narrowband bursts, which is what an FSK telemetry packet looks like, and where they are |
 
-A real example (an SDR Console recording at 1 Msps holding UNNE-1B and HADES-L, trimmed):
+A real example (an SDR Console recording at 1 Msps holding UNNE-1B and HADES-L, trimmed; the recording was shared by
+José Elías Díaz, EB1AO):
 
 ```
 HEADER format tag 1 (PCM), 2 channel(s), 16-bit, rate field 1000000 Hz, byte rate 4000000, block align 4
