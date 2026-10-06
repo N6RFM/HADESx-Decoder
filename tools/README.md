@@ -8,6 +8,7 @@ Scripts that live next to the package but are not installed with it. Run them fr
 | [`iq_survey.py`](#iq_surveypy---what-is-in-a-folder-of-recordings) | **What is in these recordings?** Format, sample rate, frequency, satellite and packet types of every file in a folder | numpy, scipy |
 | [`wav_probe.py`](#wav_probepy---why-does-this-one-file-not-decode) | **Why does this file not decode?** Header, I/Q sanity, spectrum lines, burst times | numpy |
 | [`cut_excerpt.py`](#cut_excerptpy---cut-a-small-excerpt-to-share-or-to-add-as-an-example) | **Cut a small excerpt** out of a big recording (raw or WAV) to share it or add it to `examples/`: any segments, optional filtering to a lower rate, a frequency shift to keep two distant satellites in a small file | numpy, scipy |
+| [`make_release_zip.py`](#building) | The release zip: a clean snapshot of the repository plus a Windows start page | git |
 | [`build_standalone.py`](#building) | Single-file decoder `dist/hadesx_standalone.py` | - |
 | [`build_grc.py`](#building) | The GNU Radio Companion flowgraph | - |
 | [`make_plots.py`](#building) | The figures in `docs/img` | matplotlib |
@@ -185,6 +186,7 @@ satellite's, and any sample rate from 48 kHz up works (tested to 2 MHz); the tra
 | Command | Result |
 |---|---|
 | `python3 tools/build_standalone.py` | `dist/hadesx_standalone.py`: the whole decoder (decoders, voice, WAV reader, front end, command line) in one file: `python3 hadesx_standalone.py recording.wav` |
+| `python3 tools/make_release_zip.py` | `dist/HADESx-Decoder-<version>.zip`: `git archive` of the last commit (no history) plus `START-HERE-WINDOWS.txt` (from `docs/windows.md`) |
 | `python3 tools/build_grc.py` | `grc/hadesx_decoder.grc`, the GNU Radio Companion flowgraph. It embeds `core.py` and `genesis.py`, so **re-run it after changing either** (a test checks the committed file is current). Do not save your own changes over this file in Companion; work on a copy |
 | `python3 tools/make_plots.py [FULL_PASS.iq]` | the figures in `docs/img` (the whole-pass overview needs the big recording) |
 

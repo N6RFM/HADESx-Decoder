@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 1.1.0 - 2026-10-06
+
+HADESx Decoder 1.1.0 (the project was called UNNE-1B Decoder) decodes the amateur-radio satellites of AMSAT-EA's HADES family: UNNE-1B (HADES-E2), HADES-SA and HADES-L. The rename, WAV recordings at any sample rate, native HADES-SA and HADES-L decoders checked against AMSAT-EA's own decoders, the per-type folder and its report, and tools to inspect recordings are the main changes. The old command and module names keep working.
+
 * README rewritten for the three satellites: the HADES family opening, a comparison table, a Quick start that decodes the two-satellite SDR Console example, one section per satellite, updated status notes.
 * **Renamed to HADESx Decoder** (it covers UNNE-1B / HADES-E2, HADES-SA and HADES-L): package `hadesx`, commands `hadesx-decode`, `hadesx-voice`, `hadesx-report`, `grc/hadesx_decoder.grc`, `dist/hadesx_standalone.py`. The old `unne1b-*` commands, `import unne1b` and `python3 -m unne1b` keep working (deprecated), and folders made before the rename keep their `.unne1b_ingested.json` memory.
 * Documentation brought up to date (layout and tests, limitations and roadmap, the signal chain at any sample rate, README introduction) and `tests/test_docs.py`, which keeps every option, tool, module and link documented.

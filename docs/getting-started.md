@@ -66,6 +66,8 @@ python3 tools/iq_survey.py --decode folder/     # what is in each file: rate, fr
 * Not sure what a file is, or why it does not decode? `tools/iq_survey.py` and `tools/wav_probe.py` look at it without
   decoding: see [tools/README.md](../tools/README.md).
 
+**On Windows?** See [windows.md](windows.md).
+
 ## Decode a recording
 
 ```bash

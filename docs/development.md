@@ -47,6 +47,7 @@ pytest -q                # several hundred tests, about a minute
 | `tests/test_examples.py`, `tests/test_example_sdrconsole.py` | the bundled recordings through the command line, with known clocks and bytes |
 | `tests/test_hexport.py`, `tests/test_grc.py` | the flowgraph block's hex port; the committed `.grc` equals what `build_grc.py` generates |
 | `tests/test_compat.py` | the old names still work: `import unne1b`, `python3 -m unne1b`, the `unne1b-*` commands, folders made before the rename |
+| `tests/test_release.py` | one version in the package, `pyproject.toml` and the changelog; the Windows page; the release zip |
 | `tests/test_docs.py` | the documentation stays honest: every command-line option is documented, every tool and module is listed, links resolve |
 
 `tests/synth.py` contains a small FSK modulator and packet builder (200 and 800 baud), handy for experiments, and `tests/wavhelp.py`

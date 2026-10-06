@@ -156,6 +156,7 @@ keep the receiver simple. UNNE-1B's bursts were 30 to 40 dB above the noise in t
 | Document | Contents |
 |---|---|
 | [Getting started](docs/getting-started.md) | install, first decode, options, output formats, SDR recording tips |
+| [Windows](docs/windows.md) | install and first decode on Windows (not yet tested there) |
 | [Supported satellites](docs/satellites.md) | UNNE-1B, HADES-SA, HADES-L: frame layouts, baud rates, what works |
 | [Tools](tools/README.md) | the recording survey and probe (what is in these files? why does this one not decode?), builders, test-reference tools |
 | [Output folder](docs/output-folder.md) | `--outdir` and `hadesx-report`: one file set per frame type like the Windows tool; add passes to one folder |
