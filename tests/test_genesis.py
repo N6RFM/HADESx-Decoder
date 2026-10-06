@@ -7,8 +7,8 @@ import zlib
 import pytest
 
 import synth
-from unne1b import core
-from unne1b import genesis as g
+from hadesx import core
+from hadesx import genesis as g
 
 HERE = os.path.dirname(__file__)
 DATA = os.path.join(HERE, 'data')
@@ -175,7 +175,7 @@ def test_local_or_utc_label(tmp_path):
 # ---- whole chain: signal -> decoder -> folder ----------------------------------------------------------------------
 
 def test_hades_sa_recording_to_folder_through_the_command_line(tmp_path):
-    from unne1b.cli import main
+    from hadesx.cli import main
     import numpy as np
     sample = {int(k): bytes.fromhex(v) for k, v in json.load(open(os.path.join(DATA, 'hades_sa_sample_frames.json')))['frames'].items()}
     ssdv_packet = open(os.path.join(REAL, 'sat_03_type_10_ssdv_img_218_packet_0012.bin'), 'rb').read()
@@ -198,7 +198,7 @@ def test_hades_sa_recording_to_folder_through_the_command_line(tmp_path):
     names = set(os.listdir(out))
     for need in ('sat_03_type_01.tlm', 'sat_03_type_01.dat', 'sat_03_type_03.tlm', 'sat_03_type_14_00.dat',
                  'sat_03_type_10_ssdv_img_218_packet_0012.bin', 'sat_03_type_11_codec2_frame_000.bin',
-                 'sat_03_type_11_codec2_frame_002.bin', '.unne1b_ingested.json'):
+                 'sat_03_type_11_codec2_frame_002.bin', '.hadesx_ingested.json'):
         assert need in names, need
     assert (out / 'sat_03_type_10_ssdv_img_218_packet_0012.bin').read_bytes() == ssdv_packet
     first = (out / 'sat_03_type_01.dat').read_bytes()

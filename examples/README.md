@@ -17,6 +17,6 @@
 Reproduce the small ones yourself:
 
 ```bash
-unne1b-decode examples/iq/pass_t122s_voice.iq --voice-wav /tmp/voice_start.wav   # first 6 voice packets (2.4 s)
-unne1b-decode examples/iq/pass_t032s_type14.iq --log /tmp/frames.jsonl
+hadesx-decode examples/iq/pass_t122s_voice.iq --voice-wav /tmp/voice_start.wav   # first 6 voice packets (2.4 s)
+hadesx-decode examples/iq/pass_t032s_type14.iq --log /tmp/frames.jsonl
 ```

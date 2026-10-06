@@ -17,7 +17,7 @@ from scipy import signal
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(ROOT, 'src'))
-from unne1b import FskCentreTracker, Unne1bDeframer, TYPE_NAMES   # noqa: E402
+from hadesx import FskCentreTracker, Unne1bDeframer, TYPE_NAMES   # noqa: E402
 
 IMG = os.path.join(ROOT, 'docs', 'img')
 EX = os.path.join(ROOT, 'examples')

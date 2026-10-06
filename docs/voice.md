@@ -31,22 +31,22 @@ correct reading turned out to be:
   therefore cut into ten 28-bit frames and each is padded.
 * **Missing packets** are replaced by 40 zero bytes (10 silent frames), like AMSAT-EA's merge tool.
 
-`unne1b.core` has the helpers (`voice_unwhiten`, `voice_pad_700c`, `voice_assemble`); `unne1b.voice` runs `c2dec`.
+`hadesx.core` has the helpers (`voice_unwhiten`, `voice_pad_700c`, `voice_assemble`); `hadesx.voice` runs `c2dec`.
 
 ## Usage
 
 ```bash
 # straight from the IQ
-unne1b-decode pass.iq --fs 50000 --voice-wav voice.wav     # writes voice_UNNE-1B.wav (the satellite is added to the name)
+hadesx-decode pass.iq --fs 50000 --voice-wav voice.wav     # writes voice_UNNE-1B.wav (the satellite is added to the name)
 
 # or in two steps
-unne1b-decode pass.iq --log frames.jsonl
-unne1b-voice frames.jsonl voice.wav
-unne1b-voice frames.jsonl voice_fast.wav --speed 1.15      # same pitch, 15 % faster
-unne1b-voice frames.jsonl voice_tape.wav --tape 1.15       # faster and higher, like a quick tape
+hadesx-decode pass.iq --log frames.jsonl
+hadesx-voice frames.jsonl voice.wav
+hadesx-voice frames.jsonl voice_fast.wav --speed 1.15      # same pitch, 15 % faster
+hadesx-voice frames.jsonl voice_tape.wav --tape 1.15       # faster and higher, like a quick tape
 ```
 
-`unne1b-voice` accepts the `.jsonl` log (it then uses the packet numbers: sorts, drops duplicates, fills gaps), a **per-type
+`hadesx-voice` accepts the `.jsonl` log (it then uses the packet numbers: sorts, drops duplicates, fills gaps), a **per-type
 output folder** made with `--outdir`, or a raw payload file written by `--c2out` (35 bytes per packet, in order).
 
 ### Every WAV says which satellite it is
@@ -73,10 +73,10 @@ Voice packets have **no CRC**, so a bit error in a frame number or in the data g
   and `--combine` merges all passes (use it when the passes are partial views of the same message).
 
 ```bash
-unne1b-voice ~/hades-sa --list-passes                   # which passes are in the folder
-unne1b-voice ~/hades-sa                                  # best pass -> ~/hades-sa/voice_HADES-SA.wav
-unne1b-voice ~/hades-sa --combine voice_all.wav          # all passes merged -> voice_all_HADES-SA.wav
-unne1b-voice raw_payloads.c2 --sat HADES-L voice.wav     # a raw file: say whose it is
+hadesx-voice ~/hades-sa --list-passes                   # which passes are in the folder
+hadesx-voice ~/hades-sa                                  # best pass -> ~/hades-sa/voice_HADES-SA.wav
+hadesx-voice ~/hades-sa --combine voice_all.wav          # all passes merged -> voice_all_HADES-SA.wav
+hadesx-voice raw_payloads.c2 --sat HADES-L voice.wav     # a raw file: say whose it is
 ```
 
 Output: 8 kHz, 16-bit, mono WAV. Example files from the pass: `examples/results/voice_700C.wav` (14.8 s) and

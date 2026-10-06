@@ -5,7 +5,7 @@ Recording: `unne1b_50000SPS_436888000Hz_2026_10_04_T22-48-12.iq` - complex float
 recorded). The big file is not in the repository. Everything below was produced from it with:
 
 ```bash
-unne1b-decode FULL.iq --fs 50000 --dll hadesr.dll --log frames.jsonl --c2out voice_payloads.c2 --voice-wav voice_700C.wav
+hadesx-decode FULL.iq --fs 50000 --dll hadesr.dll --log frames.jsonl --c2out voice_payloads.c2 --voice-wav voice_700C.wav
 ```
 
 Result files: [`examples/results/`](../examples/results). **45 valid frames** in about 19 s of processing.

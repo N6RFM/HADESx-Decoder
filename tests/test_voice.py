@@ -2,7 +2,7 @@ import shutil
 
 import pytest
 
-from unne1b.voice import wsola, load_packets, decode_pcm
+from hadesx.voice import wsola, load_packets, decode_pcm
 
 
 def test_wsola_changes_duration_not_pitch():

@@ -22,7 +22,7 @@ import sys
 import time
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'src'))
-from unne1b.core import DllDecoder   # noqa: E402
+from hadesx.core import DllDecoder   # noqa: E402
 
 
 MATH_STUBS = {

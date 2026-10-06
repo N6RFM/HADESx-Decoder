@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+* **Renamed to HADESx Decoder** (it covers UNNE-1B / HADES-E2, HADES-SA and HADES-L): package `hadesx`, commands `hadesx-decode`, `hadesx-voice`, `hadesx-report`, `grc/hadesx_decoder.grc`, `dist/hadesx_standalone.py`. The old `unne1b-*` commands, `import unne1b` and `python3 -m unne1b` keep working (deprecated), and folders made before the rename keep their `.unne1b_ingested.json` memory.
 * Documentation brought up to date (layout and tests, limitations and roadmap, the signal chain at any sample rate, README introduction) and `tests/test_docs.py`, which keeps every option, tool, module and link documented.
 * `unne1b-report FOLDER`: print the telemetry of a per-type output folder on the console, oldest first (`--summary`, `--brief`, `--sat`, `--type`, `--since`, `--until`; `--dll` renders UNNE-1B packets with all their fields from the saved data).
 * Example: `examples/iq/sdrconsole_two_satellites.wav`, an excerpt of an SDR Console recording of UNNE-1B and HADES-L shared by José Elías Díaz, EB1AO (WAV, two satellites, two baud rates), with a test.

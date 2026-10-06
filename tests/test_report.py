@@ -1,12 +1,12 @@
-"""unne1b-report: print what a per-type output folder holds, in time order, with filters; UNNE-1B through a DLL."""
+"""hadesx-report: print what a per-type output folder holds, in time order, with filters; UNNE-1B through a DLL."""
 import datetime
 import os
 
 import pytest
 
-from unne1b import genesis as g
-from unne1b import report
-from unne1b.report import report_main
+from hadesx import genesis as g
+from hadesx import report
+from hadesx.report import report_main
 
 T0 = 1791158458.0                                                  # 2026-10-05 00:00:58 UTC
 
@@ -82,7 +82,7 @@ def test_unne_1b_through_the_dll_uses_the_saved_data_and_the_packet_time(folder,
     class Dll(FakeDll):
         def __init__(self, path):
             pass
-    import unne1b.core as core
+    import hadesx.core as core
     monkeypatch.setattr(core, 'DllDecoder', Dll)
     dll_file = folder / 'hadesr.dll'
     dll_file.write_bytes(b'x')

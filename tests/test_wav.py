@@ -11,9 +11,9 @@ from scipy import signal
 
 import synth
 import wavhelp
-from unne1b import iqfile
-from unne1b.cli import main
-from unne1b.frontend import decimation_plan, pick_nfft
+from hadesx import iqfile
+from hadesx.cli import main
+from hadesx.frontend import decimation_plan, pick_nfft
 
 HERE = os.path.dirname(__file__)
 SAMPLE = {int(k): bytes.fromhex(v) for k, v in json.load(open(os.path.join(HERE, 'data', 'hades_sa_sample_frames.json')))['frames'].items()}

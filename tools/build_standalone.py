@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
-"""Build a single-file decoder (dist/unne1b_standalone.py) = core + folder output + voice + IQ reader + front end + cli.
+"""Build a single-file decoder (dist/hadesx_standalone.py) = core + folder output + voice + IQ reader + front end + cli.
 
     python3 tools/build_standalone.py
-    python3 dist/unne1b_standalone.py recording.wav --outdir ~/hades-sa --voice-wav voice.wav
+    python3 dist/hadesx_standalone.py recording.wav --outdir ~/hades-sa --voice-wav voice.wav
 """
 import os
 import re
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-SRC = os.path.join(ROOT, 'src', 'unne1b')
+SRC = os.path.join(ROOT, 'src', 'hadesx')
 ORDER = ['core', 'genesis', 'voice', 'iqfile', 'frontend', 'cli']
 TITLES = {'genesis': "per-type folder output (port of AMSAT-EA's HADES-SA decoder)", 'voice': 'voice', 'iqfile': 'IQ files (raw and WAV)',
           'frontend': 'signal chain', 'cli': 'command line'}
@@ -32,8 +32,8 @@ def build(path):
     parts['voice'] = parts['voice'].replace('def main(argv=None):', 'def voice_main(argv=None):')
     parts['voice'] = parts['voice'].replace("if __name__ == '__main__':\n    main()\n", '')
     out = ['#!/usr/bin/env python3\n'
-           '"""UNNE-1B / HADES-SA / HADES-L decoder - single-file build of the unne1b package.\n'
-           'Usage: python3 unne1b_standalone.py recording.wav [--fs 50000] [--outdir DIR] [--dll hadesr.dll] '
+           '"""UNNE-1B / HADES-SA / HADES-L decoder - single-file build of the hadesx package.\n'
+           'Usage: python3 hadesx_standalone.py recording.wav [--fs 50000] [--outdir DIR] [--dll hadesr.dll] '
            '[--voice-wav out.wav] [--log frames.jsonl]\n"""\n', parts['core']]
     for n in ORDER[1:]:
         out.append('\n\n# ===== %s =====\n' % TITLES[n])
@@ -45,7 +45,7 @@ def build(path):
 
 
 def main():
-    print('wrote', build(os.path.join(ROOT, 'dist', 'unne1b_standalone.py')))
+    print('wrote', build(os.path.join(ROOT, 'dist', 'hadesx_standalone.py')))
 
 
 if __name__ == '__main__':

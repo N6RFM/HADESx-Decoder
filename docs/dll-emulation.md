@@ -6,7 +6,7 @@ calibration formulas. Rather than re-deriving them, this project can run the dec
 
 ```bash
 pip install -e ".[dll]"                      # unicorn + pefile
-unne1b-decode pass.iq --fs 50000 --dll /path/to/hadesr.dll
+hadesx-decode pass.iq --fs 50000 --dll /path/to/hadesr.dll
 ```
 
 You must obtain `hadesr.dll` from AMSAT-EA yourself; it is **not** in this repository (see [NOTICE.md](../NOTICE.md)).

@@ -5,8 +5,8 @@ shifted so the two satellites, 222 kHz apart, sit at -111 and +111 kHz). Three p
 import json
 import os
 
-from unne1b import iqfile
-from unne1b.cli import main
+from hadesx import iqfile
+from hadesx.cli import main
 
 EXAMPLE = os.path.join(os.path.dirname(__file__), '..', 'examples', 'iq', 'sdrconsole_two_satellites.wav')
 PACKETS = [  # (type, source address, descrambled bytes)

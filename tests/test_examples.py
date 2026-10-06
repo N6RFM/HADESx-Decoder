@@ -4,7 +4,7 @@ import os
 
 import pytest
 
-from unne1b.cli import main
+from hadesx.cli import main
 
 ROOT = os.path.dirname(os.path.dirname(__file__))
 IQ = os.path.join(ROOT, 'examples', 'iq')
@@ -39,7 +39,7 @@ def test_voice_stream_and_wav(tmp_path):
     assert all(f['type'] == 15 for f in fr)
     import shutil
     if shutil.which('c2dec'):                             # the WAV is named after the satellite: v_UNNE-1B.wav
-        from unne1b.voice import read_wav_info
+        from hadesx.voice import read_wav_info
         tagged = tmp_path / 'v_UNNE-1B.wav'
         assert not wav.exists() and tagged.exists() and tagged.stat().st_size > 20000
         info = read_wav_info(str(tagged))

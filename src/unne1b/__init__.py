@@ -1,5 +1,9 @@
-"""UNNE-1B (HADES-E2) FSK telemetry and CODEC2 voice decoder."""
-from .core import *          # noqa: F401,F403  (single self-contained module, see core.py)
-from .core import __all__ as _core_all  # noqa: F401
+"""Compatibility: the package was renamed to `hadesx` (HADESx Decoder). `import unne1b`, `unne1b.core`, `unne1b.cli`,
+`python3 -m unne1b` and `python3 -m unne1b.report` still work.
 
-__version__ = "1.0.1"
+Deprecated: use `hadesx`. This shim is kept for a release or two."""
+import hadesx
+from hadesx import *   # noqa: F401,F403
+
+__version__ = hadesx.__version__
+__all__ = list(getattr(hadesx, '__all__', []))

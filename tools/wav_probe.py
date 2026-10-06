@@ -21,7 +21,7 @@ import numpy as np
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'src'))
 try:                                                    # the repository's own file-name parser, when it can be found
-    from unne1b.iqfile import start_from_name
+    from hadesx.iqfile import start_from_name
 except ImportError:
     def start_from_name(name):
         return None

@@ -10,9 +10,9 @@ import random
 import pytest
 
 import synth
-from unne1b import (crc16_ccitt_false, scramble, format_frame, parse_bauds, type_name, MultiBaudDeframer,
+from hadesx import (crc16_ccitt_false, scramble, format_frame, parse_bauds, type_name, MultiBaudDeframer,
                     Unne1bDeframer)
-from unne1b.voice import load_packets
+from hadesx.voice import load_packets
 
 HERE = os.path.dirname(__file__)
 DATA = json.load(open(os.path.join(HERE, 'data', 'hades_sa_sample_frames.json')))

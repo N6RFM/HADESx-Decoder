@@ -8,7 +8,7 @@ Scripts that live next to the package but are not installed with it. Run them fr
 | [`iq_survey.py`](#iq_surveypy---what-is-in-a-folder-of-recordings) | **What is in these recordings?** Format, sample rate, frequency, satellite and packet types of every file in a folder | numpy, scipy |
 | [`wav_probe.py`](#wav_probepy---why-does-this-one-file-not-decode) | **Why does this file not decode?** Header, I/Q sanity, spectrum lines, burst times | numpy |
 | [`cut_excerpt.py`](#cut_excerptpy---cut-a-small-excerpt-to-share-or-to-add-as-an-example) | **Cut a small excerpt** out of a big recording (raw or WAV) to share it or add it to `examples/`: any segments, optional filtering to a lower rate, a frequency shift to keep two distant satellites in a small file | numpy, scipy |
-| [`build_standalone.py`](#building) | Single-file decoder `dist/unne1b_standalone.py` | - |
+| [`build_standalone.py`](#building) | Single-file decoder `dist/hadesx_standalone.py` | - |
 | [`build_grc.py`](#building) | The GNU Radio Companion flowgraph | - |
 | [`make_plots.py`](#building) | The figures in `docs/img` | matplotlib |
 | [`compare_with_dll.py`, `make_dll_golden.py`, `dll_oracle.py`](#testing-against-amsat-eas-own-decoders) | Check the decoders against AMSAT-EA's decoder DLLs | unicorn, pefile, **your own copies of the DLLs** |
@@ -116,7 +116,7 @@ about 0.4-2 s.
 
 | You see | It means | Do this |
 |---|---|---|
-| bursts at the satellite's frequency, `PROBLEM` absent | the signal is there | run `unne1b-decode FILE` (no `--fs` for a WAV). Strong bursts decode and the weakest may not (in a real 1 Msps recording a burst 25 dB over the noise in 60 Hz bins decoded); if some do not, try `--min-db 10 --emit-unverified` to see the frames that fail their CRC |
+| bursts at the satellite's frequency, `PROBLEM` absent | the signal is there | run `hadesx-decode FILE` (no `--fs` for a WAV). Strong bursts decode and the weakest may not (in a real 1 Msps recording a burst 25 dB over the noise in 60 Hz bins decoded); if some do not, try `--min-db 10 --emit-unverified` to see the frames that fail their CRC |
 | `PROBLEM I and Q are almost identical` | one real channel recorded twice: not IQ | record IQ (two different channels), not demodulated audio |
 | `PROBLEM one channel is silent` / `all samples are zero` | recorder or sound-card setting | check the recorder: "IQ"/"stereo" mode, input device |
 | the header gives no usable rate | e.g. both rate field and byte rate are 0 | give `--fs HZ` (the recorder shows its sample rate), or `--fs guess` |
@@ -135,10 +135,10 @@ python3 tools/cut_excerpt.py "big recording.wav" --segments 105.0-107.6,115.6-11
 ```
 
 1. **Find the times**: `python3 tools/iq_survey.py FILE` lists the bursts (start-end in seconds); or the `t=` values of the frames in a
-   `--log` file from `unne1b-decode`. Take about half a second before and after each burst (a UNNE-1B packet is up to 2 s long).
+   `--log` file from `hadesx-decode`. Take about half a second before and after each burst (a UNNE-1B packet is up to 2 s long).
 2. **Cut**: the segments are joined one after the other, filtered and resampled to `--rate` (default 500 kHz, never higher than the
    input), and written as a stereo I/Q WAV. The output carries the **centre frequency and the start time** of the first segment in
-   its header and a comment naming the source file, so `unne1b-decode` and the survey read it with no option.
+   its header and a comment naming the source file, so `hadesx-decode` and the survey read it with no option.
 3. **Two satellites far apart** (UNNE-1B is 222 kHz above HADES-L): `--shift 111000 --rate 250000` moves the middle between them to the
    centre, so both fit inside +-125 kHz and the file is half the size. The header's centre frequency is updated to match.
 4. **Check** with `python3 tools/iq_survey.py --decode excerpt.wav`: the satellites and packet types must still be there.
@@ -150,7 +150,7 @@ python3 tools/cut_excerpt.py "big recording.wav" --segments 105.0-107.6,115.6-11
 | `--shift HZ` | move this frequency offset to the centre first |
 | `--bits 16\|24\|32` | 16-bit PCM (default), 24-bit PCM or 32-bit float |
 | `--gain auto\|X` | `auto` (default) scales the noise to a healthy level without clipping; or a number |
-| `--fs`, `--format`, `--swap-iq` | as for `unne1b-decode`, for inputs whose header does not describe them |
+| `--fs`, `--format`, `--swap-iq` | as for `hadesx-decode`, for inputs whose header does not describe them |
 
 The size is `seconds x rate x 4 bytes`: 4 s at 250 kHz is 4 MB. Nothing is changed in the input. Only recordings you may share
 should go into the repository: it is public.
@@ -160,7 +160,7 @@ should go into the repository: it is public.
 1. `python3 tools/wav_probe.py FILE` (or `iq_survey.py FILE` for raw files): is there a burst, and at which frequency?
 2. No burst at all: it is the recording (no pass, wrong frequency, antenna), not the decoder.
 3. Bursts: `python3 tools/iq_survey.py --decode FILE`. `(needs --swap-iq)` means exactly that.
-4. Still nothing: weak signal. `unne1b-decode FILE --min-db 10 --emit-unverified --log frames.jsonl` shows frames that nearly
+4. Still nothing: weak signal. `hadesx-decode FILE --min-db 10 --emit-unverified --log frames.jsonl` shows frames that nearly
    decoded (`CRC FAIL - unverified`) and `--flips 4` repairs a few more bit errors.
 5. Send the `wav_probe.py` output (or the survey line) with your question.
 
@@ -184,13 +184,13 @@ satellite's, and any sample rate from 48 kHz up works (tested to 2 MHz); the tra
 
 | Command | Result |
 |---|---|
-| `python3 tools/build_standalone.py` | `dist/unne1b_standalone.py`: the whole decoder (decoders, voice, WAV reader, front end, command line) in one file: `python3 unne1b_standalone.py recording.wav` |
-| `python3 tools/build_grc.py` | `grc/unne1b_decoder.grc`, the GNU Radio Companion flowgraph. It embeds `core.py` and `genesis.py`, so **re-run it after changing either** (a test checks the committed file is current). Do not save your own changes over this file in Companion; work on a copy |
+| `python3 tools/build_standalone.py` | `dist/hadesx_standalone.py`: the whole decoder (decoders, voice, WAV reader, front end, command line) in one file: `python3 hadesx_standalone.py recording.wav` |
+| `python3 tools/build_grc.py` | `grc/hadesx_decoder.grc`, the GNU Radio Companion flowgraph. It embeds `core.py` and `genesis.py`, so **re-run it after changing either** (a test checks the committed file is current). Do not save your own changes over this file in Companion; work on a copy |
 | `python3 tools/make_plots.py [FULL_PASS.iq]` | the figures in `docs/img` (the whole-pass overview needs the big recording) |
 
 ## Testing against AMSAT-EA's own decoders
 
-The HADES-SA and HADES-L decoders in `src/unne1b/genesis.py` are checked against AMSAT-EA's own programs. The test data is in
+The HADES-SA and HADES-L decoders in `src/hadesx/genesis.py` are checked against AMSAT-EA's own programs. The test data is in
 the repository (`tests/data/*golden*.json`, run by `pytest`); these tools regenerate it or repeat the comparison on fresh frames.
 The DLLs are AMSAT-EA's and are **not** in the repository: use the copies from their SoundModem packages.
 

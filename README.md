@@ -1,6 +1,6 @@
-# UNNE-1B Decoder
+# HADESx Decoder
 
-[![tests](https://github.com/N6RFM/UNNE-1B-Decoder/actions/workflows/ci.yml/badge.svg)](https://github.com/N6RFM/UNNE-1B-Decoder/actions/workflows/ci.yml)
+[![tests](https://github.com/N6RFM/HADESx-Decoder/actions/workflows/ci.yml/badge.svg)](https://github.com/N6RFM/HADESx-Decoder/actions/workflows/ci.yml)
 
 Decode the **UNNE-1B (HADES-E2)**, **HADES-SA** and **HADES-L** amateur-radio satellites straight from an SDR recording (raw IQ, or a WAV
 file from SDR#, HDSDR or SDR Console, at any sample rate): 200 and 800 baud FSK telemetry (CRC-checked, with field-by-field readouts)
@@ -35,7 +35,7 @@ IQ file / SDR  ->  FSK tracker (finds the signal anywhere in the band, follows i
 * **Also understands HADES-SA and HADES-L frames** (length-byte layout, 800 and 200 baud, automatic): tested on **real recordings** of HADES-SA and HADES-L (telemetry and voice decode; image packets are not decoded yet) and with AMSAT-EA's sample frames; HADES-L Lofith data and ICM messages are decoded too, and both satellites' decoders match their package's own DLL; see [Supported satellites](docs/satellites.md).
 * **Per-type output folder** (`--outdir`): the same files as AMSAT-EA's Windows tool (labelled `.tlm`, `.dat` data lines, `.bin` voice and image files), and **new frames from later passes are added to the same folder** without duplicates. HADES-SA frames are decoded natively (no DLL); see [Output folder](docs/output-folder.md).
 * **Reads WAV I/Q recordings** from SDR programs at any sample rate (rate, format and centre frequency from the header; `--swap-iq` if I and Q are swapped) and raw files; see [getting started](docs/getting-started.md).
-* **`unne1b-report FOLDER`** prints everything a per-type output folder holds on the console, oldest first, with filters and a summary; UNNE-1B packets with all their fields through `--dll hadesr.dll` (see [output-folder.md](docs/output-folder.md)).
+* **`hadesx-report FOLDER`** prints everything a per-type output folder holds on the console, oldest first, with filters and a summary; UNNE-1B packets with all their fields through `--dll hadesr.dll` (see [output-folder.md](docs/output-folder.md)).
 * **Optional official decode text**: run AMSAT-EA's own `hadesr.dll` inside an x86 emulator
   (no Wine needed) to get the labelled values (battery voltage, temperatures, ...). You supply the DLL.
 * **GNU Radio Companion flowgraph** with live plots, using the very same decoder code.
@@ -63,14 +63,14 @@ A 354 s, 50 ksps recording of the pass of **2026-10-04 22:48:12** decodes to 45 
 ## Quick start
 
 ```bash
-git clone https://github.com/N6RFM/UNNE-1B-Decoder.git
-cd UNNE-1B-Decoder
+git clone https://github.com/N6RFM/HADESx-Decoder.git
+cd HADESx-Decoder
 python3 -m venv --system-site-packages .venv && . .venv/bin/activate
 pip install -e .                      # numpy + scipy
 sudo apt install codec2               # only needed for the voice WAV (provides c2dec)
 
 # decode one of the bundled example recordings
-unne1b-decode examples/iq/pass_t211s_type01.iq --fs 50000
+hadesx-decode examples/iq/pass_t211s_type01.iq --fs 50000
 ```
 
 Output:
@@ -89,7 +89,7 @@ With your own copy of AMSAT-EA's `hadesr.dll` you get every field labelled
 (`pip install -e .[dll]` first - see [docs/dll-emulation.md](docs/dll-emulation.md)):
 
 ```bash
-unne1b-decode examples/iq/pass_t211s_type01.iq --fs 50000 --dll /path/to/hadesr.dll
+hadesx-decode examples/iq/pass_t211s_type01.iq --fs 50000 --dll /path/to/hadesr.dll
 ```
 
 ```
@@ -101,18 +101,18 @@ ibat  :   35 mA (Current flowing out from the battery)
 Voice, from a recording that contains it:
 
 ```bash
-unne1b-decode examples/iq/pass_t122s_voice.iq --voice-wav voice.wav     # -> voice_UNNE-1B.wav: the satellite is in the name
-unne1b-decode your_pass.iq --log frames.jsonl --voice-wav voice.wav --voice-speed 1.15
-unne1b-voice ~/hades-sa                                                   # WAV from a per-type output folder (best pass)
+hadesx-decode examples/iq/pass_t122s_voice.iq --voice-wav voice.wav     # -> voice_UNNE-1B.wav: the satellite is in the name
+hadesx-decode your_pass.iq --log frames.jsonl --voice-wav voice.wav --voice-speed 1.15
+hadesx-voice ~/hades-sa                                                   # WAV from a per-type output folder (best pass)
 ```
 
 Every WAV carries its satellite in the file name and in tags inside the file; voice from different satellites is never mixed.
 See [voice.md](docs/voice.md).
 
-GNU Radio: open `grc/unne1b_decoder.grc`, set the `iq_file` variable (see
+GNU Radio: open `grc/hadesx_decoder.grc`, set the `iq_file` variable (see
 [docs/gnuradio.md](docs/gnuradio.md)), run.
 
-Using the single-file release (`unne1b_standalone.py`) on Debian/Ubuntu: `sudo apt install python3-numpy python3-scipy`, then run it with `python3`.
+Using the single-file release (`hadesx_standalone.py`) on Debian/Ubuntu: `sudo apt install python3-numpy python3-scipy`, then run it with `python3`.
 
 ## Documentation
 
@@ -138,7 +138,7 @@ Using the single-file release (`unne1b_standalone.py`) on Debian/Ubuntu: `sudo a
 ## Repository layout
 
 ```
-src/unne1b/        core.py (protocol, tracker, deframer), cli.py, voice.py
+src/hadesx/        core.py (protocol, tracker, deframer), cli.py, voice.py
 grc/               GNU Radio Companion flowgraph (generated from core.py)
 examples/iq/       three short IQ excerpts cut from the full pass (6.6 MB)
 examples/results/  decoded frames, tracking report, voice WAVs from the full pass
@@ -165,7 +165,7 @@ the figures and result files were produced from the full file.
 
 ## Authorship
 
-UNNE-1B Decoder was developed by **N6RFM**, with the help of **Claude**, an AI assistant made by Anthropic.
+HADESx Decoder was developed by **N6RFM**, with the help of **Claude**, an AI assistant made by Anthropic.
 
 * **N6RFM** supplied the recordings and the AMSAT-EA documents, ran and tested everything against real signals,
   listened to the decoded voice and identified what it says, and published and maintains the project.
@@ -174,6 +174,21 @@ UNNE-1B Decoder was developed by **N6RFM**, with the help of **Claude**, an AI a
 
 The code is tested (see [docs/development.md](docs/development.md)), but it was written with AI assistance and has
 been checked against one real pass, so please report anything that looks wrong.
+
+## Renamed from UNNE-1B Decoder
+
+This project was called *UNNE-1B Decoder*; it now covers the HADES family (UNNE-1B / HADES-E2, HADES-SA, HADES-L) and is named
+**HADESx Decoder**. The repository, the package (`hadesx`) and the commands changed; the old names keep working for now:
+
+| Old (deprecated) | New |
+|---|---|
+| `unne1b-decode` | `hadesx-decode` |
+| `unne1b-voice` | `hadesx-voice` |
+| `unne1b-report` | `hadesx-report` |
+| `python3 -m unne1b`, `import unne1b` | `python3 -m hadesx`, `import hadesx` |
+
+GitHub redirects the old repository address, so existing clones and links keep working. Folders made with `--outdir` before the
+rename are recognised (the hidden `.unne1b_ingested.json` is still read). After `pip install -e .` the new commands exist.
 
 ## Acknowledgements and licence
 

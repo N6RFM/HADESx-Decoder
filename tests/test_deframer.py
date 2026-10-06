@@ -4,7 +4,7 @@ import random
 import pytest
 
 import synth
-from unne1b import TOTAL_BYTES
+from hadesx import TOTAL_BYTES
 
 TYPES = [1, 2, 3, 4, 5, 6, 8, 9, 10, 12, 14]
 
@@ -56,7 +56,7 @@ def test_corrupted_crc_is_not_reported():
 
 def test_tracker_follows_two_bursts_at_different_frequencies():
     import numpy as np
-    from unne1b import FskCentreTracker
+    from hadesx import FskCentreTracker
     rng = random.Random(9)
     d = lambda t: bytes(rng.randrange(256) for _ in range(synth.data_len(t)))
     a = synth.fsk_iq(synth.make_packet(2, 0xC, d(2)), center=-3000, snr_db=30)

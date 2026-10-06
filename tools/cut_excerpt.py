@@ -12,9 +12,9 @@
   file: with UNNE-1B at +222 kHz and HADES-L at 0, `--shift 111000 --rate 250000` puts them at +-111 kHz, inside +-125 kHz, and
   halves the size. The centre frequency in the header is updated to match.
 * The output is a stereo I/Q WAV with the centre frequency and the start time (of the first segment) in the header and a comment
-  naming the source, so `unne1b-decode` and `tools/iq_survey.py` read it without any option.
+  naming the source, so `hadesx-decode` and `tools/iq_survey.py` read it without any option.
 * `--bits 16|24|32`  (default 16; 32 = float)    `--gain auto|X`  auto scales the noise to a healthy level (default)
-  `--fs HZ` / `--format` / `--swap-iq`  as for unne1b-decode, for inputs the header does not describe.
+  `--fs HZ` / `--format` / `--swap-iq`  as for hadesx-decode, for inputs the header does not describe.
 
 Nothing is changed in the input file. The size of the result is segments x rate x 4 bytes (16-bit): 2.6 s at 500 kHz is 5 MB.
 """
@@ -27,7 +27,7 @@ import numpy as np
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(HERE, '..', 'src'))
-from unne1b.iqfile import IQFile, IQFormatError, write_iq_wav   # noqa: E402
+from hadesx.iqfile import IQFile, IQFormatError, write_iq_wav   # noqa: E402
 
 
 def parse_segments(text):
@@ -93,7 +93,7 @@ def main():
         gain = float(a.gain)
     z = (z * gain).astype(np.complex64)
     start = (src.start + segs[0][0]) if src.start is not None else None
-    comment = 'Excerpt of "%s": %s s; filtered and resampled from %.0f to %.0f Hz%s; gain %.1f. Made with tools/cut_excerpt.py of UNNE-1B Decoder.' % (
+    comment = 'Excerpt of "%s": %s s; filtered and resampled from %.0f to %.0f Hz%s; gain %.1f. Made with tools/cut_excerpt.py of HADESx Decoder.' % (
         os.path.basename(a.input), ', '.join('%.1f-%.1f' % s for s in segs), src.fs, rate,
         (', centre moved by %+.0f Hz' % a.shift) if a.shift else '', gain)
     centre = (src.center_freq + a.shift) if src.center_freq else None

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Compare src/unne1b/genesis.py with a decoder DLL on random frames (needs your own copy of the DLL; see dll_oracle.py).
+"""Compare src/hadesx/genesis.py with a decoder DLL on random frames (needs your own copy of the DLL; see dll_oracle.py).
 
     python3 tools/compare_with_dll.py --dll hadesl.dll --source 5 --types 1,2,3,7,14,15 -n 50
     python3 tools/compare_with_dll.py --dll hadessa.dll --source 3 -n 50          # all types
@@ -18,7 +18,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 sys.path.insert(0, os.path.join(HERE, '..', 'src'))
 from dll_oracle import ProcesarOracle   # noqa: E402
-from unne1b import genesis as g         # noqa: E402
+from hadesx import genesis as g         # noqa: E402
 
 NOW = 1775074700
 ALL = {3: [1, 2, 3, 4, 5, 8, 9, 10, 11, 12, 13, 14, 15], 5: [1, 2, 3, 4, 5, 7, 8, 9, 10, 11, 12, 13, 14, 15]}

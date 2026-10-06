@@ -11,7 +11,7 @@ in it are known.
 | `pass_t211s_type01.iq` | 1.4 MB | 211.14 s | 3.43 s | 1 frame: type 1 power, sclock 192304 |
 
 ```bash
-unne1b-decode pass_t211s_type01.iq --fs 50000
+hadesx-decode pass_t211s_type01.iq --fs 50000
 ```
 
 `metadata.json` repeats this in machine-readable form. To view a file: GNU Radio's file source (type *complex*),
@@ -34,7 +34,7 @@ that UNNE-1B (222 kHz above HADES-L) and HADES-L both fit; the header says so (c
 | 4.4 s | HADES-L, 800 baud | type 1 power |
 
 ```bash
-unne1b-decode sdrconsole_two_satellites.wav              # rate, format and band come from the file: no options
+hadesx-decode sdrconsole_two_satellites.wav              # rate, format and band come from the file: no options
 python3 ../../tools/iq_survey.py --decode sdrconsole_two_satellites.wav
 ```
 

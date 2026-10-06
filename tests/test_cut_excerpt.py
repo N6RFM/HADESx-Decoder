@@ -11,8 +11,8 @@ from scipy import signal
 import synth
 import wavhelp
 from test_wav import SAMPLE, decode
-from unne1b import iqfile
-from unne1b.cli import main as decode_main
+from hadesx import iqfile
+from hadesx.cli import main as decode_main
 
 ROOT = os.path.join(os.path.dirname(__file__), '..')
 sys.path.insert(0, os.path.join(ROOT, 'tools'))

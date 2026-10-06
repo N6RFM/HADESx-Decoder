@@ -6,7 +6,7 @@ import re
 
 import pytest
 
-from unne1b import cli, report, voice
+from hadesx import cli, report, voice
 
 ROOT = os.path.join(os.path.dirname(__file__), '..')
 
@@ -37,9 +37,9 @@ def options_of(main_or_parser):
 
 
 @pytest.mark.parametrize('command,entry,doc', [
-    ('unne1b-decode', cli.build_parser, 'docs/getting-started.md'),
-    ('unne1b-voice', voice.main, 'docs/voice.md'),
-    ('unne1b-report', report.report_main, 'docs/output-folder.md'),
+    ('hadesx-decode', cli.build_parser, 'docs/getting-started.md'),
+    ('hadesx-voice', voice.main, 'docs/voice.md'),
+    ('hadesx-report', report.report_main, 'docs/output-folder.md'),
 ])
 def test_every_option_is_documented_where_the_command_is_documented(command, entry, doc):
     t = text(doc)
@@ -55,7 +55,7 @@ def test_every_tool_is_listed_in_the_tools_readme():
 
 def test_every_module_is_listed_in_the_development_page():
     t = text('docs/development.md')
-    mods = [os.path.basename(f) for f in glob.glob(os.path.join(ROOT, 'src', 'unne1b', '*.py'))]
+    mods = [os.path.basename(f) for f in glob.glob(os.path.join(ROOT, 'src', 'hadesx', '*.py'))]
     missing = [m for m in sorted(mods) if m not in ('__init__.py', '__main__.py') and m not in t]
     assert not missing, 'modules missing from docs/development.md: %s' % missing
 
@@ -68,7 +68,7 @@ def test_every_test_file_is_listed_in_the_development_page():
 
 
 def test_every_console_command_is_in_the_readme():
-    scripts = re.findall(r'^(unne1b-[a-z]+)\s*=', text('pyproject.toml'), re.M)
+    scripts = re.findall(r'^((?:hadesx|unne1b)-[a-z]+)\s*=', text('pyproject.toml'), re.M)
     assert scripts and all(s in text('README.md') for s in scripts), scripts
 
 

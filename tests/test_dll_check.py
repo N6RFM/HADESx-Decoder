@@ -1,7 +1,7 @@
 """--dll takes hadesr.dll of the UNNE-1B package; the HADES-SA and HADES-L DLLs are refused with a clear message."""
 import pytest
 
-from unne1b import cli, core, report
+from hadesx import cli, core, report
 
 HADESR = {'visualiza_nebrijapayload_data_packet', 'visualiza_fraunhoferpayload_data_packet', 'visualiza_powerpacket'}
 HADESSA = {'visualiza_powerpacket', 'visualiza_ssdv', 'visualiza_codec2', 'visualiza_bbs', 'procesar'}

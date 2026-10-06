@@ -7,8 +7,8 @@ import wave
 
 import pytest
 
-from unne1b import genesis as g
-from unne1b import voice as v
+from hadesx import genesis as g
+from hadesx import voice as v
 
 HERE = os.path.dirname(__file__)
 RX = json.load(open(os.path.join(HERE, 'data', 'hades_sa_voice_receptions.json')))['receptions']

@@ -12,7 +12,7 @@
 * **Voice has no CRC**, so errors are undetectable; the mode/key were identified from the sister satellite's reference
   code and from signal statistics; confirmed by listening: the message is the opening of *Don Quijote*. The
   correct playback speed is not certain (natural at about 115-120 %). In a folder with many passes, different passes can carry
-  different content: `unne1b-voice` uses the pass with the most frames unless told otherwise.
+  different content: `hadesx-voice` uses the pass with the most frames unless told otherwise.
 * **UNNE-1B field decoding needs AMSAT-EA's `hadesr.dll`** for the labelled output (not in this repository; see
   [dll-emulation.md](dll-emulation.md)); without it UNNE-1B packets show their type, clock and raw bytes. HADES-SA and HADES-L are
   decoded natively.
@@ -37,7 +37,7 @@
 * Native decoders for HADES-SA and HADES-L, checked against each package's own decoder DLL.
 * HADES-family frames (HADES-SA, HADES-L), 200 and 800 baud detected automatically.
 * WAV recordings and any sample rate; recordings with two satellites; swapped I/Q; sample rate worked out from the signal.
-* The per-type output folder, voice WAVs identified by satellite, `unne1b-report`, the recording survey and probe tools.
+* The per-type output folder, voice WAVs identified by satellite, `hadesx-report`, the recording survey and probe tools.
 
 ## Roadmap ideas
 

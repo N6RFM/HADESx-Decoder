@@ -3,7 +3,7 @@
 
 The golden file holds, for a fixed set of frames (AMSAT-EA's sample frames plus seeded random frames of every packet
 type), the files the reference program writes for each: the labelled text, the data line and the binary file, with the
-clock strings and the epoch column replaced by placeholders.  tests/test_genesis.py checks that src/unne1b/genesis.py
+clock strings and the epoch column replaced by placeholders.  tests/test_genesis.py checks that src/hadesx/genesis.py
 produces the same.
 
     git clone https://github.com/AMSAT-EA/HADES-SA_SpinnyONE
@@ -22,7 +22,7 @@ import tempfile
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(ROOT, 'src'))
-from unne1b.genesis import BYTES_UTILES   # noqa: E402
+from hadesx.genesis import BYTES_UTILES   # noqa: E402
 
 TIME_RE = re.compile(rb'received on (?:local|UTC) time \d{8}-\d\d:\d\d:\d\d')
 FECHA_RE = re.compile(rb'\n\d{8}-\d\d:\d\d:\d\d Data matching')

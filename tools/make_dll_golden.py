@@ -4,7 +4,7 @@
 For a fixed set of frames (seeded random frames of every packet type, edge cases, AMSAT-EA's HADES-SA sample frames and real
 HADES-L frames) the golden files hold the files the DLL's own `procesar` routine writes: names, contents (clock strings and
 the epoch column replaced by placeholders) and the modes they are opened in. tests/test_dll_golden.py checks that
-src/unne1b/genesis.py produces the same.
+src/hadesx/genesis.py produces the same.
 
     python3 tools/make_dll_golden.py --sa path/to/hadessa.dll --l path/to/hadesl.dll
 """
@@ -19,7 +19,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 sys.path.insert(0, os.path.join(HERE, '..', 'src'))
 from dll_oracle import ProcesarOracle   # noqa: E402
-from unne1b import genesis as g         # noqa: E402
+from hadesx import genesis as g         # noqa: E402
 
 NOW = 1775074700
 DATA = os.path.join(HERE, '..', 'tests', 'data')

@@ -5,8 +5,8 @@ import os
 import pytest
 
 import synth
-from unne1b import genesis as g
-from unne1b.cli import main
+from hadesx import genesis as g
+from hadesx.cli import main
 
 DATA = os.path.join(os.path.dirname(__file__), 'data')
 REAL = json.load(open(os.path.join(DATA, 'hades_l_real_frames.json')))['frames']

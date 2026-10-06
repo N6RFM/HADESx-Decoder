@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
-"""Generate the GNU Radio Companion flowgraph (grc/unne1b_decoder.grc).
+"""Generate the GNU Radio Companion flowgraph (grc/hadesx_decoder.grc).
 
-The flowgraph embeds src/unne1b/core.py verbatim in two Embedded Python blocks, so the
+The flowgraph embeds src/hadesx/core.py verbatim in two Embedded Python blocks, so the
 flowgraph and the command-line tools always run the same decoder.  Re-run after editing core.py:
 
     python3 tools/build_grc.py
 """
 import os, sys
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-core = open(os.path.join(ROOT, 'src', 'unne1b', 'core.py')).read()
-genesis = open(os.path.join(ROOT, 'src', 'unne1b', 'genesis.py')).read()   # folder output (HADES-SA decoders)
+core = open(os.path.join(ROOT, 'src', 'hadesx', 'core.py')).read()
+genesis = open(os.path.join(ROOT, 'src', 'hadesx', 'genesis.py')).read()   # folder output (HADES-SA decoders)
 
 afc_wrapper = '''
 
@@ -55,7 +55,7 @@ class blk(gr.sync_block):
             t = self.tr.acc_tags[-1] / self.fs
             cen = self.tr.acc_cent[-1]
             if t - self.last_msg_t > 5.0:
-                print('[unne1b] FSK signal found at %+.0f Hz (input time %.1f s)' % (cen, t), flush=True)
+                print('[hadesx] FSK signal found at %+.0f Hz (input time %.1f s)' % (cen, t), flush=True)
                 self.message_port_pub(pmt.intern('centre'), pmt.from_double(float(cen)))
             self.last_msg_t = t
             self.nacc = na
@@ -104,15 +104,15 @@ class blk(gr.sync_block):
         if dll_path:
             try:
                 self.dll = DllDecoder(dll_path)
-                print('[unne1b] using official decoder from %s' % dll_path, flush=True)
+                print('[hadesx] using official decoder from %s' % dll_path, flush=True)
             except Exception as e:                      # noqa
-                print('[unne1b] could not load %s (%s) - install "unicorn pefile" for full '
+                print('[hadesx] could not load %s (%s) - install "unicorn pefile" for full '
                       'decoding; showing raw fields' % (dll_path, e), flush=True)
 
         if out_dir:           # per-type folder like AMSAT-EA's Windows tool (see docs/output-folder.md)
             self.writer = FolderWriter(str(out_dir), utc=True, history=bool(out_history),
                                        fallback=lambda fr: format_frame(fr, self.dll))
-            print('[unne1b] updating the per-type folder %s' % out_dir, flush=True)
+            print('[hadesx] updating the per-type folder %s' % out_dir, flush=True)
 
     def _epoch(self):
         """Reception time of the frames found in this call (epoch seconds, UTC)."""
@@ -231,7 +231,7 @@ def build(gui=True, throttle=True, iq='examples/iq/pass_t211s_type01.iq', dll=""
     gen_linking: dynamic
     generate_options: %s
     hier_block_src_path: '.:'
-    id: unne1b_decoder
+    id: hadesx_decoder
     max_nouts: '0'
     output_language: python
     placement: (0,0)
@@ -542,8 +542,8 @@ DEFAULT_IQ = 'examples/iq/pass_t211s_type01.iq'
 
 def main(argv=None):
     import argparse
-    ap = argparse.ArgumentParser(description='Generate grc/unne1b_decoder.grc from src/unne1b/core.py')
-    ap.add_argument('-o', '--output', default=os.path.join(ROOT, 'grc', 'unne1b_decoder.grc'))
+    ap = argparse.ArgumentParser(description='Generate grc/hadesx_decoder.grc from src/hadesx/core.py')
+    ap.add_argument('-o', '--output', default=os.path.join(ROOT, 'grc', 'hadesx_decoder.grc'))
     ap.add_argument('--headless', action='store_true', help='no Qt GUI, no throttle (used by tests/CI)')
     ap.add_argument('--iq', default=DEFAULT_IQ, help='default value of the iq_file variable')
     a = ap.parse_args(argv)

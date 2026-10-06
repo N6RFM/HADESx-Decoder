@@ -88,9 +88,9 @@ Types differ by satellite; the decoder shows the right name for the source addre
 ## Using it
 
 ```bash
-unne1b-decode pass.iq --fs 50000                       # auto: tries 200 and 800 baud
-unne1b-decode pass.iq --baud 800                       # only 800 baud (a little faster)
-unne1b-decode pass.iq --emit-unverified --log frames.jsonl
+hadesx-decode pass.iq --fs 50000                       # auto: tries 200 and 800 baud
+hadesx-decode pass.iq --baud 800                       # only 800 baud (a little faster)
+hadesx-decode pass.iq --emit-unverified --log frames.jsonl
 ```
 
 For HADES-SA or HADES-L record around **436.875** / **436.665 MHz** (complex float32, 50 ksps is what was tested). The

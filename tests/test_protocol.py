@@ -2,7 +2,7 @@
 import json
 import os
 
-from unne1b import (crc16_ccitt_false, descramble, scramble, check_frame, VOICE_XOR_KEY,
+from hadesx import (crc16_ccitt_false, descramble, scramble, check_frame, VOICE_XOR_KEY,
                     voice_assemble, voice_pad_700c, voice_unwhiten)
 
 HERE = os.path.dirname(__file__)

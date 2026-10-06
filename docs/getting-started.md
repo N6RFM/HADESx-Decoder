@@ -11,16 +11,16 @@
 ## Install
 
 ```bash
-git clone https://github.com/N6RFM/UNNE-1B-Decoder.git
-cd UNNE-1B-Decoder
+git clone https://github.com/N6RFM/HADESx-Decoder.git
+cd HADESx-Decoder
 python3 -m venv --system-site-packages .venv && . .venv/bin/activate
 pip install -e .            # or: pip install -e ".[dll]"   or   ".[dev]" for the test tools
-unne1b-decode --help
+hadesx-decode --help
 ```
 
-No install needed for a quick look: `PYTHONPATH=src python3 -m unne1b examples/iq/pass_t211s_type01.iq`.
+No install needed for a quick look: `PYTHONPATH=src python3 -m hadesx examples/iq/pass_t211s_type01.iq`.
 A single-file build for copying to another machine: `python3 tools/build_standalone.py`, then use
-`dist/unne1b_standalone.py` the same way.
+`dist/hadesx_standalone.py` the same way.
 
 ## What a recording must look like
 
@@ -41,7 +41,7 @@ Many recorders (SDR#, HDSDR, SDR Console, SpectraVue, ...) write IQ as a **stere
 Q. The decoder reads these directly and takes what it needs from the file itself:
 
 ```bash
-unne1b-decode recording.wav                     # sample rate, format and (usually) centre frequency come from the header
+hadesx-decode recording.wav                     # sample rate, format and (usually) centre frequency come from the header
 file recording.wav                              # Linux: shows e.g. "Microsoft PCM, 16 bit, stereo 192000 Hz"
 python3 tools/iq_survey.py --decode folder/     # what is in each file: rate, frequency, satellite, packet types
 ```
@@ -69,7 +69,7 @@ python3 tools/iq_survey.py --decode folder/     # what is in each file: rate, fr
 ## Decode a recording
 
 ```bash
-unne1b-decode pass.iq --fs 50000
+hadesx-decode pass.iq --fs 50000
 ```
 
 For every valid frame the tool prints a block to standard output; progress and the tracking report go to
@@ -129,9 +129,9 @@ Exit status is 0 if at least one frame was decoded, 1 otherwise.
 
 | File | Contains | Command |
 |---|---|---|
-| `examples/iq/pass_t211s_type01.iq` | type 1 Power packet | `unne1b-decode examples/iq/pass_t211s_type01.iq` |
-| `examples/iq/pass_t032s_type14.iq` | type 14 packet in a fading signal | `unne1b-decode examples/iq/pass_t032s_type14.iq` |
-| `examples/iq/pass_t122s_voice.iq` | start of the voice stream (6 packets) | `unne1b-decode examples/iq/pass_t122s_voice.iq --voice-wav v.wav` |
+| `examples/iq/pass_t211s_type01.iq` | type 1 Power packet | `hadesx-decode examples/iq/pass_t211s_type01.iq` |
+| `examples/iq/pass_t032s_type14.iq` | type 14 packet in a fading signal | `hadesx-decode examples/iq/pass_t032s_type14.iq` |
+| `examples/iq/pass_t122s_voice.iq` | start of the voice stream (6 packets) | `hadesx-decode examples/iq/pass_t122s_voice.iq --voice-wav v.wav` |
 
 Their positions in the full pass are listed in [example-pass.md](example-pass.md).
 

@@ -1,12 +1,12 @@
 # Per-type output folder (`--outdir`)
 
 The **HADES-SA and HADES-L** packages of AMSAT-EA's Windows tool (UZ7HO SoundModem + KISSGENESIS + `hadessa.dll` / `hadesl.dll`;
-the UNNE-1B package leaves nothing) leave a folder with **one set of files per frame type**. `unne1b-decode --outdir DIR` does the same, so you can look at frames by type, hand a folder to somebody else, and
+the UNNE-1B package leaves nothing) leave a folder with **one set of files per frame type**. `hadesx-decode --outdir DIR` does the same, so you can look at frames by type, hand a folder to somebody else, and
 **add new frames from later passes to the same folder** (voice, images, telemetry) without duplicates.
 
 ```bash
-unne1b-decode pass1.iq --outdir ~/hades-sa           # first pass: creates the folder
-unne1b-decode pass2.iq --outdir ~/hades-sa           # later pass: adds only what is new
+hadesx-decode pass1.iq --outdir ~/hades-sa           # first pass: creates the folder
+hadesx-decode pass2.iq --outdir ~/hades-sa           # later pass: adds only what is new
 ```
 
 It is not an export step: the folder *is* the result, updated in place by every run.
@@ -28,7 +28,7 @@ For satellite `NN` (the source address: `03` HADES-SA, `12` UNNE-1B) and packet 
 | `sat_NN_type_13.dat` | PN9 link test: received bytes in hex, appended; `.tlm` shows the matching rate | |
 | `sat_NN_type_15.tlm` | BBS contents (callsign, message, CODEC2 frames); on HADES-L (`sat_05`) the ICM message | |
 | `sat_05_type_07_lofith_frame_FFF.tlm` / `.dat` | HADES-L Lofith experiment: one file set per frame number `FFF` (`.dat`: one line per reception) | |
-| `.unne1b_ingested.json` | which recordings were already added (see below) | |
+| `.hadesx_ingested.json` | which recordings were already added (see below) | |
 
 The file names, the text, the `.dat` columns and the `.bin` layouts are those of AMSAT-EA's tool.
 
@@ -53,7 +53,7 @@ Every line starts with the reception time as epoch seconds (UTC) and a second co
 
 * A `.dat` line is **not added if an identical packet is already in the file** (same values; only the time columns are
   ignored). Satellite clocks keep advancing, so a real new transmission always differs.
-* A recording that was already added is recognised by name and size (`.unne1b_ingested.json`): running it again does nothing
+* A recording that was already added is recognised by name and size (`.hadesx_ingested.json`): running it again does nothing
   unless you give `--force`. This also keeps PN9 statistics and BBS files from being counted twice.
 * Voice and image files are keyed by frame number or image/packet number, so a better copy from a later pass replaces the
   older one automatically. The folder fills up pass by pass until every frame or packet is there.
@@ -62,7 +62,7 @@ Every line starts with the reception time as epoch seconds (UTC) and a second co
 ## Times
 
 AMSAT-EA's tool stamps frames with the computer's clock when they are processed. For a recording that would be meaningless,
-so `unne1b-decode` uses the **recording's start time plus the position of the frame**:
+so `hadesx-decode` uses the **recording's start time plus the position of the frame**:
 
 * from `--rec-start 2026-10-04T22:48:12Z`, or
 * from a date and time in the file name (`unne1b_50000SPS_436888000Hz_2026_10_04_T22-48-12.iq`), or
@@ -86,7 +86,7 @@ ssdv -d img224.ssdv img224.jpg
 awk '{print $1, $9}' sat_03_type_01.dat       # epoch, vbus1
 ```
 
-Voice frames that never arrived leave a gap: `c2dec` would then play the following frames too early. `unne1b-voice FOLDER`
+Voice frames that never arrived leave a gap: `c2dec` would then play the following frames too early. `hadesx-voice FOLDER`
 builds the WAV from the folder for you, fills gaps with silence, names the satellite in the file name and inside the file, and
 uses the best pass (`--list-passes`, `--pass N`, `--combine`; see [voice.md](voice.md)).
 
@@ -102,17 +102,17 @@ uses the best pass (`--list-passes`, `--pass N`, `--combine`; see [voice.md](voi
 * real files written by the Windows tool (`tests/data/windows_tool/`): a voice frame and an SSDV packet are reproduced
   exactly, and the line structure of the status, power, temperature, time-series, ephemeris, PN9 and BBS text matches.
 
-## Printing everything on the console: `unne1b-report`
+## Printing everything on the console: `hadesx-report`
 
-The folder holds the text of every packet, one file per reception. `unne1b-report` prints them all in one go, oldest first, across
+The folder holds the text of every packet, one file per reception. `hadesx-report` prints them all in one go, oldest first, across
 satellites:
 
 ```bash
-unne1b-report ~/hades-l-sdrc                       # every packet with its labelled fields
-unne1b-report ~/hades-l-sdrc --summary             # how many packets of each satellite and type, and when
-unne1b-report ~/hades-l-sdrc --brief               # one line per packet (time, satellite, type, satellite clock)
-unne1b-report ~/hades-l-sdrc --sat HADES-L --type 1,2 --since 2026-10-05T01:00
-unne1b-report ~/hades-l-sdrc | less                # page through it; > report.txt saves it
+hadesx-report ~/hades-l-sdrc                       # every packet with its labelled fields
+hadesx-report ~/hades-l-sdrc --summary             # how many packets of each satellite and type, and when
+hadesx-report ~/hades-l-sdrc --brief               # one line per packet (time, satellite, type, satellite clock)
+hadesx-report ~/hades-l-sdrc --sat HADES-L --type 1,2 --since 2026-10-05T01:00
+hadesx-report ~/hades-l-sdrc | less                # page through it; > report.txt saves it
 ```
 
 | Option | |
@@ -122,7 +122,7 @@ unne1b-report ~/hades-l-sdrc | less                # page through it; > report.t
 | `--type N,N` | only these packet types |
 | `--since T`, `--until T` | UTC, e.g. `2026-10-05T01:00` |
 | `--dll hadesr.dll` | UNNE-1B packets with all their fields (below) |
-| `--voice`, `--images` | include CODEC2 voice and SSDV image packets (left out by default: `unne1b-voice` makes the audio) |
+| `--voice`, `--images` | include CODEC2 voice and SSDV image packets (left out by default: `hadesx-voice` makes the audio) |
 
 **UNNE-1B fields.** HADES-SA and HADES-L packets are decoded by this project and their text is printed as it is. UNNE-1B packets are
 stored as bytes (there is no native UNNE-1B field decoder yet), so without a DLL you see the type, the satellite clock and the raw data.
@@ -132,15 +132,15 @@ reception time replaces the clock the DLL prints.
 
 ```bash
 unzip UNNE-1B_MARIA-G_GENESIS-M_UZ7HO_Soundmodem_demodulator_and_decoder.zip -d ~/unne-package
-unne1b-report ~/hades-l-sdrc --dll ~/unne-package/hadesr.dll --sat UNNE-1B
+hadesx-report ~/hades-l-sdrc --dll ~/unne-package/hadesr.dll --sat UNNE-1B
 ```
 
 **Many recordings into one folder, then one report:**
 
 ```bash
-for f in ~/recordings/*.wav; do unne1b-decode "$f" --outdir ~/pass-folder 2>&1 | grep -E "valid frame"; done
-unne1b-report ~/pass-folder --summary
-unne1b-report ~/pass-folder --dll ~/unne-package/hadesr.dll > ~/pass-folder-report.txt
+for f in ~/recordings/*.wav; do hadesx-decode "$f" --outdir ~/pass-folder 2>&1 | grep -E "valid frame"; done
+hadesx-report ~/pass-folder --summary
+hadesx-report ~/pass-folder --dll ~/unne-package/hadesr.dll > ~/pass-folder-report.txt
 ```
 
 ## Differences from the Windows tool

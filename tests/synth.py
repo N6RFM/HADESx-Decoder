@@ -4,7 +4,7 @@ import struct
 
 import numpy as np
 
-from unne1b import TOTAL_BYTES, crc16_ccitt_false, scramble, VOICE_XOR_KEY
+from hadesx import TOTAL_BYTES, crc16_ccitt_false, scramble, VOICE_XOR_KEY
 
 
 def make_packet(ptype, addr, data):
@@ -72,7 +72,7 @@ def fsk_iq(pkt, fs=50000, baud=200, center=-5000.0, shift=1650.0, snr_db=None, d
 def decode_iq(x, fs=50000, flips=3, chunk=4096, bauds=(200,), emit_unverified=False):
     """Run the same chain as the CLI on an in-memory array; returns the list of frames."""
     from scipy import signal
-    from unne1b import FskCentreTracker, MultiBaudDeframer
+    from hadesx import FskCentreTracker, MultiBaudDeframer
     tr = FskCentreTracker(fs)
     ys = []
     for i in range(0, len(x), chunk):

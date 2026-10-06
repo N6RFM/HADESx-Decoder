@@ -2,7 +2,7 @@
 
 **Status: incomplete - not needed for decoding.** Kept as a record of the first approach. The signal reached
 UZ7HO SoundModem's waterfall through a virtual audio cable, but no frame was ever produced by SoundModem. Use
-`unne1b-decode` instead.
+`hadesx-decode` instead.
 
 | File | Purpose |
 |---|---|

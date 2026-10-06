@@ -3,24 +3,32 @@ requires = ["setuptools>=61"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "unne1b-decoder"
+name = "hadesx-decoder"
 version = "1.0.1"
-description = "Decoder for UNNE-1B (HADES-E2) 200 baud FSK telemetry and CODEC2 voice, with automatic Doppler tracking"
+description = "HADESx Decoder: decoder for the HADES family of amateur-radio satellites (UNNE-1B / HADES-E2, HADES-SA, HADES-L): 200 and 800 baud FSK telemetry and CODEC2 voice from SDR recordings, with automatic Doppler tracking"
 readme = "README.md"
 requires-python = ">=3.9"
 license = { text = "MIT" }
 authors = [{ name = "N6RFM" }]
-keywords = ["amateur radio", "satellite", "UNNE-1B", "HADES-E2", "AMSAT-EA", "FSK", "codec2", "gnuradio"]
+keywords = ["amateur radio", "satellite", "HADESx", "HADES", "UNNE-1B", "HADES-SA", "HADES-L", "HADES-E2", "AMSAT-EA", "FSK", "codec2", "gnuradio"]
 dependencies = ["numpy>=1.21", "scipy>=1.7"]
 
 [project.optional-dependencies]
 dll = ["unicorn>=2.0", "pefile"]
 dev = ["pytest", "matplotlib", "pyyaml"]
 
+[project.urls]
+Homepage = "https://github.com/N6RFM/HADESx-Decoder"
+Issues = "https://github.com/N6RFM/HADESx-Decoder/issues"
+
 [project.scripts]
-unne1b-decode = "unne1b.cli:main"
-unne1b-voice = "unne1b.voice:main"
-unne1b-report = "unne1b.report:main"
+hadesx-decode = "hadesx.cli:main"
+hadesx-voice = "hadesx.voice:main"
+hadesx-report = "hadesx.report:main"
+# the old names keep working (deprecated)
+unne1b-decode = "hadesx.cli:main"
+unne1b-voice = "hadesx.voice:main"
+unne1b-report = "hadesx.report:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]

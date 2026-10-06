@@ -1,7 +1,7 @@
 # Signal processing
 
-From IQ samples to verified frames. The tracker and the deframers are in `src/unne1b/core.py` (`FskCentreTracker`,
-`Unne1bDeframer`, `MultiBaudDeframer`) and the chain that joins them is `src/unne1b/frontend.py` (`FrontEnd`); the command-line tool
+From IQ samples to verified frames. The tracker and the deframers are in `src/hadesx/core.py` (`FskCentreTracker`,
+`Unne1bDeframer`, `MultiBaudDeframer`) and the chain that joins them is `src/hadesx/frontend.py` (`FrontEnd`); the command-line tool
 and the GNU Radio flowgraph run the same code.
 
 ```

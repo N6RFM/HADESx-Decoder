@@ -6,7 +6,7 @@ import re
 
 import pytest
 
-from unne1b import genesis as g
+from hadesx import genesis as g
 
 DATA = os.path.join(os.path.dirname(__file__), 'data')
 GOLD = {tag: json.load(open(os.path.join(DATA, 'dll_golden_%s.json' % tag)))['entries'] for tag in ('hades_sa', 'hades_l')}

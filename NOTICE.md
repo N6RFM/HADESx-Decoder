@@ -1,6 +1,6 @@
 # Credits, attribution and third-party notices
 
-**UNNE-1B Decoder builds directly on the open documentation and source code published by AMSAT-EA.**
+**HADESx Decoder builds directly on the open documentation and source code published by AMSAT-EA.**
 Without their transmission document, their open-source HADES-SA decoder and their satellite, this project
 could not have been written. Thank you to the AMSAT-EA team.
 
@@ -47,7 +47,7 @@ AMSAT-EA is credited here and in the README as the source.
 
 | Item | Where in this project | Source in AMSAT-EA's repository | Change |
 |---|---|---|---|
-| The 35-byte XOR keystream for CODEC2 voice payloads | `VOICE_XOR_KEY` in `src/unne1b/core.py`; documented in `docs/voice.md` | `byte_version/main.c`, function `visualiza_codec2`, array `xor_codec2[35]` | the 35 values are copied unchanged into a Python constant |
+| The 35-byte XOR keystream for CODEC2 voice payloads | `VOICE_XOR_KEY` in `src/hadesx/core.py`; documented in `docs/voice.md` | `byte_version/main.c`, function `visualiza_codec2`, array `xor_codec2[35]` | the 35 values are copied unchanged into a Python constant |
 | The rule "28 bits + 4 zero bits -> 4 bytes" for Codec2 700C frames | `voice_pad_700c()` | `byte_version/main.c`, function `add_padding_codec2` | re-implemented in Python (numpy) |
 | Missing voice packets become 40 zero bytes; Codec2 700C is mode 8 | `voice_assemble()`, `docs/voice.md` | `codec2-merge/main.c` | the behaviour was re-implemented; no code copied |
 | Scrambler: `x^17 + x^12 + 1`, state `0x2C350000`, bit 0 of each byte skipped | `descramble()`, `scramble()` | `byte_version/genesis_scrambler.c` | **independent** Python implementation, checked against the C code |
@@ -117,7 +117,7 @@ copyright field, so the individual who wrote it is not stated in the file itself
 
 Suggested citation:
 
-> N6RFM, *UNNE-1B Decoder* (2026), <https://github.com/N6RFM/UNNE-1B-Decoder>, developed with the help of
+> N6RFM, *HADESx Decoder* (2026), <https://github.com/N6RFM/HADESx-Decoder>, developed with the help of
 > Claude (Anthropic) and built on documentation and software by AMSAT-EA.
 
 ---
@@ -135,7 +135,7 @@ documents (the HADES-L transmissions description and the HADES-SA decoder source
 
 ## 7. The per-type output folder
 
-`src/unne1b/genesis.py` is a **Python port of the decoding and file-writing logic of AMSAT-EA's HADES-SA decoder**
+`src/hadesx/genesis.py` is a **Python port of the decoding and file-writing logic of AMSAT-EA's HADES-SA decoder**
 (`byte_version/main.c` in <https://github.com/AMSAT-EA/HADES-SA_SpinnyONE>, (c) AMSAT EA, CC BY 4.0): the structure layouts,
 scalings, printf formats, file names and the `.dat` / `.bin` formats are the original's, translated to Python, so that the
 folder written by `--outdir` looks and behaves like the one written by AMSAT-EA's Windows tool. The tables of satellite names,
@@ -154,7 +154,7 @@ Their decoder DLLs (`hadesr.dll`, `hadessa.dll`, `hadesl.dll`, (c) AMSAT EA) are
 HADES-SA and HADES-L ones in an x86 emulator (`tools/dll_oracle.py`) to produce `tests/data/dll_golden_hades_sa.json` and
 `dll_golden_hades_l.json`: the files each DLL's own frame-processing routine writes for a fixed set of frames (seeded random frames,
 AMSAT-EA's HADES-SA sample frames, and real HADES-L frames received by N6RFM). That output is AMSAT-EA's program output (CC BY 4.0) and is
-used only to test the Python decoders in `src/unne1b/genesis.py`, which are written to match it. The HADES-L packet layouts (Lofith,
+used only to test the Python decoders in `src/hadesx/genesis.py`, which are written to match it. The HADES-L packet layouts (Lofith,
 ICM message, status) were read from that decoder's behaviour and from AMSAT-EA's HADES-L transmissions description.
 
 ---

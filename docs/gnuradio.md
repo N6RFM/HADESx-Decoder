@@ -1,7 +1,7 @@
 # GNU Radio flowgraph
 
-`grc/unne1b_decoder.grc` (GNU Radio Companion 3.10) is the same decoder as the command-line tool, with live plots.
-It is **generated** by `tools/build_grc.py`, which embeds `src/unne1b/core.py` into the Embedded Python blocks;
+`grc/hadesx_decoder.grc` (GNU Radio Companion 3.10) is the same decoder as the command-line tool, with live plots.
+It is **generated** by `tools/build_grc.py`, which embeds `src/hadesx/core.py` into the Embedded Python blocks;
 a test fails if the committed file and the generator disagree.
 
 ## Blocks
@@ -78,15 +78,15 @@ be changed. The path goes in the **Value** field, with quotes: `'/home/me/passes
 ## Running
 
 1. Open the flowgraph in Companion, set `iq_file` (and optionally `dll_path`), press Run.
-2. Watch the console for `[unne1b] FSK signal found at -5293 Hz` and the decoded frames.
+2. Watch the console for `[hadesx] FSK signal found at -5293 Hz` and the decoded frames.
 3. For voice: set `c2_path` to a file, run a recording containing voice, then
-   `unne1b-voice` on that file (35-byte payload format), or use `unne1b-decode --voice-wav` on the IQ directly.
+   `hadesx-voice` on that file (35-byte payload format), or use `hadesx-decode --voice-wav` on the IQ directly.
 
 The bundled GUI uses Qt. To run on a machine without a display, generate a headless variant:
 
 ```bash
 python3 tools/build_grc.py --headless --iq /full/path/to/file.iq -o /tmp/headless.grc
-grcc -o /tmp/hl /tmp/headless.grc && python3 /tmp/hl/unne1b_decoder.py
+grcc -o /tmp/hl /tmp/headless.grc && python3 /tmp/hl/hadesx_decoder.py
 ```
 
 ## Live reception

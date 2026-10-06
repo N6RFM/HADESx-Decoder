@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """What is in these IQ files?   (read-only)
 
-    cd ~/UNNE-1B-Decoder
+    cd ~/HADESx-Decoder
     python3 ~/Downloads/iq_survey.py FILE_OR_FOLDER [FILE_OR_FOLDER ...]
     python3 ~/Downloads/iq_survey.py --decode /path/to/the/folder
 
@@ -25,12 +25,12 @@ import numpy as np
 
 sys.path.insert(0, os.path.join(os.getcwd(), 'src'))
 try:
-    from unne1b import FskCentreTracker
-    from unne1b.frontend import FrontEnd, pick_nfft
-    from unne1b.iqfile import BadSampleRate, IQFile, IQFormatError, guess_sample_rate
+    from hadesx import FskCentreTracker
+    from hadesx.frontend import FrontEnd, pick_nfft
+    from hadesx.iqfile import BadSampleRate, IQFile, IQFormatError, guess_sample_rate
 except ImportError:
-    raise SystemExit('Run this from the UNNE-1B-Decoder folder, after the WAV update has been applied (the survey needs '
-                     'unne1b.iqfile and unne1b.frontend).')
+    raise SystemExit('Run this from the HADESx-Decoder folder, after the WAV update has been applied (the survey needs '
+                     'hadesx.iqfile and hadesx.frontend).')
 
 SATS = [('UNNE-1B', 436.888e6), ('HADES-SA', 436.875e6), ('HADES-L', 436.665e6)]
 EXTENSIONS = ('.iq', '.cfile', '.cf32', '.fc32', '.wav', '.wave', '.cs16', '.cu8')
