@@ -37,7 +37,7 @@ correct reading turned out to be:
 
 ```bash
 # straight from the IQ
-unne1b-decode pass.iq --fs 50000 --voice-wav voice.wav
+unne1b-decode pass.iq --fs 50000 --voice-wav voice.wav     # writes voice_UNNE-1B.wav (the satellite is added to the name)
 
 # or in two steps
 unne1b-decode pass.iq --log frames.jsonl
@@ -46,8 +46,38 @@ unne1b-voice frames.jsonl voice_fast.wav --speed 1.15      # same pitch, 15 % fa
 unne1b-voice frames.jsonl voice_tape.wav --tape 1.15       # faster and higher, like a quick tape
 ```
 
-`unne1b-voice` accepts the `.jsonl` log (it then uses the packet numbers: sorts, drops duplicates, fills gaps) or a raw
-payload file written by `--c2out` (35 bytes per packet, in order).
+`unne1b-voice` accepts the `.jsonl` log (it then uses the packet numbers: sorts, drops duplicates, fills gaps), a **per-type
+output folder** made with `--outdir`, or a raw payload file written by `--c2out` (35 bytes per packet, in order).
+
+### Every WAV says which satellite it is
+
+* **In the file name:** `voice.wav` becomes `voice_HADES-SA.wav`, `voice_UNNE-1B.wav`, `voice_HADES-L.wav` ... (nothing is added if
+  the name already contains the satellite; `--exact-name` / `--voice-exact-name` keep the name exactly as given).
+* **Inside the file,** so the origin survives renaming: standard WAV tags (title "HADES-SA voice message (CODEC2 700C)", artist =
+  the satellite, source = the recording or folder, date, and a comment with the source address, the frames received and missing,
+  frames dropped as corrupted, copies used and the program version). Most players show them; `ffprobe voice_HADES-SA.wav` lists them.
+* **Never mixed:** if the input holds voice from more than one satellite (UNNE-1B and HADES-SA are only 13 kHz apart and can be
+  in one recording), each gets its own WAV. A raw payload file does not say who sent it: name the satellite with `--sat HADES-SA`
+  (otherwise the file is marked `unknown-satellite`).
+
+### Several receptions, several passes
+
+Voice packets have **no CRC**, so a bit error in a frame number or in the data goes unnoticed.
+
+* **Isolated frame numbers** far from all the others (for example 44, 74 and 246 among frames 0-36 in a real HADES-SA folder) are
+  corrupted numbers; they are dropped instead of stretching the audio with minutes of silence (`--keep-all` keeps them).
+* **A frame received several times:** the most frequent identical copy is used (`--pick latest` or `first` to choose otherwise).
+* **A folder holds many passes,** and different passes can carry different content or heavy errors, so blending everything can
+  give a patchwork. By default the pass with the most frames is used (in the real HADES-SA folder: the 2026-04-01 14:20 pass with
+  all 37 frames, which is practically what UNNE-1B sends). `--list-passes` shows every pass and its frames, `--pass N` picks one,
+  and `--combine` merges all passes (use it when the passes are partial views of the same message).
+
+```bash
+unne1b-voice ~/hades-sa --list-passes                   # which passes are in the folder
+unne1b-voice ~/hades-sa                                  # best pass -> ~/hades-sa/voice_HADES-SA.wav
+unne1b-voice ~/hades-sa --combine voice_all.wav          # all passes merged -> voice_all_HADES-SA.wav
+unne1b-voice raw_payloads.c2 --sat HADES-L voice.wav     # a raw file: say whose it is
+```
 
 Output: 8 kHz, 16-bit, mono WAV. Example files from the pass: `examples/results/voice_700C.wav` (14.8 s) and
 `voice_700C_speed1.15.wav` (12.9 s).

@@ -85,8 +85,9 @@ ssdv -d img224.ssdv img224.jpg
 awk '{print $1, $9}' sat_03_type_01.dat       # epoch, vbus1
 ```
 
-Voice frames that never arrived leave a gap: `c2dec` would then play the following frames too early. `unne1b-decode
---voice-wav` fills gaps with silence; reading a folder is planned.
+Voice frames that never arrived leave a gap: `c2dec` would then play the following frames too early. `unne1b-voice FOLDER`
+builds the WAV from the folder for you, fills gaps with silence, names the satellite in the file name and inside the file, and
+uses the best pass (`--list-passes`, `--pass N`, `--combine`; see [voice.md](voice.md)).
 
 ## How faithful it is
 

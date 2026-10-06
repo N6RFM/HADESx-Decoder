@@ -37,8 +37,13 @@ def test_voice_stream_and_wav(tmp_path):
     rc, fr = run('pass_t122s_voice.iq', tmp_path, '--voice-wav', str(wav))
     assert rc == 0 and [f['number'] for f in fr] == [0, 1, 2, 3, 4, 5]
     assert all(f['type'] == 15 for f in fr)
-    if wav.exists():                                      # only when c2dec is installed
-        assert wav.stat().st_size > 20000
+    import shutil
+    if shutil.which('c2dec'):                             # the WAV is named after the satellite: v_UNNE-1B.wav
+        from unne1b.voice import read_wav_info
+        tagged = tmp_path / 'v_UNNE-1B.wav'
+        assert not wav.exists() and tagged.exists() and tagged.stat().st_size > 20000
+        info = read_wav_info(str(tagged))
+        assert info['IART'] == 'UNNE-1B' and 'UNNE-1B voice message' in info['INAM'] and 'frames 0-5' in info['ICMT']
 
 
 def test_fixed_centre_option(tmp_path):

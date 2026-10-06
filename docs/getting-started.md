@@ -71,7 +71,8 @@ data (descrambled): ...
 | `--dll PATH` | decode text from AMSAT-EA's `hadesr.dll` via emulation (see [dll-emulation.md](dll-emulation.md)) |
 | `--log FILE` | append every frame as one JSON line |
 | `--c2out FILE` | write raw voice payloads (35 bytes per packet) |
-| `--voice-wav FILE` | decode the voice to a WAV (needs `c2dec`) |
+| `--voice-wav FILE` | decode the voice to a WAV (needs `c2dec`); the satellite name is added to the file name and written inside the file, one WAV per satellite |
+| `--voice-exact-name` | with `--voice-wav`: keep the file name exactly as given |
 | `--voice-speed 1.15` | time-stretch the voice WAV, pitch preserved |
 
 Exit status is 0 if at least one frame was decoded, 1 otherwise.

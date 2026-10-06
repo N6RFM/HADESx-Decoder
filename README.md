@@ -99,9 +99,13 @@ ibat  :   35 mA (Current flowing out from the battery)
 Voice, from a recording that contains it:
 
 ```bash
-unne1b-decode examples/iq/pass_t122s_voice.iq --voice-wav voice.wav
+unne1b-decode examples/iq/pass_t122s_voice.iq --voice-wav voice.wav     # -> voice_UNNE-1B.wav: the satellite is in the name
 unne1b-decode your_pass.iq --log frames.jsonl --voice-wav voice.wav --voice-speed 1.15
+unne1b-voice ~/hades-sa                                                   # WAV from a per-type output folder (best pass)
 ```
+
+Every WAV carries its satellite in the file name and in tags inside the file; voice from different satellites is never mixed.
+See [voice.md](docs/voice.md).
 
 GNU Radio: open `grc/unne1b_decoder.grc`, set the `iq_file` variable (see
 [docs/gnuradio.md](docs/gnuradio.md)), run.

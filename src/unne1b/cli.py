@@ -61,7 +61,9 @@ def build_parser():
     ap.add_argument('--c2out', help='write the raw CODEC2 voice payloads (type 15 / 11) to this file')
     ap.add_argument('--emit-unverified', action='store_true',
                     help='also report length-byte frames whose CRC fails (marked CRC FAIL; for exploring new satellites)')
-    ap.add_argument('--voice-wav', help='decode the CODEC2 voice to this WAV (needs c2dec)')
+    ap.add_argument('--voice-wav', help='decode the CODEC2 voice to this WAV (needs c2dec); the satellite name is added to '
+                                        'the file name and written inside the file, one WAV per satellite')
+    ap.add_argument('--voice-exact-name', action='store_true', help='--voice-wav: do not add the satellite name to the file name')
     ap.add_argument('--outdir', help='folder to update with one file set per frame type, like the Windows '
                                      'SoundModem/KISSGENESIS tool (see docs/output-folder.md)')
     ap.add_argument('--rec-start', help='start time of the recording (ISO 8601, UTC) for the time stamps in --outdir; '
@@ -144,7 +146,8 @@ def main(argv=None):
     zi = np.zeros(len(taps) - 1, dtype=np.complex128)
     df = MultiBaudDeframer(fs=fs2, bauds=bauds, max_flips=a.flips, emit_unverified=a.emit_unverified)
     state = {'nf': 0, 'consumed': 0}
-    voice = {}
+    voice = {}                                  # {source address: VoiceSet}: voice is kept per satellite
+    rec_t0 = guess_rec_start(a.iq)
 
     def handle(frames):
         # approximate time of the frame in the recording (seconds, +-1 s: frames are found
@@ -161,7 +164,11 @@ def main(argv=None):
             if writer is not None:
                 writer.write(fr, rec_start + fr['t'])
             if fr.get('voice'):
-                voice.setdefault(fr['number'], bytes.fromhex(fr['payload']))
+                from .voice import VoiceSet, c2_frame_from_payload
+                vs = voice.setdefault(fr['src'], VoiceSet(fr['src'], os.path.basename(a.iq)))
+                vs.add(fr['number'], c2_frame_from_payload(bytes.fromhex(fr['payload'])))
+                if rec_t0 is not None and vs.start is None:
+                    vs.start = rec_t0 + fr['t']
                 if a.c2out:
                     with open(a.c2out, 'ab') as f:
                         f.write(bytes.fromhex(fr['payload']))
@@ -215,8 +222,8 @@ def main(argv=None):
         json.dump(done, open(ingest_path, 'w'), indent=1)
 
     if a.voice_wav and voice:
-        from .voice import write_wav
-        write_wav(voice, a.voice_wav, speed=a.voice_speed)
+        from .voice import write_voice_wavs
+        write_voice_wavs(voice, a.voice_wav, speed=a.voice_speed, exact_name=a.voice_exact_name)
     elif a.voice_wav:
         print('no voice packets found - no WAV written', file=sys.stderr)
     return 0 if state['nf'] else 1
