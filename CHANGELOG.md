@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+* `tools/cut_excerpt.py`: cut a small excerpt (segments, filtering to a lower rate, frequency shift for two distant satellites) out of a big recording as a labelled I/Q WAV; `unne1b.iqfile.write_iq_wav`.
 * File names of SDR Console, SDR# and HDSDR give the start time and frequency; a WAV with a zero rate field is read from its byte rate; SDR Console's own `auxi` chunk is ignored; `--guess-samples`; `tools/wav_probe.py` and a separate `tools/README.md` documenting the recording survey and probe.
 * WAV I/Q recordings (sample rate, format, centre frequency and start time from the header), any sample rate from 48 kHz to several MHz, `--swap-iq`, rate and frequency from a raw file's name, `tools/iq_survey.py`; the single-file build includes all modules again.
 * Console output shows the decoded fields of HADES-SA and HADES-L frames; PN9 packets are labelled "no CRC in this packet type" instead of "CRC FAIL - unverified".

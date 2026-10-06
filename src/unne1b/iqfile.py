@@ -330,3 +330,40 @@ def guess_sample_rate(path, fmt='auto', swap=False, max_samples=24000000, candid
     pool = [c for c in decoded if 1550.0 <= spacing_of[c] <= 1700.0] or decoded
     best = max(table[c] for c in pool)
     return min((c for c in pool if table[c] == best), key=lambda c: (clock_dev[c], c)), table
+
+
+def write_iq_wav(path, z, rate, bits=16, center_freq=None, start=None, comment=None):
+    """Write complex samples `z` (complex64, full scale = +-1) as a stereo I/Q WAV (left = I, right = Q).
+
+    The centre frequency and the start time go into an SDR#/HDSDR-style "auxi" chunk (so this reader and those programs find
+    them), and an optional comment into a standard LIST/INFO chunk. `bits`: 16, 24 or 32 (float)."""
+    z = np.asarray(z)
+    st = np.empty(len(z) * 2, dtype=np.float64)
+    st[0::2], st[1::2] = z.real, z.imag
+    if bits == 16:
+        data, tag = np.clip(np.round(st * 32767.0), -32768, 32767).astype('<i2').tobytes(), 1
+    elif bits == 24:
+        v = np.clip(np.round(st * 8388607.0), -8388608, 8388607).astype(np.int32) & 0xFFFFFF
+        b = np.empty((len(v), 3), dtype=np.uint8)
+        b[:, 0], b[:, 1], b[:, 2] = v & 255, (v >> 8) & 255, (v >> 16) & 255
+        data, tag = b.tobytes(), 1
+    elif bits == 32:
+        data, tag = st.astype('<f4').tobytes(), 3
+    else:
+        raise ValueError('bits must be 16, 24 or 32 (float)')
+    ba = 2 * bits // 8
+    fmt = struct.pack('<HHIIHH', tag, 2, int(rate), int(rate) * ba, ba, bits)
+    chunks = b'fmt ' + struct.pack('<I', len(fmt)) + fmt
+    if center_freq or start:
+        d = datetime.datetime.fromtimestamp(start or 0, datetime.timezone.utc)
+        t = struct.pack('<8H', d.year, d.month, d.weekday(), d.day, d.hour, d.minute, d.second, int(d.microsecond / 1000))
+        aux = t + t + struct.pack('<9I', int(center_freq or 0), int(rate), 0, int(rate), 0, 0, 0, 0, 0)
+        chunks += b'auxi' + struct.pack('<I', len(aux)) + aux
+    chunks += b'data' + struct.pack('<I', len(data)) + data + (b'\0' if len(data) % 2 else b'')
+    if comment:
+        raw = comment.encode('utf-8', 'replace') + b'\0'
+        raw += b'\0' * (len(raw) % 2)
+        info = b'INFO' + b'ICMT' + struct.pack('<I', len(raw)) + raw
+        chunks += b'LIST' + struct.pack('<I', len(info)) + info
+    with open(path, 'wb') as f:
+        f.write(b'RIFF' + struct.pack('<I', 4 + len(chunks)) + b'WAVE' + chunks)

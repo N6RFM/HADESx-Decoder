@@ -7,6 +7,7 @@ Scripts that live next to the package but are not installed with it. Run them fr
 |---|---|---|
 | [`iq_survey.py`](#iq_surveypy---what-is-in-a-folder-of-recordings) | **What is in these recordings?** Format, sample rate, frequency, satellite and packet types of every file in a folder | numpy, scipy |
 | [`wav_probe.py`](#wav_probepy---why-does-this-one-file-not-decode) | **Why does this file not decode?** Header, I/Q sanity, spectrum lines, burst times | numpy |
+| [`cut_excerpt.py`](#cut_excerptpy---cut-a-small-excerpt-to-share-or-to-add-as-an-example) | **Cut a small excerpt** out of a big recording (raw or WAV) to share it or add it to `examples/`: any segments, optional filtering to a lower rate, a frequency shift to keep two distant satellites in a small file | numpy, scipy |
 | [`build_standalone.py`](#building) | Single-file decoder `dist/unne1b_standalone.py` | - |
 | [`build_grc.py`](#building) | The GNU Radio Companion flowgraph | - |
 | [`make_plots.py`](#building) | The figures in `docs/img` | matplotlib |
@@ -121,6 +122,37 @@ about 0.4-2 s.
 | `no narrowband signal appears above the noise` | no pass in the part of the file looked at | look at more with `--seconds`, check the recording time against a pass prediction, antenna and frequency |
 | bursts, but `iq_survey --decode` says `(needs --swap-iq)` | I and Q swapped: the spectrum is mirrored and every bit is inverted | add `--swap-iq` |
 | lines at the wrong frequency (offset by a lot) | the SDR was tuned elsewhere, or the frequency in the name is not the centre | the decoder does not care (it finds the signal anywhere in the band), but `--fc HZ` fixes the satellite match |
+
+### `cut_excerpt.py` - cut a small excerpt, to share or to add as an example
+
+A good recording is often a gigabyte. To send somebody the interesting seconds, or to add a recording to `examples/`, cut it
+down:
+
+```bash
+python3 tools/cut_excerpt.py "big recording.wav" --segments 105.0-107.6,115.6-117.0 --out excerpt.wav
+python3 tools/cut_excerpt.py "big recording.wav" --segments 105.0-107.6,115.6-117.0 --shift 111000 --rate 250000 --out excerpt.wav
+```
+
+1. **Find the times**: `python3 tools/iq_survey.py FILE` lists the bursts (start-end in seconds); or the `t=` values of the frames in a
+   `--log` file from `unne1b-decode`. Take about half a second before and after each burst (a UNNE-1B packet is up to 2 s long).
+2. **Cut**: the segments are joined one after the other, filtered and resampled to `--rate` (default 500 kHz, never higher than the
+   input), and written as a stereo I/Q WAV. The output carries the **centre frequency and the start time** of the first segment in
+   its header and a comment naming the source file, so `unne1b-decode` and the survey read it with no option.
+3. **Two satellites far apart** (UNNE-1B is 222 kHz above HADES-L): `--shift 111000 --rate 250000` moves the middle between them to the
+   centre, so both fit inside +-125 kHz and the file is half the size. The header's centre frequency is updated to match.
+4. **Check** with `python3 tools/iq_survey.py --decode excerpt.wav`: the satellites and packet types must still be there.
+
+| Option | |
+|---|---|
+| `--segments A-B,C-D` | seconds from the start of the recording |
+| `--rate HZ` | output sample rate (default 500000); a rate R holds +-R/2 around the centre |
+| `--shift HZ` | move this frequency offset to the centre first |
+| `--bits 16\|24\|32` | 16-bit PCM (default), 24-bit PCM or 32-bit float |
+| `--gain auto\|X` | `auto` (default) scales the noise to a healthy level without clipping; or a number |
+| `--fs`, `--format`, `--swap-iq` | as for `unne1b-decode`, for inputs whose header does not describe them |
+
+The size is `seconds x rate x 4 bytes`: 4 s at 250 kHz is 4 MB. Nothing is changed in the input. Only recordings you may share
+should go into the repository: it is public.
 
 ### If a recording decodes nothing: the short route
 
