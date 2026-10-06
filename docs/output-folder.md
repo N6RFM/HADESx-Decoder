@@ -102,6 +102,47 @@ uses the best pass (`--list-passes`, `--pass N`, `--combine`; see [voice.md](voi
 * real files written by the Windows tool (`tests/data/windows_tool/`): a voice frame and an SSDV packet are reproduced
   exactly, and the line structure of the status, power, temperature, time-series, ephemeris, PN9 and BBS text matches.
 
+## Printing everything on the console: `unne1b-report`
+
+The folder holds the text of every packet, one file per reception. `unne1b-report` prints them all in one go, oldest first, across
+satellites:
+
+```bash
+unne1b-report ~/hades-l-sdrc                       # every packet with its labelled fields
+unne1b-report ~/hades-l-sdrc --summary             # how many packets of each satellite and type, and when
+unne1b-report ~/hades-l-sdrc --brief               # one line per packet (time, satellite, type, satellite clock)
+unne1b-report ~/hades-l-sdrc --sat HADES-L --type 1,2 --since 2026-10-05T01:00
+unne1b-report ~/hades-l-sdrc | less                # page through it; > report.txt saves it
+```
+
+| Option | |
+|---|---|
+| `--summary` / `--brief` | counts per satellite and type / one line per packet |
+| `--sat NAMES` | only these satellites: `UNNE-1B`, `HADES-SA`, `HADES-L` or a source address, comma separated |
+| `--type N,N` | only these packet types |
+| `--since T`, `--until T` | UTC, e.g. `2026-10-05T01:00` |
+| `--dll hadesr.dll` | UNNE-1B packets with all their fields (below) |
+| `--voice`, `--images` | include CODEC2 voice and SSDV image packets (left out by default: `unne1b-voice` makes the audio) |
+
+**UNNE-1B fields.** HADES-SA and HADES-L packets are decoded by this project and their text is printed as it is. UNNE-1B packets are
+stored as bytes (there is no native UNNE-1B field decoder yet), so without a DLL you see the type, the satellite clock and the raw data.
+With `--dll` the report renders them from the saved data using AMSAT-EA's own decoder, which is the one in the **UNNE-1B package**
+(`hadesr.dll`; not in this repository; `pip install unicorn pefile`). The recordings need not be decoded again, and the packet's own
+reception time replaces the clock the DLL prints.
+
+```bash
+unzip UNNE-1B_MARIA-G_GENESIS-M_UZ7HO_Soundmodem_demodulator_and_decoder.zip -d ~/unne-package
+unne1b-report ~/hades-l-sdrc --dll ~/unne-package/hadesr.dll --sat UNNE-1B
+```
+
+**Many recordings into one folder, then one report:**
+
+```bash
+for f in ~/recordings/*.wav; do unne1b-decode "$f" --outdir ~/pass-folder 2>&1 | grep -E "valid frame"; done
+unne1b-report ~/pass-folder --summary
+unne1b-report ~/pass-folder --dll ~/unne-package/hadesr.dll > ~/pass-folder-report.txt
+```
+
 ## Differences from the Windows tool
 
 * **Unique additions** (above) and the **recording-start time** are new; the tool has neither.

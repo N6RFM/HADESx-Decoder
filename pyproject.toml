@@ -20,6 +20,7 @@ dev = ["pytest", "matplotlib", "pyyaml"]
 [project.scripts]
 unne1b-decode = "unne1b.cli:main"
 unne1b-voice = "unne1b.voice:main"
+unne1b-report = "unne1b.report:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
