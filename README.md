@@ -2,13 +2,11 @@
 
 [![tests](https://github.com/N6RFM/HADESx-Decoder/actions/workflows/ci.yml/badge.svg)](https://github.com/N6RFM/HADESx-Decoder/actions/workflows/ci.yml)
 
-Decode the **UNNE-1B (HADES-E2)**, **HADES-SA** and **HADES-L** amateur-radio satellites straight from an SDR recording (raw IQ, or a WAV
-file from SDR#, HDSDR or SDR Console, at any sample rate): 200 and 800 baud FSK telemetry (CRC-checked, with field-by-field readouts)
-and the **CODEC2 voice message** (to a WAV file named after its satellite) - with **automatic Doppler / frequency tracking**,
-so you never have to chase the signal by hand.
+Decode the amateur-radio satellites of [AMSAT-EA](https://www.amsat-ea.org/)'s **HADES family**: **UNNE-1B (HADES-E2)**, **HADES-SA** and
+**HADES-L**. Give it an SDR recording, a raw IQ file or a WAV file from SDR#, HDSDR or SDR Console at any sample rate, and it finds the
+signal, follows its Doppler shift and decodes the CRC-checked FSK telemetry and the CODEC2 voice message. No tuning, no sound card, no Windows.
 
-UNNE-1B is a 1.5P PocketQube built by [AMSAT-EA](https://www.amsat-ea.org/) with Universidad Nebrija,
-downlink **436.888 MHz**; HADES-SA (436.875 MHz) and HADES-L (436.665 MHz) are sister satellites that share the signal format. This project is an independent, open-source ground-station decoder; it is
+This project is an independent, open-source ground-station decoder; it is
 not an AMSAT-EA product; AMSAT-EA has reviewed the credit given here and confirmed it is correct (October 2026).
 It is built on the open documentation and
 source code that AMSAT-EA publishes - see [Acknowledgements](#acknowledgements-and-licence).
@@ -16,37 +14,96 @@ source code that AMSAT-EA publishes - see [Acknowledgements](#acknowledgements-a
 Developed by **N6RFM** with help from Claude (Anthropic) - see [Authorship](#authorship).
 
 ```
-IQ file / SDR  ->  FSK tracker (finds the signal anywhere in the band, follows its drift)
+IQ file / WAV  ->  FSK tracker (finds the signal anywhere in the band, follows its drift)
                ->  demodulator + clock recovery -> sync 0xBF35 -> descramble -> CRC16
-               ->  telemetry text  /  JSON lines  /  CODEC2 700C voice -> WAV
+               ->  telemetry text / JSON / per-type folder  |  CODEC2 700C voice -> WAV
 ```
 
 ![Whole pass: spectrogram, tracked FSK centre and decoded frames](docs/img/pass_overview.png)
 
-## What it does
+## The satellites at a glance
 
-* **Reads** SDR IQ recordings (complex float32 by default; int16 and uint8 too) at any sample rate.
-* **Finds and tracks** the two-tone FSK signal automatically. In the example pass the centre moved from
-  -2.0 kHz to -8.4 kHz and back; the tracker handled all of it without a tuning control.
-* **Decodes all UNNE-1B telemetry packets** (types 1-14) with CRC-CCITT-FALSE verification and
-  soft-decision repair of up to 3 bit errors.
-* **Decodes CODEC2 voice** (type 15) - 10 x 28-bit Codec2 700C frames per packet - into a WAV,
-  with optional pitch-preserving speed-up.
-* **Also understands HADES-SA and HADES-L frames** (length-byte layout, 800 and 200 baud, automatic): tested on **real recordings** of HADES-SA and HADES-L (telemetry and voice decode; image packets are not decoded yet) and with AMSAT-EA's sample frames; HADES-L Lofith data and ICM messages are decoded too, and both satellites' decoders match their package's own DLL; see [Supported satellites](docs/satellites.md).
-* **Per-type output folder** (`--outdir`): the same files as AMSAT-EA's Windows tool (labelled `.tlm`, `.dat` data lines, `.bin` voice and image files), and **new frames from later passes are added to the same folder** without duplicates. HADES-SA frames are decoded natively (no DLL); see [Output folder](docs/output-folder.md).
-* **Reads WAV I/Q recordings** from SDR programs at any sample rate (rate, format and centre frequency from the header; `--swap-iq` if I and Q are swapped) and raw files; see [getting started](docs/getting-started.md).
-* **`hadesx-report FOLDER`** prints everything a per-type output folder holds on the console, oldest first, with filters and a summary; UNNE-1B packets with all their fields through `--dll hadesr.dll` (see [output-folder.md](docs/output-folder.md)).
-* **Optional official decode text**: run AMSAT-EA's own `hadesr.dll` inside an x86 emulator
-  (no Wine needed) to get the labelled values (battery voltage, temperatures, ...). You supply the DLL.
+The three satellites share one air interface (2-FSK, sync word 0xBF35, scrambler, CRC-16), so one decoder handles all of them, even
+when two are in the same recording.
+
+| | **UNNE-1B** (HADES-E2) | **HADES-SA** (SpinnyONE, SO-127) | **HADES-L** |
+|---|---|---|---|
+| Downlink | 436.888 MHz | 436.875 MHz | 436.665 MHz |
+| FSK | 200 baud, tones about 1.64 kHz apart | 800 baud (tones 1.6 kHz apart) and 200 baud, alternating | 800 baud, tones 1.6 kHz apart |
+| Frame | type/address, data, CRC | length byte, type/address, data, CRC | as HADES-SA |
+| Telemetry | power, temperatures, status, time series, ephemeris, Nebrija game payload | power, temperatures, status, power and temperature ranges, antenna deploy, extended power, time series, ephemeris, BBS | the same, plus the Lofith experiment and ICM messages |
+| Also | CODEC2 voice | CODEC2 voice, PN9 link test, SSDV image packets | CODEC2 voice, PN9 link test |
+| Fields decoded by | AMSAT-EA's `hadesr.dll` (optional, you supply it) | this program, checked against the package's own DLL | this program, checked against the package's own DLL |
+| Received on real signals | types 1-6, 10, 12, 14 and voice | status, ranges, BBS, voice, PN9 | power, temperature, status, antenna deploy, Lofith, PN9, time series |
+
+Details, frame layouts and what is still open: [Supported satellites](docs/satellites.md).
+
+## What you get
+
+* **Any recording:** raw IQ (complex float32, int16, uint8) or WAV (8 to 32-bit, any rate from 48 kHz, the rate read from the header), with the
+  signal anywhere in the recorded band.
+* **Finds and tracks the signal** automatically: no tuning control, the Doppler drift is followed (in the UNNE-1B example pass the centre moved
+  from -2.0 kHz to -8.4 kHz and back).
+* **CRC-checked decoding** with soft-decision repair of up to 3 bit errors; 200 and 800 baud detected automatically; frames that fail their
+  CRC are shown only on request (`--emit-unverified`).
+* **Voice:** CODEC2 700C to a WAV file that is **named and tagged with its satellite**, never mixed between satellites, with optional
+  pitch-preserving speed-up. From a folder of many passes it picks the best one.
+* **Per-type output folder** (`--outdir`): the files AMSAT-EA's Windows tool writes (labelled `.tlm`, `.dat` data lines, `.bin` voice and image files),
+  and new frames from later passes are added without duplicates.
+* **`hadesx-report`** prints everything such a folder holds on the console, oldest first, across satellites, with filters and a summary.
+* **Tools** to look at a recording before decoding it (what is in it, why it does not decode) and to cut a small excerpt: [tools/README.md](tools/README.md).
 * **GNU Radio Companion flowgraph** with live plots, using the very same decoder code.
-* **Tested**: 64 automated tests, including a cross-check against AMSAT-EA's reference C code and
-  synthetic signals of every packet type anywhere in the band.
+* **Tested:** several hundred automated tests, including comparisons with the output of AMSAT-EA's own decoders (the DLLs of the HADES-SA and
+  HADES-L packages and their open-source reference program) and synthetic signals of every packet type anywhere in the band.
 
-## Results from a real pass
+## Quick start
 
-A 354 s, 50 ksps recording of the pass of **2026-10-04 22:48:12** decodes to 45 frames
-(8 telemetry packets, all CRC OK, plus a 37-packet voice stream). Full details in
-[docs/example-pass.md](docs/example-pass.md).
+```bash
+git clone https://github.com/N6RFM/HADESx-Decoder.git
+cd HADESx-Decoder
+pip install -e .                      # numpy + scipy
+sudo apt install codec2               # only needed for the voice WAV (provides c2dec)
+
+# a real recording with two satellites in it (UNNE-1B and HADES-L), a WAV from SDR Console: no options needed
+hadesx-decode examples/iq/sdrconsole_two_satellites.wav
+```
+
+```
+1400000 samples, 5.6 s at 250000 sps
+file: WAV, 2 channels (I/Q), 16-bit PCM, header sample rate 250000 Hz, 5.6 s, centre 436.7760 MHz
+=== HADES-L packet type 2 (Temperature)  [CRC OK] ===
+sclock: 174955 s  (2d 00:35:55 since boot)
+...
+=== UNNE-1B packet type 3 (Status) from UNNE-1B  [CRC OK] ===
+sclock: 174964 s  (2d 00:36:04 since boot)
+...
+=== HADES-L packet type 1 (Power)  [CRC OK] ===
+sclock: 174975 s  (2d 00:36:15 since boot)
+...
+3 valid frame(s)
+```
+
+More of the same:
+
+```bash
+hadesx-decode recording.wav --outdir ~/pass-folder        # one file set per packet type; run it again for the next pass
+hadesx-report ~/pass-folder --summary                     # what is in the folder
+hadesx-report ~/pass-folder --dll /path/to/hadesr.dll     # everything, UNNE-1B with all its fields (optional DLL, see docs/dll-emulation.md)
+hadesx-decode pass.iq --voice-wav voice.wav               # -> voice_UNNE-1B.wav: the satellite is in the file name
+hadesx-voice ~/pass-folder                                # the voice of a whole folder, best pass
+python3 tools/iq_survey.py --decode ~/recordings          # which satellite and packets are in each file
+```
+
+Raw files carry no header: give the sample rate (`--fs 50000`) or put it in the file name (`..._50000SPS_...`). If a recording decodes nothing,
+try `--swap-iq`, or look at it first with `tools/wav_probe.py`. GNU Radio: open `grc/hadesx_decoder.grc`, set the `iq_file` variable
+(see [docs/gnuradio.md](docs/gnuradio.md)), run.
+
+## Satellite by satellite
+
+### UNNE-1B (HADES-E2)
+
+The first satellite the project decoded, from a 354 s, 50 ksps recording of the pass of **2026-10-04 22:48:12**: 45 frames (8 telemetry packets,
+all CRC OK, plus a 37-packet voice stream). Full details in [docs/example-pass.md](docs/example-pass.md).
 
 | Pass time | Packet | Satellite clock | Highlights |
 |---|---|---|---|
@@ -60,59 +117,39 @@ A 354 s, 50 ksps recording of the pass of **2026-10-04 22:48:12** decodes to 45 
 | 303 s | type 12 ephemeris | - | all zeros (no TLE uploaded yet) |
 | 333 s | type 3 status | 192424 s | same as at 63 s |
 
-## Quick start
+Its telemetry fields are decoded with AMSAT-EA's `hadesr.dll`, which you supply (a native UNNE-1B decoder is on the roadmap); without it you
+see each packet's type, clock and raw data. Packet types 4, 5 and 6 have since been received too; types 8 and 9 have not.
 
-```bash
-git clone https://github.com/N6RFM/HADESx-Decoder.git
-cd HADESx-Decoder
-python3 -m venv --system-site-packages .venv && . .venv/bin/activate
-pip install -e .                      # numpy + scipy
-sudo apt install codec2               # only needed for the voice WAV (provides c2dec)
+### HADES-SA (SpinnyONE)
 
-# decode one of the bundled example recordings
-hadesx-decode examples/iq/pass_t211s_type01.iq --fs 50000
-```
+Decoded natively, with the output checked file for file against the decoder DLL of AMSAT-EA's HADES-SA package. A real recording gives status,
+power ranges, the (empty) BBS and a nine-packet voice stream, bit for bit the same message UNNE-1B sends. Its image packets (SSDV) are recognised and stored
+but not decoded yet; their on-air format is an open question to AMSAT-EA. The voice of a whole folder of passes becomes one WAV:
+`hadesx-voice FOLDER`.
 
-Output:
+### HADES-L
 
-```
-171520 samples, 3.4 s at 50000 sps
-=== UNNE-1B packet type 1 (Power) from UNNE-1B  [CRC OK] ===
-sclock: 192304 s  (2d 05:25:04 since boot)
-data (descrambled): 30ef02000000000000002bb66d6ff373533f00f40123001000000000
-FSK signal tracking: 1 burst(s) found
-  t=   0.8-   2.7 s  centre   -5288 Hz  (drift +173 Hz)
-1 valid frame(s)
-```
-
-With your own copy of AMSAT-EA's `hadesr.dll` you get every field labelled
-(`pip install -e .[dll]` first - see [docs/dll-emulation.md](docs/dll-emulation.md)):
-
-```bash
-hadesx-decode examples/iq/pass_t211s_type01.iq --fs 50000 --dll /path/to/hadesr.dll
-```
+Decoded natively, checked against the decoder DLL of AMSAT-EA's HADES-L package. Besides the common telemetry it sends the **Lofith experiment**
+(one packet per frame number) and ICM messages. A real Lofith packet:
 
 ```
-vbat1 : 4097 mV bat voltage read in EPS.ADC
-ibat  :   35 mA (Current flowing out from the battery)
-...
+sat_id           : 5 (HADES-L)
+total frames     : 128
+timestamp        : 64179 seconds (satellite clock was 0 days and 17:49:39 hh:mm:ss)
+frame number     : 14
+gaugue value     : 22957          gauge ref value  : 22983
+vbus ref voltage : 22867          payload ref      : -99
+satellite temp   :  +9.0 degC     radiation cont 1 : 0     radiation cont 2 : 0
 ```
 
-Voice, from a recording that contains it:
+Its long packets often fail their CRC at the start of a burst, where the transmitter is still ramping up its power.
 
-```bash
-hadesx-decode examples/iq/pass_t122s_voice.iq --voice-wav voice.wav     # -> voice_UNNE-1B.wav: the satellite is in the name
-hadesx-decode your_pass.iq --log frames.jsonl --voice-wav voice.wav --voice-speed 1.15
-hadesx-voice ~/hades-sa                                                   # WAV from a per-type output folder (best pass)
-```
+## Recording your own pass
 
-Every WAV carries its satellite in the file name and in tags inside the file; voice from different satellites is never mixed.
-See [voice.md](docs/voice.md).
-
-GNU Radio: open `grc/hadesx_decoder.grc`, set the `iq_file` variable (see
-[docs/gnuradio.md](docs/gnuradio.md)), run.
-
-Using the single-file release (`hadesx_standalone.py`) on Debian/Ubuntu: `sudo apt install python3-numpy python3-scipy`, then run it with `python3`.
+Any SDR that writes IQ will do: centre it within the recorded band of the satellite (it need not be exactly on it), record at 48 kHz or more, and
+keep the receiver simple. UNNE-1B's bursts were 30 to 40 dB above the noise in the example pass and the weakest, fading one still decoded.
+[Getting started](docs/getting-started.md) has the recording tips, and the recorder notes (SDR#, HDSDR, SDR Console, GNU Radio, rtl_sdr) are in
+[tools/README.md](tools/README.md).
 
 ## Documentation
 
@@ -121,14 +158,14 @@ Using the single-file release (`hadesx_standalone.py`) on Debian/Ubuntu: `sudo a
 | [Getting started](docs/getting-started.md) | install, first decode, options, output formats, SDR recording tips |
 | [Supported satellites](docs/satellites.md) | UNNE-1B, HADES-SA, HADES-L: frame layouts, baud rates, what works |
 | [Tools](tools/README.md) | the recording survey and probe (what is in these files? why does this one not decode?), builders, test-reference tools |
-| [Output folder](docs/output-folder.md) | `--outdir`: one file set per frame type like the Windows tool; add passes to one folder |
+| [Output folder](docs/output-folder.md) | `--outdir` and `hadesx-report`: one file set per frame type like the Windows tool; add passes to one folder |
 | [Protocol](docs/protocol.md) | air interface, frame layout, scrambler, CRC, every packet type, voice format |
-| [Signal processing](docs/signal-processing.md) | tone detector, clock recovery, sync search, bit-error repair |
+| [Signal processing](docs/signal-processing.md) | tone detector, clock recovery, sync search, bit-error repair, any sample rate |
 | [Frequency tracking](docs/tracking.md) | how the signal is found and followed automatically |
-| [Voice](docs/voice.md) | CODEC2 700C packing, the XOR whitening, speed options |
+| [Voice](docs/voice.md) | CODEC2 700C packing, the XOR whitening, per-satellite WAVs, speed options |
 | [GNU Radio](docs/gnuradio.md) | the flowgraph, variables, live SDR use |
-| [DLL emulation](docs/dll-emulation.md) | using `hadesr.dll` without Wine |
-| [Example pass](docs/example-pass.md) | the full recording, burst by burst |
+| [DLL emulation](docs/dll-emulation.md) | using `hadesr.dll` without Wine; which DLL is for what |
+| [Example pass](docs/example-pass.md) | the full UNNE-1B recording, burst by burst |
 | [Reverse-engineering notes](docs/reverse-engineering-notes.md) | what was tried, what worked, what didn't |
 | [Troubleshooting](docs/troubleshooting.md) | common problems |
 | [Limitations and roadmap](docs/limitations-and-roadmap.md) | known gaps |
@@ -138,29 +175,31 @@ Using the single-file release (`hadesx_standalone.py`) on Debian/Ubuntu: `sudo a
 ## Repository layout
 
 ```
-src/hadesx/        core.py (protocol, tracker, deframer), cli.py, voice.py
-grc/               GNU Radio Companion flowgraph (generated from core.py)
-examples/iq/       three short IQ excerpts cut from the full pass (6.6 MB)
-examples/results/  decoded frames, tracking report, voice WAVs from the full pass
+src/hadesx/        core.py (protocol, tracker, deframers), genesis.py (HADES-SA and HADES-L decoders, output folder), iqfile.py, frontend.py,
+                   cli.py, voice.py, report.py   (src/unne1b/ is a thin compatibility shim for the old name)
+grc/               GNU Radio Companion flowgraph (generated from core.py and genesis.py)
+examples/iq/       short real recordings: three excerpts of the UNNE-1B pass (6.6 MB) and a two-satellite WAV from SDR Console
+examples/results/  decoded frames, tracking report, voice WAVs from the full UNNE-1B pass
 docs/              documentation and figures
-tests/             pytest suite + reference vectors from AMSAT-EA's C code
-tools/             build_grc.py, build_standalone.py, make_plots.py
+tests/             pytest suite, with golden data from AMSAT-EA's decoders
+tools/             recording survey/probe/excerpt, builders, DLL comparison tools (see tools/README.md)
 extras/soundmodem/ experimental audio route through UZ7HO soundmodem (not needed)
 ```
 
-The full 142 MB recording is not part of the repository; the three excerpts are exact slices of it and
-the figures and result files were produced from the full file.
+The full 142 MB UNNE-1B recording is not part of the repository; the three excerpts are exact slices of it and the figures and result files were
+produced from the full file.
 
 ## Status and honesty notes
 
-* Telemetry types 1, 2, 3, 10, 12 and 14 were decoded from real signals with a valid CRC; types 4, 5,
-  6, 8 and 9 have only been verified on synthetic packets (they were not transmitted during the pass).
+* **What has been received on real signals.** UNNE-1B: packet types 1-6, 10, 12, 14 and voice (8 and 9 never). HADES-SA: status, ranges, BBS, voice,
+  PN9 and image packets. HADES-L: power, temperature, status, antenna deploy, Lofith, PN9, time series. For the rest, the decoders are checked against
+  frames run through AMSAT-EA's own decoders.
+* **Image packets (SSDV)** are not decoded: their CRC-32 does not verify on air yet.
 * The voice message has been **identified by ear**: it is the opening of *Don Quijote de la Mancha*
-  ([transcript](examples/results/voice_transcript.md)). Voice packets have **no CRC**, so bit errors cannot be
-  detected. The pace sounds natural at 115-120 % speed (`--voice-speed 1.15`); whether the original is slow or the
-  time base is slightly off is not known.
-* The FSK tone spacing is about **1.64 kHz**. Version 1.01 of the AMSAT-EA document said 1125 Hz; AMSAT-EA
-  confirmed in October 2026 that this was an error and will correct it. Decoding does not depend on it. See [reverse-engineering notes](docs/reverse-engineering-notes.md).
+  ([transcript](examples/results/voice_transcript.md)), the same on UNNE-1B and HADES-SA. Voice packets have **no CRC**, so bit errors cannot be
+  detected. The pace sounds natural at 115-120 % speed (`--voice-speed 1.15`); whether the original is slow or the time base is slightly off is not known.
+* The measured FSK tone spacing is about **1.64 kHz** on UNNE-1B, not the 1125 Hz written in the AMSAT-EA document (v1.01), and 1.6 kHz at 800 baud on
+  HADES-SA and HADES-L. Decoding does not depend on it. See [reverse-engineering notes](docs/reverse-engineering-notes.md).
 * See [limitations](docs/limitations-and-roadmap.md) for the full list.
 
 ## Authorship
@@ -172,8 +211,8 @@ HADESx Decoder was developed by **N6RFM**, with the help of **Claude**, an AI as
 * **Claude** helped write the decoder, the tests and the documentation, and worked out the packet format and
   the voice layout from those recordings and AMSAT-EA's published material.
 
-The code is tested (see [docs/development.md](docs/development.md)), but it was written with AI assistance and has
-been checked against one real pass, so please report anything that looks wrong.
+The code is tested (see [docs/development.md](docs/development.md)) and has been checked against real recordings of all three satellites and against
+AMSAT-EA's own decoders, but it was written with AI assistance, so please report anything that looks wrong.
 
 ## Renamed from UNNE-1B Decoder
 
@@ -202,6 +241,7 @@ rename are recognised (the hidden `.unne1b_ingested.json` is still read). After 
   implementation is tested against.
 * **`hadesr.dll`**, AMSAT-EA's telemetry decoder library, provides the optional labelled output. It is **not**
   included; you supply your own copy.
+* The recording `examples/iq/sdrconsole_two_satellites.wav` was shared by **José Elías Díaz, EB1AO**, who agreed to its use here.
 * AMSAT-EA reviewed the attribution in this project in October 2026 and confirmed it is correct, and that they are
   comfortable with the reuse of their format, key and code credited here. It remains an independent project, not an
   AMSAT-EA product.
