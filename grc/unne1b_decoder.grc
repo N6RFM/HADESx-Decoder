@@ -1235,7 +1235,8 @@ blocks:
               return ('=== %s frame #%d%s [no CRC in this packet type] ===\n'
                       'payload (35 bytes, 280 bits): %s' % (lead.replace('(%s)' % name, '(%s)' % name), fr['number'],
                                                             tail, fr['payload']))
-          status = 'CRC OK' if fr.get('crc_ok', True) else 'CRC FAIL - unverified'
+          crc = fr.get('crc_ok', True)
+          status = 'CRC OK' if crc else ('no CRC in this packet type' if crc is None else 'CRC FAIL - unverified')
           if fr['flips']:
               status += ', corrected bits %s' % fr['flips']
           lines = ['=== %s%s  [%s] ===' % (lead, tail, status)]
@@ -1253,15 +1254,44 @@ blocks:
                   text = dll.decode(ptype, src, bytes.fromhex(fr['plain']))
               except Exception as e:                       # noqa
                   text = '[DLL decode failed: %s]' % e
+          if not text and crc is not False:
+              text = _native_text(fr)                      # HADES-SA / HADES-L: decoded here, no DLL needed
           if text:
               lines.append(text.rstrip())
           else:
-              lines.append('data (descrambled): ' + fr['plain'][2:])
+              scrambled = not (fr.get('framing') == 'sized' and ptype in (10, 13))
+              lines.append('data (%s): %s' % ('descrambled' if scrambled else 'as received, not scrambled', fr['plain'][2:]))
               if dll_ok:
                   lines.append('(pass --dll hadesr.dll to get the full field-by-field decode)')
+              elif crc is False:
+                  lines.append('(CRC failed: not decoded)')
               else:
                   lines.append('(field-by-field decoding for %s is not implemented yet - raw bytes shown)' % fr['src_name'])
           return '\n'.join(lines)
+
+
+      def _native_text(fr):
+          """The labelled text of the native decoders for HADES-SA / HADES-L frames (None for other satellites or packet types),
+          without the time line, which is not known here."""
+          try:
+              try:
+                  decode, native, Context = decode_frame, NATIVE_SOURCES, Ctx          # noqa: F821  genesis.py shares the namespace
+              except NameError:
+                  from .genesis import decode_frame as decode, NATIVE_SOURCES as native, Ctx as Context
+              if fr['src'] not in native:
+                  return None
+              res = decode(fr['type'], fr['src'], bytes.fromhex(fr['plain']), Context(0))
+          except Exception:                                # noqa: genesis not available, or a frame the decoders cannot handle
+              return None
+          if res is None or not res[0]:
+              return None
+          body = res[0].split('\n', 1)[1] if res[0].startswith('***') else res[0]
+          out = []
+          for line in body.split('\n'):
+              if 'Data matching rate' in line and line[:8].isdigit():        # the PN9 line starts with the (unknown here) time
+                  line = line[line.index('Data matching rate'):]
+              out.append(line)
+          return '\n'.join(out).rstrip('\n')
 
 
       # ----------------------------------------------------------------------------
@@ -2294,7 +2324,8 @@ blocks:
               return ('=== %s frame #%d%s [no CRC in this packet type] ===\n'
                       'payload (35 bytes, 280 bits): %s' % (lead.replace('(%s)' % name, '(%s)' % name), fr['number'],
                                                             tail, fr['payload']))
-          status = 'CRC OK' if fr.get('crc_ok', True) else 'CRC FAIL - unverified'
+          crc = fr.get('crc_ok', True)
+          status = 'CRC OK' if crc else ('no CRC in this packet type' if crc is None else 'CRC FAIL - unverified')
           if fr['flips']:
               status += ', corrected bits %s' % fr['flips']
           lines = ['=== %s%s  [%s] ===' % (lead, tail, status)]
@@ -2312,15 +2343,44 @@ blocks:
                   text = dll.decode(ptype, src, bytes.fromhex(fr['plain']))
               except Exception as e:                       # noqa
                   text = '[DLL decode failed: %s]' % e
+          if not text and crc is not False:
+              text = _native_text(fr)                      # HADES-SA / HADES-L: decoded here, no DLL needed
           if text:
               lines.append(text.rstrip())
           else:
-              lines.append('data (descrambled): ' + fr['plain'][2:])
+              scrambled = not (fr.get('framing') == 'sized' and ptype in (10, 13))
+              lines.append('data (%s): %s' % ('descrambled' if scrambled else 'as received, not scrambled', fr['plain'][2:]))
               if dll_ok:
                   lines.append('(pass --dll hadesr.dll to get the full field-by-field decode)')
+              elif crc is False:
+                  lines.append('(CRC failed: not decoded)')
               else:
                   lines.append('(field-by-field decoding for %s is not implemented yet - raw bytes shown)' % fr['src_name'])
           return '\n'.join(lines)
+
+
+      def _native_text(fr):
+          """The labelled text of the native decoders for HADES-SA / HADES-L frames (None for other satellites or packet types),
+          without the time line, which is not known here."""
+          try:
+              try:
+                  decode, native, Context = decode_frame, NATIVE_SOURCES, Ctx          # noqa: F821  genesis.py shares the namespace
+              except NameError:
+                  from .genesis import decode_frame as decode, NATIVE_SOURCES as native, Ctx as Context
+              if fr['src'] not in native:
+                  return None
+              res = decode(fr['type'], fr['src'], bytes.fromhex(fr['plain']), Context(0))
+          except Exception:                                # noqa: genesis not available, or a frame the decoders cannot handle
+              return None
+          if res is None or not res[0]:
+              return None
+          body = res[0].split('\n', 1)[1] if res[0].startswith('***') else res[0]
+          out = []
+          for line in body.split('\n'):
+              if 'Data matching rate' in line and line[:8].isdigit():        # the PN9 line starts with the (unknown here) time
+                  line = line[line.index('Data matching rate'):]
+              out.append(line)
+          return '\n'.join(out).rstrip('\n')
       """Per-type decoded output for the GENESIS / HADES family: text (.tlm), data (.dat) and binary (.bin) files.
 
       This is a Python port of the decoding and file-writing logic of AMSAT-EA's open-source HADES-SA decoder

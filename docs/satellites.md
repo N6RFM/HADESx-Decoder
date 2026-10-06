@@ -69,9 +69,9 @@ Types differ by satellite; the decoder shows the right name for the source addre
 * **Works:** finding the signal anywhere in the band, demodulation at 200 and 800 baud, sync, length detection, CRC
   check with bit repair, descrambling, JSON log, hex port, CODEC2 voice extraction (the XOR key and 28-bit layout come
   from AMSAT-EA's HADES-SA decoder).
-* **Not yet:** field-by-field decoding of HADES-SA frames *in the console output* (use `--outdir`: the per-type `.tlm` files hold
-  the full labelled text; the console shows raw bytes with type, satellite, clock and length), JPEG assembly of SSDV
-  packets, UNNE-1B field decoding without `hadesr.dll`, and decoding of the HADES-L voice-beacon FEC.
+* **Not yet:** JPEG assembly of SSDV packets, UNNE-1B field decoding without `hadesr.dll`, and decoding of the HADES-L
+  voice-beacon FEC. (HADES-SA and HADES-L frames are decoded field by field both in the per-type `.tlm` files and on the
+  console.)
 * **Frame types without a CRC16:** SSDV image packets (type 10) are checked with SSDV's own CRC-32 (all 60 packets in a real
   HADES-SA folder verify); PN9 link-test packets (type 13) and voice (type 11) have no CRC and are recognised by their
   header (size byte, type, known satellite address). For PN9 the matching rate against the known pattern tells you whether the

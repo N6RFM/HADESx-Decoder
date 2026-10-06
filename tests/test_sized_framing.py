@@ -109,8 +109,10 @@ def test_dll_is_only_used_for_the_satellites_it_knows():
     dll = FakeDll()
     assert 'decoded by the dll' in format_frame(frame_for(0xC, 'legacy'), dll)       # UNNE-1B
     assert dll.calls == 1
-    out = format_frame(frame_for(3, 'sized'), dll)                                   # HADES-SA: not supported
-    assert dll.calls == 1 and 'not implemented yet' in out
+    out = format_frame(frame_for(3, 'sized'), dll)                                   # HADES-SA: native decoder, not the DLL
+    assert dll.calls == 1 and 'decoded by the dll' not in out and 'Power packet' not in out and 'sat_id' in out
+    unknown = dict(frame_for(9, 'sized'), src_name='x')                              # a satellite nobody decodes yet
+    assert 'not implemented yet' in format_frame(unknown, dll) and dll.calls == 1
 
 
 def test_type_names_depend_on_the_satellite():
