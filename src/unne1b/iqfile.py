@@ -32,7 +32,7 @@ def parse_wav(path):
     """Header of a WAV file -> dict(channels, rate, bits, tag, data_offset, data_bytes, center_freq, start, stop)."""
     size = os.path.getsize(path)
     info = {'channels': None, 'rate': None, 'bits': None, 'tag': None, 'data_offset': None, 'data_bytes': None,
-            'center_freq': None, 'start': None, 'stop': None}
+            'center_freq': None, 'start': None, 'stop': None, 'byterate': None, 'align': None}
     with open(path, 'rb') as f:
         head = f.read(12)
         if len(head) < 12 or head[:4] not in (b'RIFF', b'RF64') or head[8:12] != b'WAVE':
@@ -48,19 +48,21 @@ def parse_wav(path):
             body = pos + 8
             if cid == b'fmt ':
                 fmt = f.read(min(sz, 40))
-                tag, ch, rate, _, _, bits = struct.unpack('<HHIIHH', fmt[:16])
+                tag, ch, rate, byterate, align, bits = struct.unpack('<HHIIHH', fmt[:16])
                 if tag == 0xFFFE and len(fmt) >= 26:                      # WAVE_FORMAT_EXTENSIBLE: the real tag is in the GUID
                     tag = struct.unpack('<H', fmt[24:26])[0]
-                info.update(tag=tag, channels=ch, rate=rate, bits=bits)
+                info.update(tag=tag, channels=ch, rate=rate, bits=bits, byterate=byterate, align=align)
             elif cid == b'ds64' and sz >= 16:
                 ds64_data = struct.unpack('<Q', f.read(16)[8:16])[0]
             elif cid == b'auxi' and sz >= 36:
                 a = f.read(min(sz, 80))
-                info['start'] = _systemtime(a[0:16])
-                info['stop'] = _systemtime(a[16:32])
-                center = struct.unpack('<I', a[32:36])[0]
-                if center:
-                    info['center_freq'] = float(center)
+                start = _systemtime(a[0:16])
+                if start is not None:                                     # the SDR#/HDSDR/SpectraVue layout has valid dates; other
+                    info['start'] = start                                 # programs (SDR Console) use a chunk of the same name
+                    info['stop'] = _systemtime(a[16:32])                  # for something else: then none of it is trusted
+                    center = struct.unpack('<I', a[32:36])[0]
+                    if center:
+                        info['center_freq'] = float(center)
             elif cid == b'data':
                 info['data_offset'] = body
                 if ds64_data is not None and sz == 0xFFFFFFFF:
@@ -86,15 +88,51 @@ def _systemtime(b):
 
 
 def meta_from_name(name):
-    """(sample rate, centre frequency) written into a file name: ..._50000SPS_436875000Hz_..., ..._436.875MHz_..., 192k ..."""
+    """(sample rate, centre frequency) written into a file name: ..._50000SPS_436875000Hz_..., ..._436.875MHz_...,
+    HDSDR's ..._436665kHz_RF.wav, SDR Console's "05-Oct-2026 000058.000 436.665MHz 000.wav"."""
     rate = re.search(r'(\d{4,8})\s*SPS', name, re.I)
-    freq = re.search(r'(\d{6,10})\s*Hz', name, re.I)
+    freq = re.search(r'(?<![\d.])(\d{6,10})\s*Hz', name, re.I)
     if freq:
         fc = float(freq.group(1))
     else:
-        m = re.search(r'(\d+(?:[.,]\d+)?)\s*MHz', name, re.I)
-        fc = float(m.group(1).replace(',', '.')) * 1e6 if m else None
+        m = re.search(r'(\d+(?:[.,]\d+)?)\s*(MHz|kHz)', name, re.I)
+        fc = float(m.group(1).replace(',', '.')) * (1e6 if m.group(2).lower() == 'mhz' else 1e3) if m else None
     return (float(rate.group(1)) if rate else None), fc
+
+
+_MONTHS = {m: i for i, m in enumerate(('jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'), 1)}
+
+
+def start_from_name(name):
+    """Recording start time (epoch seconds) written into a file name, or None. The time zone is not in the name: it is taken as
+    UTC, which is what these programs write by default (check your recorder's setting; `--rec-start` overrides).
+
+        unne1b_50000SPS_436888000Hz_2026_10_04_T22-48-12.iq     (2026_10_04_T22-48-12)
+        SDRSharp_20261004_224812Z_436888000Hz_IQ.wav            (20261004_224812)
+        05-Oct-2026 000058.000 436.665MHz 000.wav               (SDR Console: DD-Mon-YYYY HHMMSS.mmm)
+    """
+    name = os.path.basename(name)
+    vals = None
+    m = re.search(r'(?<!\d)(\d{4})[_-](\d{2})[_-](\d{2})[_T -]+T?(\d{2})[-:_.]?(\d{2})[-:_.]?(\d{2})(?:\.(\d+))?', name)
+    if m:
+        vals = m.groups()
+    else:
+        m = re.search(r'(?<!\d)(\d{4})(\d{2})(\d{2})[_T -](\d{2})(\d{2})(\d{2})(?:\.(\d+))?(?!\d)', name)
+        if m:
+            vals = m.groups()
+        else:
+            m = re.search(r'(?<!\d)(\d{1,2})[-_ ]([A-Za-z]{3})[A-Za-z]*[-_ ](\d{4})[-_ ]+(\d{2})[-:_.]?(\d{2})[-:_.]?(\d{2})(?:\.(\d+))?', name)
+            if m and m.group(2).lower() in _MONTHS:
+                d, mon, y, h, mi, sec, frac = m.groups()
+                vals = (y, '%02d' % _MONTHS[mon.lower()], d, h, mi, sec, frac)
+    if not vals:
+        return None
+    y, mo, d, h, mi, sec, frac = vals
+    try:
+        t = datetime.datetime(int(y), int(mo), int(d), int(h), int(mi), int(sec), tzinfo=datetime.timezone.utc).timestamp()
+    except ValueError:
+        return None
+    return t + (float('0.' + frac) if frac else 0.0)
 
 
 class IQFile(object):
@@ -105,6 +143,7 @@ class IQFile(object):
         self.swap = bool(swap)
         name = os.path.basename(path)
         name_fs, name_fc = meta_from_name(name)
+        self.name_start = start_from_name(name)
         if fmt == 'auto':
             fmt = 'wav' if path.lower().endswith(WAV_EXTENSIONS) or _looks_like_wav(path) else 'cf32'
         self.kind = fmt
@@ -117,18 +156,24 @@ class IQFile(object):
                 raise IQFormatError(
                     '%s has %s channel(s). IQ recordings are stereo WAV files (left = I, right = Q); a mono WAV is audio. '
                     'If this is a real-valued recording it cannot be used directly.' % (name, h['channels']))
-            if not fs and not 1000 <= h['rate'] <= 1e9:
+            header_rate = h['rate']
+            if not fs and not 1000 <= header_rate <= 1e9 and h['byterate'] and h['align'] and h['align'] == 2 * h['bits'] // 8 \
+                    and 1000 <= h['byterate'] / h['align'] <= 1e9:
+                header_rate = h['byterate'] // h['align']                     # the byte rate = rate x block align still says it
+                self.fs_note = 'the rate field is %d: using the byte rate / block align = %d Hz' % (h['rate'], header_rate)
+            if not fs and not 1000 <= header_rate <= 1e9:
                 raise BadSampleRate(
                     '%s: the WAV header gives no usable sample rate (%s). Give it with --fs HZ, or let the decoder work it out '
                     'from the signal with --fs guess' % (name, h['rate']))
-            self.fs = float(fs or h['rate'])
+            self.fs = float(fs or header_rate)
             if fs and abs(fs - h['rate']) > 1:
                 self.fs_note = 'the header says %d Hz, using the %.0f Hz you gave' % (h['rate'], fs)
             self.center_freq = center_freq or h['center_freq'] or name_fc
-            self.start = h['start']
+            self.start = h['start'] or self.name_start
             self._open_wav(h)
         else:
             self.fs = float(fs or name_fs or 50000.0)
+            self.start = self.name_start
             self._open_raw(fmt)
         self.fs_note = getattr(self, 'fs_note', '')
 

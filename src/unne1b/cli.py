@@ -27,15 +27,9 @@ def _read_iq(path, fmt):
 
 
 def guess_rec_start(path):
-    """Recording start time (epoch seconds, UTC) from a name like unne1b_50000SPS_436888000Hz_2026_10_04_T22-48-12.iq."""
-    m = re.search(r'(\d{4})[_-](\d{2})[_-](\d{2})[_T-]+T?(\d{2})[-:_.]?(\d{2})[-:_.]?(\d{2})', os.path.basename(path))
-    if not m:
-        return None
-    y, mo, d, h, mi, sec = map(int, m.groups())
-    try:
-        return datetime.datetime(y, mo, d, h, mi, sec, tzinfo=datetime.timezone.utc).timestamp()
-    except ValueError:
-        return None
+    """Recording start time (epoch seconds, UTC) from the file name (see iqfile.start_from_name), or None."""
+    from .iqfile import start_from_name
+    return start_from_name(path)
 
 
 def build_parser():
@@ -51,6 +45,9 @@ def build_parser():
     ap.add_argument('--format', default='auto', choices=['auto', 'cf32', 'cs16', 'cu8', 'wav'],
                     help='sample format: auto (default: a .wav file is read as WAV, anything else as cf32 = GNU Radio / SDR '
                          'complex float), cs16 / cu8 = 16-bit / 8-bit interleaved I/Q')
+    ap.add_argument('--guess-samples', type=int, default=24000000,
+                    help='with --fs guess: how many samples from the start of the file to examine for each candidate rate '
+                         '(default 24 million, which is 24 s at 1 Msps: raise it if the signal comes later in the file)')
     ap.add_argument('--swap-iq', action='store_true',
                     help='exchange I and Q (use it if a recording decodes nothing: some recorders write Q first, which mirrors '
                          'the spectrum and turns every bit round)')
@@ -94,7 +91,8 @@ def main(argv=None):
     if fs_arg == 'guess':
         from .iqfile import guess_sample_rate
         print('working out the sample rate from the signal (tries the standard rates) ...', file=sys.stderr)
-        fs_arg, table = guess_sample_rate(a.iq, fmt=a.format, swap=a.swap_iq, report=lambda t: print(t, file=sys.stderr))
+        fs_arg, table = guess_sample_rate(a.iq, fmt=a.format, swap=a.swap_iq, max_samples=a.guess_samples,
+                                          report=lambda t: print(t, file=sys.stderr))
         if fs_arg is None:
             raise SystemExit('could not work out the sample rate: no standard rate made any frame decode. Try --swap-iq, or give '
                              '--fs HZ if you know it')
@@ -138,6 +136,9 @@ def main(argv=None):
             if rec_start is None and src.start is not None:
                 rec_start = src.start
                 print('NOTE: recording start time taken from the WAV header (as the recorder wrote it).', file=sys.stderr)
+            elif rec_start is not None:
+                print('NOTE: recording start time read from the file name; its time zone is not in the name and is taken as UTC '
+                      '(--rec-start overrides).', file=sys.stderr)
         if rec_start is None:
             rec_start = time.time()
             print('NOTE: no recording start time (--rec-start, or a date in the file name): frames in %s are stamped '

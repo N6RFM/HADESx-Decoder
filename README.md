@@ -119,6 +119,7 @@ Using the single-file release (`unne1b_standalone.py`) on Debian/Ubuntu: `sudo a
 |---|---|
 | [Getting started](docs/getting-started.md) | install, first decode, options, output formats, SDR recording tips |
 | [Supported satellites](docs/satellites.md) | UNNE-1B, HADES-SA, HADES-L: frame layouts, baud rates, what works |
+| [Tools](tools/README.md) | the recording survey and probe (what is in these files? why does this one not decode?), builders, test-reference tools |
 | [Output folder](docs/output-folder.md) | `--outdir`: one file set per frame type like the Windows tool; add passes to one folder |
 | [Protocol](docs/protocol.md) | air interface, frame layout, scrambler, CRC, every packet type, voice format |
 | [Signal processing](docs/signal-processing.md) | tone detector, clock recovery, sync search, bit-error repair |

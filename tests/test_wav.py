@@ -169,7 +169,7 @@ def test_raw_formats_still_work(tmp_path):
 
 # ---- recordings whose header has no usable sample rate (SDR Console writes such files) -------------------------------------
 
-def zero_rate_wav(tmp_path, fs, offset, name='sdrconsole.wav'):
+def zero_rate_wav(tmp_path, fs, offset, name='sdrconsole.wav', byte_rate_too=True):
     from math import gcd
     x, plain = packet_iq()
     g = gcd(fs, 50000)
@@ -181,6 +181,8 @@ def zero_rate_wav(tmp_path, fs, offset, name='sdrconsole.wav'):
     raw = bytearray(p.read_bytes())
     i = raw.index(b'fmt ') + 12
     raw[i:i + 4] = struct.pack('<I', 0)                                                     # header sample rate = 0
+    if byte_rate_too:
+        raw[i + 4:i + 8] = struct.pack('<I', 0)                                             # ... and the byte rate: nothing left
     p.write_bytes(bytes(raw))
     return p, plain
 
@@ -215,3 +217,46 @@ def test_guess_gives_up_on_noise(tmp_path):
     p = tmp_path / 'noise.wav'
     wavhelp.write_wav(str(p), noise, 96000, bits=16)
     assert iqfile.guess_sample_rate(str(p), candidates=(48000, 96000))[0] is None
+
+
+def test_rate_from_the_byte_rate_when_the_rate_field_is_zero(tmp_path):
+    p, plain = zero_rate_wav(tmp_path, 192000, 25000, 'br.wav', byte_rate_too=False)
+    f = iqfile.IQFile(str(p))
+    assert f.fs == 192000.0 and 'byte rate' in f.fs_note
+    rc, fr = decode(p, tmp_path)
+    assert rc == 0 and [x['plain'] for x in fr] == [plain]                                   # no --fs, no guessing
+
+
+# ---- file names: SDR Console, SDR#, HDSDR ---------------------------------------------------------------------------------
+
+def test_start_time_and_frequency_from_recorder_file_names():
+    t = lambda name: iqfile.start_from_name(name)
+    assert t('unne1b_50000SPS_436888000Hz_2026_10_04_T22-48-12.iq') == 1791154092.0
+    assert t('05-Oct-2026 000058.000 436.665MHz 000.wav') == 1791158458.0                    # SDR Console, 2026-10-05 00:00:58
+    assert t('05-Oct-2026 000058.250 436.665MHz 000.wav') == 1791158458.25
+    assert t('SDRSharp_20261004_224812Z_436888000Hz_IQ.wav') == 1791154092.0
+    assert t('HDSDR_20261004_224812Z_436888kHz_RF.wav') == 1791154092.0
+    assert t('/some/folder/31-Feb-2026 000058.000.wav') is None and t('plain_name.wav') is None
+    assert iqfile.meta_from_name('05-Oct-2026 000058.000 436.665MHz 000.wav') == (None, 436665000.0)
+    assert iqfile.meta_from_name('HDSDR_20261004_224812Z_436665kHz_RF.wav') == (None, 436665000.0)
+    assert iqfile.meta_from_name('SDRSharp_20261004_224812Z_436888000Hz_IQ.wav') == (None, 436888000.0)
+
+
+def test_foreign_auxi_chunk_is_ignored_and_the_name_is_used(tmp_path):
+    """SDR Console has an 'auxi' chunk of its own: its bytes are not SDR#'s layout and must not give a bogus frequency or time."""
+    x, plain = packet_iq()
+    garbage = struct.pack('<8H', 60, 63, 0, 109, 108, 32, 118, 0) * 2 + struct.pack('<I', 3145774) + bytes(80)
+    p = tmp_path / '05-Oct-2026 000058.000 436.665MHz 000.wav'
+    wavhelp.write_wav(str(p), x, 50000, bits=16, auxi_raw=garbage)
+    f = iqfile.IQFile(str(p))
+    assert f.center_freq == 436665000.0 and f.start == 1791158458.0                           # from the name, not the garbage
+    out = tmp_path / 'out'
+    assert main([str(p), '--outdir', str(out)]) == 0
+    assert 'received on UTC time 20261005-00:0' in (out / 'sat_03_type_03.tlm').read_text()
+
+
+def test_guess_samples_option_is_accepted(tmp_path):
+    p, plain = zero_rate_wav(tmp_path, 96000, 10000)
+    rc, fr = decode(p, tmp_path, '--fs', 'guess', '--guess-samples', '2000000')
+    assert rc == 0 and [f['plain'] for f in fr] == [plain]
+

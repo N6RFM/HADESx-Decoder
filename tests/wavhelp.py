@@ -1,7 +1,7 @@
 """Helpers for the WAV tests: write a stereo I/Q WAV in any common sample format (with an optional auxi chunk)."""
 import numpy as np, struct, sys
 from scipy import signal
-def write_wav(path, z, fs, bits=16, kind='pcm', auxi_center=None, swap=False, extensible=False, data_size=None, mono=False):
+def write_wav(path, z, fs, bits=16, kind='pcm', auxi_center=None, swap=False, extensible=False, data_size=None, mono=False, auxi_raw=None):
     I, Q = (z.imag, z.real) if swap else (z.real, z.imag)
     st = np.empty(len(z)*2, dtype=np.float64); st[0::2]=I; st[1::2]=Q
     if kind=='float':
@@ -19,7 +19,9 @@ def write_wav(path, z, fs, bits=16, kind='pcm', auxi_center=None, swap=False, ex
         fmt=struct.pack('<HHIIHH',0xFFFE,ch,int(fs),int(fs)*ba,ba,bits)+struct.pack('<HHI',22,bits,3)+struct.pack('<H',tag)+bytes.fromhex('000000001000800000aa00389b71')
     else: fmt=struct.pack('<HHIIHH',tag,ch,int(fs),int(fs)*ba,ba,bits)
     chunks=b'fmt '+struct.pack('<I',len(fmt))+fmt
-    if auxi_center is not None:
+    if auxi_raw is not None:
+        chunks+=b'auxi'+struct.pack('<I',len(auxi_raw))+auxi_raw
+    elif auxi_center is not None:
         st_=struct.pack('<8H',2026,10,2,4,10,35,21,0)
         aux=st_+st_+struct.pack('<9I',int(auxi_center),int(fs),0,int(fs),0,0,0,0,0)
         chunks+=b'auxi'+struct.pack('<I',len(aux))+aux

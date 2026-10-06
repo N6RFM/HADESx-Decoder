@@ -61,6 +61,10 @@ python3 tools/iq_survey.py --decode folder/     # what is in each file: rate, fr
   3 MHz and prints what it found for each, which takes a minute or two for a long file.
 * Raw files have no header: give `--fs`, or put the rate in the name (`..._50000SPS_...`); `--format cs16` / `cu8` for
   interleaved 16-bit / 8-bit I/Q.
+* **Start time:** read from the file name for SDR Console (`05-Oct-2026 000058.000 ...`), SDR# / HDSDR (`..._20261004_224812Z_...`)
+  and `..._2026_10_04_T22-48-12`. A name has no time zone: UTC is assumed, `--rec-start` overrides.
+* Not sure what a file is, or why it does not decode? `tools/iq_survey.py` and `tools/wav_probe.py` look at it without
+  decoding: see [tools/README.md](../tools/README.md).
 
 ## Decode a recording
 

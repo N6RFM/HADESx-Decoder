@@ -7,6 +7,7 @@
 | `cannot read ...: ... mono WAV is audio` | the WAV has one channel: it is not an IQ recording |
 | Tracker finds bursts, **0 frames**, in a recording from an SDR program | I and Q may be swapped (the spectrum is mirrored): add `--swap-iq`. `python3 tools/iq_survey.py --decode FILE` tells you |
 | `the WAV header gives no usable sample rate` | the recorder wrote 0 or nonsense: give `--fs HZ`, or `--fs guess` to work it out from the signal |
+| A recording decodes nothing and you do not know why | `python3 tools/wav_probe.py FILE` (WAV) or `python3 tools/iq_survey.py FILE` show whether a signal is in it, at which frequency, and whether the format is the problem: see [tools/README.md](../tools/README.md) |
 | Frames appear with `[CRC OK, corrected bits [...]]` | normal on weak signals; the CRC still matched after the repair |
 | Burst at the very end of a file is missing | the tracker's 1.2 s look-ahead; `unne1b-decode` flushes, the GRC file source pads. In your own flowgraph append silence |
 | `WARNING: hadesr.dll not found` | give the full path: `--dll /home/me/hadesr.dll`. The decode continues without it |
