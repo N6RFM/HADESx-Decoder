@@ -151,7 +151,7 @@ see each packet's type, clock and raw data. Packet types 4, 5 and 6 have since b
 
 Decoded natively, with the output checked file for file against the decoder DLL of AMSAT-EA's HADES-SA package. A real recording gives status,
 power ranges, the (empty) BBS and a nine-packet voice stream, bit for bit the same message UNNE-1B sends. Its image packets (SSDV) are decoded off the air
-(27 packets of one picture from a single pass: [example](examples/iq/README.md)), verified by their own CRC-32 with Reed-Solomon repair, and stored like
+(29 packets of one picture from a single pass: [example](examples/iq/README.md)), verified by their own CRC-32 with Reed-Solomon repair, and stored like
 AMSAT-EA's Windows tool does; `hadesx-ssdv FOLDER` assembles them into the JPEG. The voice of a whole folder of passes becomes one WAV:
 `hadesx-voice FOLDER`.
 

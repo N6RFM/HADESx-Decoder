@@ -314,7 +314,7 @@ def guess_sample_rate(path, fmt='auto', swap=False, max_samples=24000000, candid
             frames += sum(1 for f in got if f.get('crc_ok') is not False)
             # the symbol clock the receiver locked to, whenever frames were found: at the true sample rate it sits at the nominal
             # value (the satellite's clock is good to about 100 ppm), a rate that is 2 % off pulls it 2 % away
-            devs += [abs(d.T / d.sps0 - 1.0) for d, b in zip(fe.df.deframers, before) if d.nframes > b]
+            devs += [abs(d.T_ref / d.sps0 - 1.0) for d, b in zip(fe.df.deframers, before) if d.nframes > b]
         table[cand] = frames
         clock_dev[cand] = float(np.median(devs)) if devs else 1.0
         if report:
@@ -329,7 +329,11 @@ def guess_sample_rate(path, fmt='auto', swap=False, max_samples=24000000, candid
     # 3. only if nothing has the known spacing (a satellite or mode we do not know), fall back to all candidates that decode
     pool = [c for c in decoded if 1550.0 <= spacing_of[c] <= 1700.0] or decoded
     best = max(table[c] for c in pool)
-    return min((c for c in pool if table[c] == best), key=lambda c: (clock_dev[c], c)), table
+    # the rates that decode equally well: the tone spacing closest to a known one (1600 Hz, or 1640 Hz at 200 baud) wins, then the symbol
+    # clock closest to nominal. (A rate 4 % off still decodes a short frame: the spacing and the clock tell it from the true one.)
+    def key(c):
+        return (round(min(abs(spacing_of[c] - 1600.0), abs(spacing_of[c] - 1640.0)) / 15.0), clock_dev[c], c)
+    return min((c for c in pool if table[c] == best), key=key), table
 
 
 def write_iq_wav(path, z, rate, bits=16, center_freq=None, start=None, comment=None):

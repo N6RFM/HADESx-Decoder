@@ -1051,6 +1051,7 @@ blocks:
               self.t = None
               self.quiet = 99                    # symbols since the signal was last strong (burst-start detection)
               self.alt = 0                       # length of the current run of alternating bits (training pattern)
+              self.T_ref = self.sps0             # symbol period learned from the last training pattern
               self.bits = []
               self.soft = []
               self.scan = 0
@@ -1180,7 +1181,7 @@ blocks:
                   strong = self.nf is not None and p > 6.0 * self.nf
                   if strong:
                       if self.quiet >= 24:             # a new burst: the bit rate is the nominal one again
-                          T = self.sps0
+                          T = self.T_ref = self.sps0
                       self.quiet = 0
                   else:
                       self.quiet += 1
@@ -1193,8 +1194,12 @@ blocks:
                   if strong and j < len(self.edges) and self.edges[j] < tb + T / 2:
                       err = self.edges[j] - tb
                       t += self.kp * err
-                      if self.alt >= 8:        # the rate is learned from the training pattern only
-                          T = min(hi, max(lo, T + self.ki * err))
+                      if self.alt >= 8:        # the rate is learned from the training pattern at a high gain ...
+                          T = min(hi, max(lo, T + 5.0 * self.ki * err))
+                          self.T_ref = T
+                      else:                    # ... and from the data only gently and within +-0.5 % of that (unscrambled data biases the edges)
+                          r = self.T_ref
+                          T = min(r * 1.005, max(r * 0.995, T + 0.25 * self.ki * err))
                   t += T
               self.T, self.t = T, t
               # trim buffers
@@ -2335,6 +2340,7 @@ blocks:
               self.t = None
               self.quiet = 99                    # symbols since the signal was last strong (burst-start detection)
               self.alt = 0                       # length of the current run of alternating bits (training pattern)
+              self.T_ref = self.sps0             # symbol period learned from the last training pattern
               self.bits = []
               self.soft = []
               self.scan = 0
@@ -2464,7 +2470,7 @@ blocks:
                   strong = self.nf is not None and p > 6.0 * self.nf
                   if strong:
                       if self.quiet >= 24:             # a new burst: the bit rate is the nominal one again
-                          T = self.sps0
+                          T = self.T_ref = self.sps0
                       self.quiet = 0
                   else:
                       self.quiet += 1
@@ -2477,8 +2483,12 @@ blocks:
                   if strong and j < len(self.edges) and self.edges[j] < tb + T / 2:
                       err = self.edges[j] - tb
                       t += self.kp * err
-                      if self.alt >= 8:        # the rate is learned from the training pattern only
-                          T = min(hi, max(lo, T + self.ki * err))
+                      if self.alt >= 8:        # the rate is learned from the training pattern at a high gain ...
+                          T = min(hi, max(lo, T + 5.0 * self.ki * err))
+                          self.T_ref = T
+                      else:                    # ... and from the data only gently and within +-0.5 % of that (unscrambled data biases the edges)
+                          r = self.T_ref
+                          T = min(r * 1.005, max(r * 0.995, T + 0.25 * self.ki * err))
                   t += T
               self.T, self.t = T, t
               # trim buffers

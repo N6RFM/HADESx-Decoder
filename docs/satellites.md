@@ -7,7 +7,7 @@ CRC-16. The decoder recognises the variants automatically (by the frame itself, 
 | Satellite | Downlink | Baud / tone spacing | Frame layout | Status here |
 |---|---|---|---|---|
 | **UNNE-1B** (HADES-E2) | 436.888 MHz | 200, about 1.64 kHz (the 1125 Hz in document v1.01 was an error, confirmed by AMSAT-EA) | legacy: type/addr, data, CRC; voice with a length byte | **decoded from real recordings** (telemetry, voice) |
-| **HADES-SA / SpinnyONE** (SO-127) | 436.875 MHz | 800 with 1600 Hz spacing, or 200 with 1125 Hz (per its document; the same figure was wrong for UNNE-1B, so check on real recordings); alternates every 30 days | length byte, then type/addr, data, CRC | **decoded from a real recording** (5 October 2026: status, power ranges, BBS, voice, and **image packets**: 27 SSDV packets of one picture in a single pass) |
+| **HADES-SA / SpinnyONE** (SO-127) | 436.875 MHz | 800 with 1600 Hz spacing, or 200 with 1125 Hz (per its document; the same figure was wrong for UNNE-1B, so check on real recordings); alternates every 30 days | length byte, then type/addr, data, CRC | **decoded from a real recording** (5 October 2026: status, power ranges, BBS, voice, and **image packets**: 29 SSDV packets of one picture in a single pass) |
 | **HADES-L** | 436.665 MHz | 800 with 1600 Hz spacing (measured) | length byte, then type/addr, data, CRC | **decoded from a real recording** (45 frames: status, antenna, time series, Lofith experiment, PN9, ...); source address 5 confirmed |
 | MARIA-G, HADES-ICM | - | 200 | legacy | recognised by address; not in orbit (HADES-ICM ended, per AMSAT-EA), untested |
 
@@ -152,8 +152,8 @@ antenna pattern), so the first 100-400 bits after the sync word can carry bit er
 image packets showed a training pattern full of duplicated bits: the tracker's symbol period had drifted to its lower limit (3 % fast),
 because the zero-crossing times of **unscrambled** data (SSDV, PN9) are biased, so every frame came out misaligned a few bits after the
 sync word although the signal was strong. Now the symbol period is reset to the nominal baud rate at the start of each
-burst and is learned only from the alternating training pattern, never from the data; this took the HADES-SA recording from 12 to 47
-valid frames (27 SSDV packets, one picture) and gave HADES-L one more PN9 packet. Image (SSDV) packets also carry their own
+burst and is learned from the alternating training pattern at full gain and from the data only very gently (within 0.5 %); this took
+the HADES-SA recording from 12 to 43 valid frames (29 SSDV packets, one picture), HADES-L and UNNE-1B unchanged. Image (SSDV) packets also carry their own
 Reed-Solomon repair, which the decoder uses (up to 16 damaged bytes per packet).
 
 

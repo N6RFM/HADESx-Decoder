@@ -53,4 +53,4 @@ hadesx-decode hades_sa_ssdv_pass.wav --outdir ~/ssdv-pass
 hadesx-ssdv ~/ssdv-pass --image 0        # needs the `ssdv` program for the JPEG
 ```
 
-The whole recording gives 27 packets of the same picture. Released under CC BY 4.0.
+The whole recording gives 29 packets of the same picture. Released under CC BY 4.0.
