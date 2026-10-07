@@ -78,7 +78,8 @@ labels them as local time instead. Accuracy is about one second.
 cat $(ls sat_03_type_11_codec2_frame_*.bin | sort) > all.bin
 c2dec 700C all.bin voice.raw          # 8 kHz, 16-bit mono
 
-# images: concatenate the packets of one image and decode with the SSDV tool (github.com/fsphil/ssdv)
+# images: hadesx-ssdv does this for you (see below); by hand, concatenate the packets of one image and decode them
+# with the SSDV tool (github.com/fsphil/ssdv), as AMSAT-EA's run_ssdv.bat does
 cat sat_03_type_10_ssdv_img_224_packet_*.bin > img224.ssdv
 ssdv -d img224.ssdv img224.jpg
 
@@ -101,6 +102,19 @@ uses the best pass (`--list-passes`, `--pass N`, `--combine`; see [voice.md](voi
 * a fixed set of 69 of those frames is stored in `tests/data/genesis_golden.json` and checked on every test run;
 * real files written by the Windows tool (`tests/data/windows_tool/`): a voice frame and an SSDV packet are reproduced
   exactly, and the line structure of the status, power, temperature, time-series, ephemeris, PN9 and BBS text matches.
+
+## Pictures from the SSDV packets: `hadesx-ssdv`
+
+```bash
+hadesx-ssdv ~/pass-folder                 # list the images found and their packet numbers
+hadesx-ssdv ~/pass-folder --image 218     # hades_sa_image_218.ssdv, and hades_sa_image_218.jpg if `ssdv` is installed
+hadesx-ssdv ~/pass-folder --all
+```
+
+It does what AMSAT-EA's `run_ssdv.bat` does: the packets of one image are put in packet order into one `.ssdv` file and Philip Heron's
+`ssdv -d` (github.com/fsphil/ssdv, or `ssdv-x86.exe` from AMSAT-EA's SSDV utilities) makes the JPEG. Every packet is checked again, a damaged one is
+repaired with its Reed-Solomon code or left out, and missing packet numbers are listed. It also works on the folder of the Windows tool.
+Build `ssdv` with `git clone https://github.com/fsphil/ssdv && cd ssdv && make`; without it you still get the `.ssdv` file.
 
 ## Printing everything on the console: `hadesx-report`
 

@@ -25,6 +25,7 @@ Issues = "https://github.com/N6RFM/HADESx-Decoder/issues"
 hadesx-decode = "hadesx.cli:main"
 hadesx-voice = "hadesx.voice:main"
 hadesx-report = "hadesx.report:main"
+hadesx-ssdv = "hadesx.ssdv:main"
 # the old names keep working (deprecated)
 unne1b-decode = "hadesx.cli:main"
 unne1b-voice = "hadesx.voice:main"

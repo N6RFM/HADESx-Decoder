@@ -32,7 +32,7 @@ import numpy as np
 
 __all__ = [
     'SYNC_BITS', 'TOTAL_BYTES', 'PRE_BYTES', 'TYPE_NAMES', 'DLL_FUNCS', 'SOURCES',
-    'crc16_ccitt_false', 'ssdv_crc_ok', 'descramble', 'scramble', 'bits_to_bytes', 'check_frame',
+    'crc16_ccitt_false', 'ssdv_crc_ok', 'ssdv_plain', 'ssdv_repair', 'rs_ssdv_correct', 'rs_ssdv_parity', 'descramble', 'scramble', 'bits_to_bytes', 'check_frame',
     'VOICE_PAYLOAD_BYTES', 'VOICE_XOR_KEY', 'voice_unwhiten', 'voice_pad_700c', 'voice_assemble',
     'DllDecoder', 'FskCentreTracker', 'Unne1bDeframer', 'MultiBaudDeframer', 'parse_bauds', 'format_frame',
     'type_name', 'check_unne_dll', 'DLL_SATELLITES', 'LEGACY_SOURCES', 'VOICE_TYPES', 'VOICE_SIZE_BYTE', 'SSDV_SIZE_BYTE', 'PN9_SIZES', 'TYPE_NAMES_BY_SOURCE',
@@ -113,6 +113,162 @@ def ssdv_crc_ok(packet):
     """Check a 256-byte SSDV packet: CRC-32 over bytes 1..219, stored big-endian at 220..223."""
     import zlib
     return len(packet) >= 224 and (zlib.crc32(packet[1:220]) & 0xFFFFFFFF) == int.from_bytes(packet[220:224], 'big')
+
+
+def _ssdv_layouts(body):
+    """The ways the 251 SSDV bytes (type/address first) might have been scrambled; each gives a candidate."""
+    return [body,                                                         # 0: sent as is
+            body[:1] + descramble(body[1:]),                              # 1: everything after type/address scrambled
+            body[:1] + descramble(body[1:215]) + body[215:],              # 2: data scrambled, CRC-32 and FEC as is
+            body[:1] + descramble(body[1:219]) + body[219:],              # 3: data and CRC-32 scrambled, FEC as is
+            body[:1] + descramble(body[1:215]) + body[215:219] + descramble(body[219:])]   # 4: CRC-32 as is, FEC scrambled
+
+
+def ssdv_plain(raw):
+    """HADES-SA SSDV frame: `raw` = size byte + type/address + 250 bytes (the standard 256-byte SSDV packet is
+    55 66 BF 35 FB followed by the 251 bytes after the size byte).  Returns those 251 bytes (type/address first) when
+    the packet's own CRC-32 verifies, else None.  Whether the satellite scrambles the SSDV bytes is not settled
+    (the spec exempts "training, sync, type and CRC"), so each plausible layout is tried; a CRC-32 pass is proof."""
+    body = raw[1:252]
+    if len(body) < 251:
+        return None
+    head = b'\x55\x66\xbf\x35' + raw[0:1]
+    good = [cand for cand in _ssdv_layouts(body) if ssdv_crc_ok(head + cand)]
+    for cand in good:                       # the CRC-32 does not cover the FEC: prefer the layout whose FEC is consistent
+        if rs_ssdv_parity((head + cand)[1:224]) == cand[219:]:
+            return cand
+    return good[0] if good else None
+
+
+# Reed-Solomon RS(255,223) of the SSDV standard (fsphil/ssdv, libfec decode_rs_8 CCSDS parameters: field polynomial
+# 0x187, first root 112, root step 11, 32 parity bytes, conventional basis).  Verified against the FEC of a real
+# HADES-SA packet.  Corrects up to 16 wrong bytes in the 255 bytes after the 0x55 sync byte.
+_RS_EXP = [0] * 512
+_RS_LOG = [0] * 256
+_x = 1
+for _i in range(255):
+    _RS_EXP[_i] = _x
+    _RS_LOG[_x] = _i
+    _x <<= 1
+    if _x & 0x100:
+        _x ^= 0x187
+for _i in range(255, 512):
+    _RS_EXP[_i] = _RS_EXP[_i - 255]
+
+
+def _gmul(a, b):
+    return 0 if a == 0 or b == 0 else _RS_EXP[_RS_LOG[a] + _RS_LOG[b]]
+
+
+def _gdiv(a, b):
+    return 0 if a == 0 else _RS_EXP[(_RS_LOG[a] - _RS_LOG[b]) % 255]
+
+
+def rs_ssdv_parity(data223):
+    g = [1]
+    for i in range(32):
+        r = _RS_EXP[(11 * (112 + i)) % 255]
+        ng = [0] * (len(g) + 1)
+        for j, c in enumerate(g):
+            ng[j] ^= c
+            ng[j + 1] ^= _gmul(c, r)
+        g = ng
+    par = [0] * 32
+    for d in data223:
+        fb = d ^ par[0]
+        par = par[1:] + [0]
+        if fb:
+            for j in range(32):
+                par[j] ^= _gmul(fb, g[j + 1])
+    return bytes(par)
+
+
+def rs_ssdv_correct(block):
+    """block = 255 bytes (data 223 + parity 32).  Returns (corrected 255 bytes, number of bytes fixed) or None."""
+    n = 255
+    blk = list(block)
+    syn = []
+    for i in range(32):
+        r = _RS_EXP[(11 * (112 + i)) % 255]
+        acc = 0
+        for c in blk:
+            acc = _gmul(acc, r) ^ c
+        syn.append(acc)
+    if not any(syn):
+        return bytes(blk), 0
+    lam, prev, L, m, b = [1], [1], 0, 1, 1                 # Berlekamp-Massey
+    for k in range(32):
+        d = syn[k]
+        for i in range(1, L + 1):
+            if i < len(lam):
+                d ^= _gmul(lam[i], syn[k - i])
+        if d == 0:
+            m += 1
+            continue
+        t = lam[:]
+        coef = _gdiv(d, b)
+        shifted = [0] * m + [_gmul(coef, c) for c in prev]
+        lam = lam + [0] * (len(shifted) - len(lam))
+        for i, c in enumerate(shifted):
+            lam[i] ^= c
+        if 2 * L <= k:
+            L, prev, b, m = k + 1 - L, t, d, 1
+        else:
+            m += 1
+    if L > 16:
+        return None
+    lam = lam[:L + 1] + [0] * max(0, L + 1 - len(lam))
+    pos = []
+    for idx in range(n):                                   # error at index idx has locator X = alpha^(11 * (254 - idx))
+        xinv = _RS_EXP[(-11 * (254 - idx)) % 255]
+        v, pw = 0, 1
+        for c in lam:
+            v ^= _gmul(c, pw)
+            pw = _gmul(pw, xinv)
+        if v == 0:
+            pos.append(idx)
+    if len(pos) != L:
+        return None
+    omega = [0] * 32                                       # Omega = S(x) * Lambda(x) mod x^32
+    for i in range(32):
+        acc = 0
+        for j in range(min(i, L) + 1):
+            acc ^= _gmul(lam[j], syn[i - j])
+        omega[i] = acc
+    for idx in pos:
+        x = _RS_EXP[(11 * (254 - idx)) % 255]
+        xinv = _RS_EXP[(-11 * (254 - idx)) % 255]
+        num, pw = 0, 1
+        for c in omega:
+            num ^= _gmul(c, pw)
+            pw = _gmul(pw, xinv)
+        den, pw = 0, 1                                     # Lambda'(xinv): odd terms only
+        for j in range(1, len(lam), 2):
+            den ^= _gmul(lam[j], _RS_EXP[(_RS_LOG[xinv] * (j - 1)) % 255] if xinv else 0)
+        if den == 0:
+            return None
+        # magnitude = X^(1 - fcr) * Omega(Xinv) / Lambda'(Xinv), fcr = 112
+        mag = _gmul(_gdiv(num, den), _RS_EXP[((1 - 112) * _RS_LOG[x]) % 255])
+        blk[idx] ^= mag
+    again = rs_ssdv_parity(bytes(blk[:223]))
+    if again != bytes(blk[223:]):
+        return None
+    return bytes(blk), len(pos)
+
+
+def ssdv_repair(raw):
+    """Like ssdv_plain(), but lets the Reed-Solomon code repair damaged bytes first.  Returns
+    (251 plain bytes, number of bytes repaired) or None.  The result is accepted only if its CRC-32 then verifies."""
+    body = raw[1:252]
+    if len(body) < 251:
+        return None
+    head = b'\x55\x66\xbf\x35' + raw[0:1]
+    for cand in _ssdv_layouts(body):
+        packet = head + cand
+        fixed = rs_ssdv_correct(packet[1:])
+        if fixed is not None and ssdv_crc_ok(b'\x55' + fixed[0]):
+            return fixed[0][4:], fixed[1]
+    return None
 
 
 def descramble(data, init=0x2C350000):
@@ -594,6 +750,7 @@ class Unne1bDeframer(object):
         self.fm = None                     # tracked mark   (lower tone) frequency, Hz
         self.fs_ = None                    # tracked space  (higher tone) frequency, Hz
         self.nf = None                     # running noise-floor estimate (|x|^2 per sample)
+        self.nf_min = float('inf')         # lowest noise floor seen
         self.nseed = []                    # first noise-power samples used to seed nf
         self.fm0 = self.fs0 = None         # first learned tone frequencies (for clamping)
         self.nafc = 0                      # confident symbols seen (AFC gain schedule)
@@ -602,6 +759,8 @@ class Unne1bDeframer(object):
         self.fstep = 25.0
         self.edges = []
         self.t = None
+        self.quiet = 99                    # symbols since the signal was last strong (burst-start detection)
+        self.alt = 0                       # length of the current run of alternating bits (training pattern)
         self.bits = []
         self.soft = []
         self.scan = 0
@@ -722,12 +881,21 @@ class Unne1bDeframer(object):
                     self.nseed.append(p)
                     if len(self.nseed) >= 40:      # seed the noise floor robustly
                         self.nf = 0.7 * float(np.median(self.nseed))
+                        self.nf_min = self.nf
                 elif p < self.nf:
                     self.nf = p
-                else:
-                    self.nf *= 1.0015
+                    self.nf_min = min(self.nf_min, p)
+                else:                              # rises only slowly, but never far above the lowest floor seen (a long continuous burst must stay "strong")
+                    self.nf = min(self.nf * 1.0015, 50.0 * self.nf_min)
             strong = self.nf is not None and p > 6.0 * self.nf
+            if strong:
+                if self.quiet >= 24:             # a new burst: the bit rate is the nominal one again
+                    T = self.sps0
+                self.quiet = 0
+            else:
+                self.quiet += 1
             bit, soft = self._decide(t, T, a, b, m, p, strong)
+            self.alt = self.alt + 1 if self.bits and bit != self.bits[-1] else 0
             self.bits.append(bit)
             self.soft.append(soft)
             tb = t + T / 2
@@ -735,7 +903,8 @@ class Unne1bDeframer(object):
             if strong and j < len(self.edges) and self.edges[j] < tb + T / 2:
                 err = self.edges[j] - tb
                 t += self.kp * err
-                T = min(hi, max(lo, T + self.ki * err))
+                if self.alt >= 8:        # the rate is learned from the training pattern only
+                    T = min(hi, max(lo, T + self.ki * err))
             t += T
         self.T, self.t = T, t
         # trim buffers
@@ -755,10 +924,10 @@ class Unne1bDeframer(object):
         """Returns (check(raw) -> bool, plain_of(raw)) for a layout.  `raw` = the bytes after the sync word."""
         if kind == 'ssdv':                                   # HADES-SA image packet: no CRC16, SSDV's own CRC32
             def plain_of(raw):
-                return raw[1:]                               # sent without the scrambler (like PN9: see docs/satellites.md)
+                return ssdv_plain(raw) or raw[1:]            # unverified: leave as received
 
             def check(raw):
-                return ssdv_crc_ok(b'\x55\x66\xbf\x35' + raw[0:1] + plain_of(raw))
+                return ssdv_plain(raw) is not None
             return check, plain_of
 
         def check(raw):
@@ -874,6 +1043,14 @@ class Unne1bDeframer(object):
             if hit is None and pending:
                 self.scan = a                                            # wait for the longer layouts' bits
                 break
+            if hit is None:                                              # 1b. SSDV: Reed-Solomon repair of damaged bytes
+                for kind, nbits, crc_from in have:
+                    if kind == 'ssdv':
+                        raw = bits_to_bytes(self.bits[a + 16:a + 16 + nbits])
+                        fixed = ssdv_repair(raw)
+                        if fixed:
+                            hit = (kind, nbits, fixed[0], raw, [])
+                            break
             if hit is None and self.max_flips > 0:                       # 2. bit repair, fewest flips first
                 for nf in range(1, self.max_flips + 1):
                     for kind, nbits, crc_from in have:

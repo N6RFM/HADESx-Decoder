@@ -10,17 +10,20 @@
 
 ## Install
 
+Step by step, with a virtual environment, a regular install without pip, and the single-file build: **[installing.md](installing.md)**.
+The short version (virtual environment):
+
 ```bash
 git clone https://github.com/N6RFM/HADESx-Decoder.git
 cd HADESx-Decoder
-python3 -m venv --system-site-packages .venv && . .venv/bin/activate
-pip install -e .            # or: pip install -e ".[dll]"   or   ".[dev]" for the test tools
+python3 -m venv .venv && . .venv/bin/activate      # the prompt now shows (.venv); repeat the second part in every new terminal
+pip install -e .                                   # or: pip install -e ".[dll]"   or   ".[dev]" for the test tools
 hadesx-decode --help
 ```
 
-No install needed for a quick look: `PYTHONPATH=src python3 -m hadesx examples/iq/pass_t211s_type01.iq`.
-A single-file build for copying to another machine: `python3 tools/build_standalone.py`, then use
-`dist/hadesx_standalone.py` the same way.
+No install at all: `PYTHONPATH=src python3 -m hadesx examples/iq/pass_t211s_type01.iq` (from the project folder).
+A single-file build for copying to another machine: `python3 tools/build_standalone.py`, then
+`python3 dist/hadesx_standalone.py ...` the same way.
 
 ## What a recording must look like
 

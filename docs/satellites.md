@@ -7,9 +7,9 @@ CRC-16. The decoder recognises the variants automatically (by the frame itself, 
 | Satellite | Downlink | Baud / tone spacing | Frame layout | Status here |
 |---|---|---|---|---|
 | **UNNE-1B** (HADES-E2) | 436.888 MHz | 200, about 1.64 kHz (the 1125 Hz in document v1.01 was an error, confirmed by AMSAT-EA) | legacy: type/addr, data, CRC; voice with a length byte | **decoded from real recordings** (telemetry, voice) |
-| **HADES-SA / SpinnyONE** (SO-127) | 436.875 MHz | 800 with 1600 Hz spacing, or 200 with 1125 Hz (per its document; the same figure was wrong for UNNE-1B, so check on real recordings); alternates every 30 days | length byte, then type/addr, data, CRC | framing, scrambler, CRC and demodulation checked with AMSAT-EA's sample frames and synthetic signals; **not yet tested on a real recording** |
+| **HADES-SA / SpinnyONE** (SO-127) | 436.875 MHz | 800 with 1600 Hz spacing, or 200 with 1125 Hz (per its document; the same figure was wrong for UNNE-1B, so check on real recordings); alternates every 30 days | length byte, then type/addr, data, CRC | **decoded from a real recording** (5 October 2026: status, power ranges, BBS, voice, and **image packets**: 27 SSDV packets of one picture in a single pass) |
 | **HADES-L** | 436.665 MHz | 800 with 1600 Hz spacing (measured) | length byte, then type/addr, data, CRC | **decoded from a real recording** (45 frames: status, antenna, time series, Lofith experiment, PN9, ...); source address 5 confirmed |
-| MARIA-G, HADES-ICM | - | 200 | legacy | recognised by address; not launched / ended, untested |
+| MARIA-G, HADES-ICM | - | 200 | legacy | recognised by address; not in orbit (HADES-ICM ended, per AMSAT-EA), untested |
 
 Sources: AMSAT-EA's transmission documents (UNNE-1B v1.01, HADES-L), AMSAT-EA's open-source HADES-SA decoder and the
 AMSAT-EA projects page. See [NOTICE.md](../NOTICE.md).
@@ -69,15 +69,21 @@ Types differ by satellite; the decoder shows the right name for the source addre
 * **Works:** finding the signal anywhere in the band, demodulation at 200 and 800 baud, sync, length detection, CRC
   check with bit repair, descrambling, JSON log, hex port, CODEC2 voice extraction (the XOR key and 28-bit layout come
   from AMSAT-EA's HADES-SA decoder).
-* **Not yet:** JPEG assembly of SSDV packets, UNNE-1B field decoding without `hadesr.dll`, and decoding of the HADES-L
+* **Not yet:** UNNE-1B field decoding without `hadesr.dll`, and decoding of the HADES-L
   voice-beacon FEC. (HADES-SA and HADES-L frames are decoded field by field both in the per-type `.tlm` files and on the
   console.)
 * **Frame types without a CRC16:** SSDV image packets (type 10) are checked with SSDV's own CRC-32 (all 60 packets in a real
   HADES-SA folder verify); PN9 link-test packets (type 13) and voice (type 11) have no CRC and are recognised by their
   header (size byte, type, known satellite address). For PN9 the matching rate against the known pattern tells you whether the
   link was clean. **These two packet types are sent without the scrambler** (PN9: verified on a real HADES-L recording, where
-  the received data is the pattern itself; SSDV: assumed by analogy and by the structure of real packets, not yet proven by a
-  valid CRC-32 on air). The HADES-L document gives 255 as the PN9 size byte; the real packets use 249, like HADES-SA.
+  the received data is the pattern itself; SSDV: verified on a real pass, where every packet passes its CRC-32 as received). The SSDV
+  decoder still tries five layouts (as sent, everything after the type byte scrambled, ...) because a CRC-32 pass is proof; the real
+  satellite uses the first, "as sent".
+  The packet is a standard SSDV packet (github.com/fsphil/ssdv): `55 66` then four bytes that the satellite fills with its own frame
+  header `BF 35 FB A3` in place of the callsign, image id, 16-bit packet number, width and height in 16-pixel blocks, flags, MCU offset,
+  16-bit MCU index, 205 bytes of JPEG data, CRC-32, and 32 bytes of Reed-Solomon FEC (type `66`). The first two bytes are not sent: the
+  receiver rebuilds them, exactly as AMSAT-EA's tool does. This was checked on a real packet from the Windows tool, whose CRC-32 and
+  FEC both verify. The HADES-L document gives 255 as the PN9 size byte; the real packets use 249, like HADES-SA.
 * **Unverified frames:** length-byte frames of any other type whose CRC fails are not reported by default. Use
   `--emit-unverified` (or the `emit_unverified` flowgraph variable) to see them; they are marked `CRC FAIL - unverified`.
   This is meant for exploring real recordings of new satellites.
@@ -139,14 +145,16 @@ the header and finds both. 12 frames passed their CRC: HADES-L 4 power and 3 tem
 saw from it), UNNE-1B 1 power, 2 temperature, 1 status and 1 type 10. UNNE-1B's offset falls from +222.5 to +220.1 kHz over
 210 s: the Doppler shift. A 5.6 s excerpt is in `examples/iq/`.
 
-**Why long frames often fail.** In the four PN9 packets the received power **ramps up over roughly the first half second of
-each packet** (at the start it is 10 dB or more below its later level; it may be the transmitter's power amplifier or the
-antenna pattern). The first 100-400 bits after the sync word therefore carry bit errors, sometimes with a one- or two-bit clock
-slip, and then the rest of the packet is perfect.
-Short packets (23-41 bytes) usually survive thanks to bit repair; long ones (64-251 bytes) do not. Faster clock acquisition,
-re-learning the tones per burst, a higher sample rate and a lower strength threshold were all tried on the HADES-L recording
-and none recovered more frames, because the information is not in the signal. Image (SSDV) packets, which carry their own
-Reed-Solomon repair, will need that repair; it is not implemented yet.
+**Why long frames often fail.** Two causes are known. (1) In the four HADES-L PN9 packets the received power **ramps up over roughly the
+first half second of each packet** (10 dB or more below its later level at the start; it may be the transmitter's power amplifier or the
+antenna pattern), so the first 100-400 bits after the sync word can carry bit errors. We first took this for the whole story
+("the information is not in the signal"), which was too pessimistic. (2) **The bit clock itself.** The first HADES-SA recording with
+image packets showed a training pattern full of duplicated bits: the tracker's symbol period had drifted to its lower limit (3 % fast),
+because the zero-crossing times of **unscrambled** data (SSDV, PN9) are biased, so every frame came out misaligned a few bits after the
+sync word although the signal was strong. Now the symbol period is reset to the nominal baud rate at the start of each
+burst and is learned only from the alternating training pattern, never from the data; this took the HADES-SA recording from 12 to 47
+valid frames (27 SSDV packets, one picture) and gave HADES-L one more PN9 packet. Image (SSDV) packets also carry their own
+Reed-Solomon repair, which the decoder uses (up to 16 damaged bytes per packet).
 
 
 ## HADES-L specifics (from the HADES-L package's own decoder, `hadesl.dll`)

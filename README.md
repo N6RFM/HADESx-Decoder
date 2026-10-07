@@ -51,6 +51,7 @@ Details, frame layouts and what is still open: [Supported satellites](docs/satel
 * **Per-type output folder** (`--outdir`): the files AMSAT-EA's Windows tool writes (labelled `.tlm`, `.dat` data lines, `.bin` voice and image files),
   and new frames from later passes are added without duplicates.
 * **`hadesx-report`** prints everything such a folder holds on the console, oldest first, across satellites, with filters and a summary.
+* **`hadesx-ssdv`** puts the image (SSDV) packets of such a folder together into pictures, the way AMSAT-EA's `run_ssdv.bat` does: it merges the packets of an image, repairs damaged ones with the Reed-Solomon code and runs Philip Heron's `ssdv` program for the JPEG.
 * **Tools** to look at a recording before decoding it (what is in it, why it does not decode) and to cut a small excerpt: [tools/README.md](tools/README.md).
 * **GNU Radio Companion flowgraph** with live plots, using the very same decoder code.
 * **Tested:** several hundred automated tests, including comparisons with the output of AMSAT-EA's own decoders (the DLLs of the HADES-SA and
@@ -58,12 +59,38 @@ Details, frame layouts and what is still open: [Supported satellites](docs/satel
 
 ## Quick start
 
+Needs Python 3.9+ (numpy and scipy are installed with it). Full step-by-step instructions, including what to do when `pip` refuses
+(`externally-managed-environment`) and every way to run it, are in **[docs/installing.md](docs/installing.md)**. The two usual routes:
+
+**A. Virtual environment (recommended):** an isolated copy of the libraries inside the project folder.
+
 ```bash
 git clone https://github.com/N6RFM/HADESx-Decoder.git
 cd HADESx-Decoder
-pip install -e .                      # numpy + scipy
-sudo apt install codec2               # only needed for the voice WAV (provides c2dec)
+python3 -m venv .venv                 # once (Debian/Ubuntu: sudo apt install python3-venv if it complains)
+. .venv/bin/activate                  # in EVERY new terminal; the prompt then starts with (.venv)
+pip install -e .                      # once: numpy, scipy and the commands hadesx-decode, hadesx-voice, hadesx-report, hadesx-ssdv
+hadesx-decode examples/iq/sdrconsole_two_satellites.wav
+```
 
+**B. Regular install, nothing installed with pip:** the system Python runs straight from the folder (it needs `python3-numpy` and
+`python3-scipy`: `sudo apt install python3-numpy python3-scipy`). Run the commands from inside the project folder:
+
+```bash
+git clone https://github.com/N6RFM/HADESx-Decoder.git
+cd HADESx-Decoder
+PYTHONPATH=src python3 -m hadesx examples/iq/sdrconsole_two_satellites.wav       # = hadesx-decode
+PYTHONPATH=src python3 -m hadesx.report ~/pass-folder --summary                  # = hadesx-report
+```
+
+**C. One file to carry around:** `python3 tools/build_standalone.py` writes `dist/hadesx_standalone.py`; run it with
+`python3 dist/hadesx_standalone.py recording.wav` on any machine that has Python, numpy and scipy.
+
+Optional: `sudo apt install codec2` (voice WAV files, provides `c2dec`), the `ssdv` program for pictures
+([how](docs/installing.md#extras-you-may-need)). The rest of this README writes the commands in the short form (`hadesx-decode`); with
+route B or C use the forms in the [table](docs/installing.md#b-regular-install-no-pip-run-it-from-the-folder).
+
+```bash
 # a real recording with two satellites in it (UNNE-1B and HADES-L), a WAV from SDR Console: no options needed
 hadesx-decode examples/iq/sdrconsole_two_satellites.wav
 ```
@@ -123,8 +150,9 @@ see each packet's type, clock and raw data. Packet types 4, 5 and 6 have since b
 ### HADES-SA (SpinnyONE)
 
 Decoded natively, with the output checked file for file against the decoder DLL of AMSAT-EA's HADES-SA package. A real recording gives status,
-power ranges, the (empty) BBS and a nine-packet voice stream, bit for bit the same message UNNE-1B sends. Its image packets (SSDV) are recognised and stored
-but not decoded yet; their on-air format is an open question to AMSAT-EA. The voice of a whole folder of passes becomes one WAV:
+power ranges, the (empty) BBS and a nine-packet voice stream, bit for bit the same message UNNE-1B sends. Its image packets (SSDV) are decoded off the air
+(27 packets of one picture from a single pass: [example](examples/iq/README.md)), verified by their own CRC-32 with Reed-Solomon repair, and stored like
+AMSAT-EA's Windows tool does; `hadesx-ssdv FOLDER` assembles them into the JPEG. The voice of a whole folder of passes becomes one WAV:
 `hadesx-voice FOLDER`.
 
 ### HADES-L
@@ -142,7 +170,7 @@ vbus ref voltage : 22867          payload ref      : -99
 satellite temp   :  +9.0 degC     radiation cont 1 : 0     radiation cont 2 : 0
 ```
 
-Its long packets often fail their CRC at the start of a burst, where the transmitter is still ramping up its power.
+Its long packets sometimes fail their CRC at the start of a burst (the received power rises over the first half second, and the bit clock needs a moment to lock).
 
 ## Recording your own pass
 
@@ -155,6 +183,7 @@ keep the receiver simple. UNNE-1B's bursts were 30 to 40 dB above the noise in t
 
 | Document | Contents |
 |---|---|
+| [Installing and running](docs/installing.md) | step by step: virtual environment, regular install without pip, single file; what each error means |
 | [Getting started](docs/getting-started.md) | install, first decode, options, output formats, SDR recording tips |
 | [Windows](docs/windows.md) | install and first decode on Windows (not yet tested there) |
 | [Supported satellites](docs/satellites.md) | UNNE-1B, HADES-SA, HADES-L: frame layouts, baud rates, what works |
@@ -195,7 +224,7 @@ produced from the full file.
 * **What has been received on real signals.** UNNE-1B: packet types 1-6, 10, 12, 14 and voice (8 and 9 never). HADES-SA: status, ranges, BBS, voice,
   PN9 and image packets. HADES-L: power, temperature, status, antenna deploy, Lofith, PN9, time series. For the rest, the decoders are checked against
   frames run through AMSAT-EA's own decoders.
-* **Image packets (SSDV)** are not decoded: their CRC-32 does not verify on air yet.
+* **Image packets (SSDV)** are decoded and assembled (`hadesx-ssdv`). Packets lost while the bit clock locks (the first of a burst) or damaged beyond Reed-Solomon repair leave gaps in the picture: more passes fill them in.
 * The voice message has been **identified by ear**: it is the opening of *Don Quijote de la Mancha*
   ([transcript](examples/results/voice_transcript.md)), the same on UNNE-1B and HADES-SA. Voice packets have **no CRC**, so bit errors cannot be
   detected. The pace sounds natural at 115-120 % speed (`--voice-speed 1.15`); whether the original is slow or the time base is slightly off is not known.

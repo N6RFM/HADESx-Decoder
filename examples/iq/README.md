@@ -40,3 +40,17 @@ python3 ../../tools/iq_survey.py --decode sdrconsole_two_satellites.wav
 
 It shows a WAV file from another recorder, two satellites at once and two baud rates in one file. The recording remains its
 author's: the CC BY 4.0 sentence above covers only the three UNNE-1B excerpts (see NOTICE.md).
+
+## HADES-SA image packets (SSDV): `hades_sa_ssdv_pass.wav`
+
+A 21.5 s excerpt (4.3 MB, 16-bit stereo I/Q WAV, 50 000 samples/s, centre 436.875 MHz) of a **HADES-SA recording by N6RFM, 5 October 2026,
+14:24:55 UTC**, cut with [`tools/cut_excerpt.py`](../../tools/README.md) (33.0-54.5 s of the 285 s recording). The satellite is sending its
+internal test picture (image 0, 320 x 240) as SSDV packets at 800 baud. The excerpt decodes to **four to five packets of the picture**,
+each with a valid CRC-32 (the first packet of the burst is lost while the bit clock locks):
+
+```bash
+hadesx-decode hades_sa_ssdv_pass.wav --outdir ~/ssdv-pass
+hadesx-ssdv ~/ssdv-pass --image 0        # needs the `ssdv` program for the JPEG
+```
+
+The whole recording gives 27 packets of the same picture. Released under CC BY 4.0.

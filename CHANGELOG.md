@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+* **Installation guide** `docs/installing.md`: step by step with a virtual environment, a regular install without pip (`PYTHONPATH=src python3 -m hadesx`), and the single-file build; what each error means. README Quick start and Getting started point to it.
+
+* **Bit-clock fix:** the symbol-period tracker is reset to the nominal rate at every burst start and learns the rate only from the alternating training pattern, not from the data; its noise-floor estimate can no longer climb to the signal during a long continuous burst. Unscrambled data (SSDV image packets, PN9) had pulled the clock off by up to 3 %, so frames were misaligned shortly after the sync word. Your real HADES-SA recording goes from 12 to 47 valid frames (27 SSDV packets of one picture), HADES-L from 39 to 40, UNNE-1B unchanged (45). `examples/iq/hades_sa_ssdv_pass.wav`: a 21 s excerpt with five image packets.
+* **SSDV (HADES-SA images):** the packet layout from AMSAT-EA's specification is implemented: the CRC-32 is checked under every plausible scrambling layout, damaged packets are repaired with the Reed-Solomon code (up to 16 bytes, checked against the FEC of a real packet), and the new `hadesx-ssdv` command assembles the packets of an image into a `.ssdv` file and a JPEG (with the `ssdv` program), as AMSAT-EA's `run_ssdv.bat` does. The packets are sent **without** the scrambler (confirmed off the air); the check still tries every layout, because a CRC-32 pass is proof.
+* Documentation: HADES-SA/HADES-L tone spacing confirmed by AMSAT-EA, HADES-ICM no longer in orbit.
+
 ## 1.1.0 - 2026-10-06
 
 HADESx Decoder 1.1.0 (the project was called UNNE-1B Decoder) decodes the amateur-radio satellites of AMSAT-EA's HADES family: UNNE-1B (HADES-E2), HADES-SA and HADES-L. The rename, WAV recordings at any sample rate, native HADES-SA and HADES-L decoders checked against AMSAT-EA's own decoders, the per-type folder and its report, and tools to inspect recordings are the main changes. The old command and module names keep working.
