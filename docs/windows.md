@@ -18,7 +18,7 @@ py --version
 
 ## 2. Get the program
 
-Unzip `HADESx-Decoder-1.1.0.zip` (right-click, Extract All), for example to `C:\HADESx-Decoder`. Then in Command Prompt:
+Unzip `HADESx-Decoder-1.2.0.zip` (right-click, Extract All), for example to `C:\HADESx-Decoder`. Then in Command Prompt:
 
 ```
 cd C:\HADESx-Decoder

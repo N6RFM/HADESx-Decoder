@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 1.2.0 - 2026-10-07
+
+HADESx Decoder 1.2.0 decodes the **image packets (SSDV) of HADES-SA** off the air and assembles them into a picture, and fixes a bit-clock problem that made many frames of unscrambled data fail although the signal was strong. It also adds a step-by-step installation guide. Update from 1.1.0 with `git pull`; nothing else changes.
+
 * **Installation guide** `docs/installing.md`: step by step with a virtual environment, a regular install without pip (`PYTHONPATH=src python3 -m hadesx`), and the single-file build; what each error means. README Quick start and Getting started point to it.
 
 * **Bit-clock fix:** the symbol-period tracker is reset to the nominal rate at every burst start and learns the rate from the alternating training pattern, and from the data only gently (within 0.5 %); its noise-floor estimate can no longer climb to the signal during a long continuous burst. Unscrambled data (SSDV image packets, PN9) had pulled the clock off by up to 3 %, so frames were misaligned shortly after the sync word. Your real HADES-SA recording goes from 12 to 43 valid frames (29 SSDV packets of one picture), HADES-L (39) and UNNE-1B (45) unchanged. `examples/iq/hades_sa_ssdv_pass.wav`: a 21 s excerpt with five image packets.
