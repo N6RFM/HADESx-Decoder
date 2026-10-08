@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+* `hadesx-report` accepts the results folder of `hadesx` (it reads all the satellite sub-folders together); new "Reading the telemetry" section in docs/settings.md.
+
 * Every code file now starts with a credit block (authors N6RFM with Claude, licence, and the AMSAT-EA / SSDV work it builds on);
   `tests/test_docs.py` checks it. NOTICE.md gains a section on SSDV (Philip Heron's `ssdv`, AMSAT-EA's utilities).
 * Documentation brought up to date for `hadesx`, the settings file, the per-satellite folders and `tools/install.sh`: README, installing,

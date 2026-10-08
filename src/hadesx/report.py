@@ -8,6 +8,7 @@
     hadesx-report ~/hades-l-sdrc --brief               # one line per packet
     hadesx-report ~/hades-l-sdrc --sat UNNE-1B --type 1,2,3
     hadesx-report ~/hades-l-sdrc --dll hadesr.dll      # UNNE-1B fields through AMSAT-EA's decoder (see below)
+    hadesx-report ~/hadesx-output --summary            # the results folder of `hadesx`: all satellite sub-folders together
 
 The folder is the one `hadesx-decode --outdir DIR` keeps. HADES-SA and HADES-L packets are decoded by this project, so their stored
 text is printed as it is. UNNE-1B packets are stored as bytes (the decoder has no native UNNE-1B field decoder): with `--dll
@@ -60,8 +61,24 @@ def read_text(path):
         return f.read().decode('latin-1').rstrip('\n')
 
 
+def _has_sat_files(folder):
+    return any(n.startswith('sat_') for n in os.listdir(folder))
+
+
 def load(folder, dll=None):
-    """All records of a folder, oldest first. Satellites in DLL_SATELLITES are rendered from their .dat lines when a DLL is given."""
+    """All records of a folder, oldest first. Satellites in DLL_SATELLITES are rendered from their .dat lines when a DLL is given.
+    A results folder made by `hadesx` (one sub-folder per satellite) is read as the sum of its sub-folders."""
+    if not _has_sat_files(folder):
+        subs = [os.path.join(folder, n) for n in sorted(os.listdir(folder))
+                if os.path.isdir(os.path.join(folder, n)) and _has_sat_files(os.path.join(folder, n))]
+        if subs:
+            recs = [r for d in subs for r in _load_one(d, dll)]
+            recs.sort(key=lambda r: (r.epoch, r.src, r.ptype, r.name))
+            return recs
+    return _load_one(folder, dll)
+
+
+def _load_one(folder, dll=None):
     recs, from_dat = [], set()
     names = sorted(os.listdir(folder))
     if dll is not None:
@@ -129,7 +146,7 @@ def parse_sat(text):
 
 def report_main(argv=None):
     ap = argparse.ArgumentParser(prog='hadesx-report', description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument('folder', help='the folder of hadesx-decode --outdir')
+    ap.add_argument('folder', help='the folder of hadesx-decode --outdir, or the results folder of hadesx (all its satellite sub-folders)')
     ap.add_argument('--sat', help='only these satellites: names or source addresses, comma separated (UNNE-1B,HADES-L)')
     ap.add_argument('--type', help='only these packet types, comma separated (1,2,3)')
     ap.add_argument('--since', help='only packets from this time (UTC), e.g. 2026-10-05T01:00')

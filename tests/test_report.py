@@ -114,3 +114,18 @@ def test_errors(tmp_path, capsys, folder):
         report_main([str(folder), '--dll', str(tmp_path / 'nope.dll')])
     rc, _, err = run(capsys, folder, '--type', '9')
     assert rc == 1 and 'nothing to show' in err
+
+
+def test_a_results_folder_with_one_subfolder_per_satellite_is_read_as_a_whole(tmp_path):
+    from hadesx.layout import MultiFolderWriter
+    w = MultiFolderWriter(str(tmp_path / 'res'))
+    w.write(frame(2, 5, bytes(14)), T0 + 1)                          # HADES-L temperature
+    w.write(frame(1, 5, bytes(28)), T0 + 3)                          # HADES-L power
+    w.write(frame(3, 12, bytes(28)), T0 + 2)                         # UNNE-1B status
+    root = str(tmp_path / 'res')
+    assert sorted(os.listdir(root)) == ['hades-l', 'unne-1b']
+    both = report.load(root)
+    assert [(r.src, r.ptype) for r in both if r.kind == 'telemetry'] == [(5, 2), (12, 3), (5, 1)]      # merged, oldest first
+    assert {r.src for r in report.load(root + '/hades-l')} == {5}                                       # one satellite on its own
+    assert {r.src for r in report.load(root + '/unne-1b')} == {12}
+

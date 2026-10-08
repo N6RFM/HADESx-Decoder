@@ -49,6 +49,28 @@ If the `ssdv` program is not installed you get "packets stored, no JPEG": build 
 `hadesx` on any recording again (a recording that was already added is not decoded twice, but the pictures are rebuilt), or run
 `hadesx-ssdv FOLDER --all`.
 
+## Reading the telemetry
+
+`hadesx-report` prints what a folder holds, oldest first, with every field labelled. Point it at one satellite's folder, or at the whole
+results folder to see all satellites together:
+
+```bash
+hadesx-report ~/Desktop/Hadesx_Results/hades-l                  # every packet with its labelled fields
+hadesx-report ~/Desktop/Hadesx_Results --summary                # how many packets of each satellite and type, and when
+hadesx-report ~/Desktop/Hadesx_Results/hades-l --brief          # one line per packet
+hadesx-report ~/Desktop/Hadesx_Results/hades-l --type 1,2,3     # only these packet types (1 power, 2 temperatures, 3 status ...)
+hadesx-report ~/Desktop/Hadesx_Results --sat HADES-SA,HADES-L --since 2026-10-05T01:00 --until 2026-10-05T02:00    # times are UTC
+hadesx-report ~/Desktop/Hadesx_Results/hades-sa --voice --images    # voice and picture packets are left out unless asked for
+hadesx-report ~/Desktop/Hadesx_Results/hades-l > ~/Desktop/hades-l-report.txt                                       # save it
+```
+
+For numbers you want to plot or open in a spreadsheet, each folder also has the `.dat` files: one line per packet, one file per packet
+type (for example `sat_05_type_01.dat` is HADES-L power). The columns are listed in [output-folder.md](output-folder.md#the-dat-columns).
+
+**UNNE-1B** packets are stored as bytes; the labelled fields come from AMSAT-EA's `hadesr.dll`, which you supply:
+`hadesx-report ~/Desktop/Hadesx_Results/unne-1b --dll /path/to/hadesr.dll` (needs `pip install unicorn pefile`; see
+[dll-emulation.md](dll-emulation.md)). Set `dll = ...` in the settings file to have `hadesx` use it at decode time as well.
+
 ## The settings file
 
 `hadesx --init` writes a commented file and tells you where it is (Linux and macOS: `~/.config/hadesx/config.ini`, Windows:

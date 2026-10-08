@@ -56,7 +56,7 @@ Details, frame layouts and what is still open: [Supported satellites](docs/satel
   pitch-preserving speed-up. From a folder of many passes it picks the best one.
 * **Per-type output folder** (`--outdir`): the files AMSAT-EA's Windows tool writes (labelled `.tlm`, `.dat` data lines, `.bin` voice and image files),
   and new frames from later passes are added without duplicates.
-* **`hadesx-report`** prints everything such a folder holds on the console, oldest first, across satellites, with filters and a summary.
+* **`hadesx-report`** prints everything such a folder holds on the console, oldest first, across satellites (point it at one satellite's folder or at the whole `hadesx` results folder), with filters and a summary.
 * **`hadesx-ssdv`** puts the image (SSDV) packets of such a folder together into pictures, the way AMSAT-EA's `run_ssdv.bat` does: it merges the packets of an image, repairs damaged ones with the Reed-Solomon code and runs Philip Heron's `ssdv` program for the JPEG (build it once: [docs/installing.md](docs/installing.md#extras-you-may-need)). `hadesx` calls it for you.
 * **Tools** to look at a recording before decoding it (what is in it, why it does not decode) and to cut a small excerpt: [tools/README.md](tools/README.md).
 * **GNU Radio Companion flowgraph** with live plots, using the very same decoder code.

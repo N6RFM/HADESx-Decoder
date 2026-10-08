@@ -130,6 +130,7 @@ hadesx-report ~/hades-l-sdrc --summary             # how many packets of each sa
 hadesx-report ~/hades-l-sdrc --brief               # one line per packet (time, satellite, type, satellite clock)
 hadesx-report ~/hades-l-sdrc --sat HADES-L --type 1,2 --since 2026-10-05T01:00
 hadesx-report ~/hades-l-sdrc | less                # page through it; > report.txt saves it
+hadesx-report ~/hadesx-output --summary            # a results folder of `hadesx`: all its satellite sub-folders together
 ```
 
 | Option | |
