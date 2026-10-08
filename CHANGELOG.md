@@ -2,23 +2,18 @@
 
 ## Unreleased
 
-* `hadesx-report` now includes the voice and image (SSDV) packets by default (counted in `--summary`); `--no-voice` and `--no-images` leave them out. `--voice` and `--images` are still accepted.
+## 1.3.0 - 2026-10-08
 
-* `hadesx-report` accepts the results folder of `hadesx` (it reads all the satellite sub-folders together); new "Reading the telemetry" section in docs/settings.md.
+HADESx Decoder 1.3.0 makes everyday use short: one command, `hadesx pass.wav`, decodes a recording and keeps **each satellite in its own folder** with its telemetry, its voice WAV and its pictures, and a small settings file remembers where the results go. An install script makes the commands work from any folder. Update from 1.2.0 with `git pull`; nothing is lost.
 
-* Every code file now starts with a credit block (authors N6RFM with Claude, licence, and the AMSAT-EA / SSDV work it builds on);
-  `tests/test_docs.py` checks it. NOTICE.md gains a section on SSDV (Philip Heron's `ssdv`, AMSAT-EA's utilities).
-* Documentation brought up to date for `hadesx`, the settings file, the per-satellite folders and `tools/install.sh`: README, installing,
-  settings (how the voice WAV and the pictures are rebuilt each run), Windows, voice, troubleshooting, roadmap, examples.
-
-* `tools/install.sh`: installs the commands (`hadesx`, `hadesx-decode` ...) so they work from any folder, in a private environment, with no sudo and nothing to activate; `--uninstall` removes them. See [docs/installing.md](docs/installing.md).
-* **`hadesx`**, a short command for everyday use: `hadesx pass.wav`. Each satellite gets its own sub-folder of the output folder
-  (`unne-1b`, `hades-sa`, `hades-l`), and the voice WAV and the pictures are made inside it. A new settings file
-  (`hadesx --init`, plain INI, no extra package) remembers the output folder, the sample rate for raw files, voice speed, the paths of
-  the `ssdv` program and `hadesr.dll`, and optional folder names per satellite. See [docs/settings.md](docs/settings.md).
-* `hadesx-decode --outroot DIR`: the same one-folder-per-satellite layout for the lower-level command.
-
-* The README introduction, the package description and the pipeline diagram now mention the SSDV pictures (HADES-SA) next to the FSK telemetry and the voice.
+* **`hadesx`, the short command.** `hadesx pass.wav` (or several recordings) decodes, stores the results in `<output folder>/unne-1b`, `hades-sa` and `hades-l` (and `maria-g`, `hades-icm` or `other` only if heard), then makes `voice_<SATELLITE>.wav` and the SSDV pictures (`hades_sa_image_NNN.jpg`) in the satellite's own folder. Both are rebuilt from everything stored, so every pass improves them; a recording that was already added is not decoded twice. See [docs/settings.md](docs/settings.md).
+* **Settings file** (`hadesx --init`, plain INI, nothing to install): the output folder, the sample rate for raw IQ files, voice on or off and its speed, the paths of the `ssdv` program and `hadesr.dll`, local or UTC times, and a folder name per satellite. `--show-config` shows what is in use. The first file found wins: `--config`, `HADESX_CONFIG`, `hadesx.ini` in the current folder, `~/.config/hadesx/config.ini` (Windows: `%APPDATA%\hadesx\config.ini`). Command line switches win over the file; a mistake in the file stops the run with a clear message.
+* **`hadesx-decode --outroot DIR`:** the same one-folder-per-satellite layout for the lower-level command.
+* **`tools/install.sh`** (Linux, macOS): `sh tools/install.sh` installs the commands into a private environment and links them into `~/.local/bin`, so `hadesx`, `hadesx-decode`, `hadesx-voice`, `hadesx-report` and `hadesx-ssdv` work from any folder, with nothing to activate and no sudo. `git pull` updates it; `--uninstall` removes it.
+* **`hadesx-report`** reads the whole results folder (all satellite sub-folders together) as well as one satellite's folder, and now includes the **voice and image (SSDV) packets by default**; `--no-voice` and `--no-images` leave them out (`--voice` and `--images` are still accepted).
+* **Credits:** every code file now starts with a block naming the authors (N6RFM with Claude), the licence and the AMSAT-EA or SSDV work it builds on; `tests/test_docs.py` checks it. `NOTICE.md` has a new section on the SSDV sources (Philip Heron's `ssdv`, AMSAT-EA's utilities).
+* **Documentation brought up to date:** README (introduction, quick start, features), new [settings page](docs/settings.md), installing (easy install, the `ssdv` program), Windows (`py -m hadesx.easy`, settings path, `ssdv` on Windows), voice (how the WAV is rebuilt), troubleshooting table for `hadesx`, roadmap and examples. The README, the package description and the pipeline diagram now mention the SSDV pictures.
+* About 480 automated tests, including the settings file, the per-satellite folders, `hadesx` end to end on the two-satellite and HADES-SA recordings, and the report on a results folder.
 
 ## 1.2.0 - 2026-10-07
 
