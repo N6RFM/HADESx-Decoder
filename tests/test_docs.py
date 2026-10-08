@@ -6,7 +6,7 @@ import re
 
 import pytest
 
-from hadesx import cli, report, voice
+from hadesx import cli, easy, report, voice
 
 ROOT = os.path.join(os.path.dirname(__file__), '..')
 
@@ -27,7 +27,7 @@ def options_of(main_or_parser):
     argparse.ArgumentParser.parse_args = spy
     try:
         try:
-            ap = main_or_parser() if main_or_parser is cli.build_parser else main_or_parser(['x'])
+            ap = main_or_parser() if main_or_parser in (cli.build_parser, easy.build_parser) else main_or_parser(['x'])
         except SystemExit:
             ap = store['ap']
     finally:
@@ -38,6 +38,7 @@ def options_of(main_or_parser):
 
 @pytest.mark.parametrize('command,entry,doc', [
     ('hadesx-decode', cli.build_parser, 'docs/getting-started.md'),
+    ('hadesx', easy.build_parser, 'docs/settings.md'),
     ('hadesx-voice', voice.main, 'docs/voice.md'),
     ('hadesx-report', report.report_main, 'docs/output-folder.md'),
 ])

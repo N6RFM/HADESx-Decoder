@@ -72,6 +72,8 @@ def build_parser():
     ap.add_argument('--voice-exact-name', action='store_true', help='--voice-wav: do not add the satellite name to the file name')
     ap.add_argument('--outdir', help='folder to update with one file set per frame type, like the Windows '
                                      'SoundModem/KISSGENESIS tool (see docs/output-folder.md)')
+    ap.add_argument('--outroot', help='like --outdir, but one sub-folder per satellite inside DIR (unne-1b, hades-sa, hades-l ...): '
+                                      'the easy way, see "hadesx --help"')
     ap.add_argument('--rec-start', help='start time of the recording (ISO 8601, UTC) for the time stamps in --outdir; '
                                         'default: read from the file name (..._2026_10_04_T22-48-12...), else now')
     ap.add_argument('--no-history', action='store_true', help='--outdir: do not keep one .tlm file per reception')
@@ -82,9 +84,13 @@ def build_parser():
     return ap
 
 
-def main(argv=None):
+def main(argv=None, folders=None):
+    """folders: {satellite name: folder} overrides for --outroot (from the settings file)."""
     from scipy import signal
     a = build_parser().parse_args(argv)
+    if a.outdir and a.outroot:
+        raise SystemExit('use either --outdir (one folder for everything) or --outroot (one folder per satellite), not both')
+    out_dir = a.outdir or a.outroot
 
     bauds = parse_bauds(a.baud)
     fs_arg = a.fs
@@ -126,7 +132,7 @@ def main(argv=None):
                 print('WARNING: %s Continuing without it.' % e, file=sys.stderr)
 
     writer, rec_start, ingest_key = None, None, None
-    if a.outdir:
+    if out_dir:
         from .genesis import FolderWriter
         if a.rec_start:
             rec_start = datetime.datetime.fromisoformat(a.rec_start.replace('Z', '+00:00'))
@@ -144,22 +150,27 @@ def main(argv=None):
         if rec_start is None:
             rec_start = time.time()
             print('NOTE: no recording start time (--rec-start, or a date in the file name): frames in %s are stamped '
-                  'with the current time, like the Windows tool does.' % a.outdir, file=sys.stderr)
+                  'with the current time, like the Windows tool does.' % out_dir, file=sys.stderr)
         else:
             print('recording start (UTC): %s' % datetime.datetime.fromtimestamp(rec_start, datetime.timezone.utc)
                   .strftime('%Y-%m-%d %H:%M:%S'), file=sys.stderr)
-        os.makedirs(a.outdir, exist_ok=True)
+        os.makedirs(out_dir, exist_ok=True)
         ingest_key = '%s:%d' % (os.path.basename(a.iq), os.path.getsize(a.iq))
-        ingest_path = os.path.join(a.outdir, '.hadesx_ingested.json')
-        legacy_path = os.path.join(a.outdir, '.unne1b_ingested.json')           # before the rename
+        ingest_path = os.path.join(out_dir, '.hadesx_ingested.json')
+        legacy_path = os.path.join(out_dir, '.unne1b_ingested.json')           # before the rename
         done = json.load(open(ingest_path if os.path.exists(ingest_path) else legacy_path)) \
             if os.path.exists(ingest_path) or os.path.exists(legacy_path) else {}
         if ingest_key in done and not a.force:
             print('%s was already added to %s on %s - nothing done (use --force to add it again).'
-                  % (os.path.basename(a.iq), a.outdir, done[ingest_key]), file=sys.stderr)
+                  % (os.path.basename(a.iq), out_dir, done[ingest_key]), file=sys.stderr)
             return 0
-        writer = FolderWriter(a.outdir, utc=not a.local_time, history=not a.no_history,
-                              fallback=lambda fr: format_frame(fr, dll))
+        if a.outroot:
+            from .layout import MultiFolderWriter
+            writer = MultiFolderWriter(out_dir, folders, utc=not a.local_time, history=not a.no_history,
+                                       fallback=lambda fr: format_frame(fr, dll))
+        else:
+            writer = FolderWriter(out_dir, utc=not a.local_time, history=not a.no_history,
+                                  fallback=lambda fr: format_frame(fr, dll))
 
     fe = FrontEnd(fs, bauds=bauds, center=a.center, min_db=a.min_db, max_flips=a.flips, emit_unverified=a.emit_unverified)
     state = {'nf': 0}
@@ -216,7 +227,7 @@ def main(argv=None):
     if writer is not None:
         st = writer.stats
         print('%s updated: %d frame(s) written, %d new data line(s), %d duplicate line(s) skipped, %d file(s) touched'
-              % (a.outdir, st['frames'], st['new_dat_lines'], st['skipped_duplicates'], len(st['files'])), file=sys.stderr)
+              % (out_dir, st['frames'], st['new_dat_lines'], st['skipped_duplicates'], len(st['files'])), file=sys.stderr)
         for (src, typ), n in sorted(st['by_type'].items()):
             print('   satellite %d type %2d: %d' % (src, typ, n), file=sys.stderr)
         done = json.load(open(ingest_path if os.path.exists(ingest_path) else legacy_path)) \

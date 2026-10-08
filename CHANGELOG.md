@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+* **`hadesx`**, a short command for everyday use: `hadesx pass.wav`. Each satellite gets its own sub-folder of the output folder
+  (`unne-1b`, `hades-sa`, `hades-l`), and the voice WAV and the pictures are made inside it. A new settings file
+  (`hadesx --init`, plain INI, no extra package) remembers the output folder, the sample rate for raw files, voice speed, the paths of
+  the `ssdv` program and `hadesr.dll`, and optional folder names per satellite. See [docs/settings.md](docs/settings.md).
+* `hadesx-decode --outroot DIR`: the same one-folder-per-satellite layout for the lower-level command.
+
 * The README introduction, the package description and the pipeline diagram now mention the SSDV pictures (HADES-SA) next to the FSK telemetry and the voice.
 
 ## 1.2.0 - 2026-10-07

@@ -9,8 +9,8 @@ import re
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SRC = os.path.join(ROOT, 'src', 'hadesx')
-ORDER = ['core', 'genesis', 'voice', 'iqfile', 'frontend', 'cli']
-TITLES = {'genesis': "per-type folder output (port of AMSAT-EA's HADES-SA decoder)", 'voice': 'voice', 'iqfile': 'IQ files (raw and WAV)',
+ORDER = ['core', 'genesis', 'layout', 'voice', 'iqfile', 'frontend', 'cli']
+TITLES = {'genesis': "per-type folder output (port of AMSAT-EA's HADES-SA decoder)", 'layout': 'one folder per satellite', 'voice': 'voice', 'iqfile': 'IQ files (raw and WAV)',
           'frontend': 'signal chain', 'cli': 'command line'}
 
 

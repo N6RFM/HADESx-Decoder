@@ -71,7 +71,7 @@ git clone https://github.com/N6RFM/HADESx-Decoder.git
 cd HADESx-Decoder
 python3 -m venv .venv                 # once (Debian/Ubuntu: sudo apt install python3-venv if it complains)
 . .venv/bin/activate                  # in EVERY new terminal; the prompt then starts with (.venv)
-pip install -e .                      # once: numpy, scipy and the commands hadesx-decode, hadesx-voice, hadesx-report, hadesx-ssdv
+pip install -e .                      # once: numpy, scipy and the commands hadesx, hadesx-decode, hadesx-voice, hadesx-report, hadesx-ssdv
 hadesx-decode examples/iq/sdrconsole_two_satellites.wav
 ```
 
@@ -87,6 +87,15 @@ PYTHONPATH=src python3 -m hadesx.report ~/pass-folder --summary                 
 
 **C. One file to carry around:** `python3 tools/build_standalone.py` writes `dist/hadesx_standalone.py`; run it with
 `python3 dist/hadesx_standalone.py recording.wav` on any machine that has Python, numpy and scipy.
+
+**The short command.** Once it is installed, day-to-day use is one line; every satellite gets its own folder, with its voice WAV and its
+pictures, and a small settings file remembers the output folder and your defaults ([docs/settings.md](docs/settings.md)):
+
+```bash
+hadesx --init                         # once: writes the settings file (output folder, sample rate for raw files ...)
+hadesx pass.wav                       # results in ~/hadesx-output/unne-1b, hades-sa, hades-l
+hadesx capture.iq --fs 250000         # a raw IQ file needs its rate
+```
 
 Optional: `sudo apt install codec2` (voice WAV files, provides `c2dec`), the `ssdv` program for pictures
 ([how](docs/installing.md#extras-you-may-need)). The rest of this README writes the commands in the short form (`hadesx-decode`); with
@@ -197,6 +206,7 @@ keep the receiver simple. UNNE-1B's bursts were 30 to 40 dB above the noise in t
 | [Voice](docs/voice.md) | CODEC2 700C packing, the XOR whitening, per-satellite WAVs, speed options |
 | [GNU Radio](docs/gnuradio.md) | the flowgraph, variables, live SDR use |
 | [DLL emulation](docs/dll-emulation.md) | using `hadesr.dll` without Wine; which DLL is for what |
+| [Settings and folders](docs/settings.md) | the short `hadesx` command, the settings file, one folder per satellite |
 | [Example pass](docs/example-pass.md) | the full UNNE-1B recording, burst by burst |
 | [Reverse-engineering notes](docs/reverse-engineering-notes.md) | what was tried, what worked, what didn't |
 | [Troubleshooting](docs/troubleshooting.md) | common problems |
@@ -208,7 +218,7 @@ keep the receiver simple. UNNE-1B's bursts were 30 to 40 dB above the noise in t
 
 ```
 src/hadesx/        core.py (protocol, tracker, deframers), genesis.py (HADES-SA and HADES-L decoders, output folder), iqfile.py, frontend.py,
-                   cli.py, voice.py, report.py   (src/unne1b/ is a thin compatibility shim for the old name)
+                   cli.py, easy.py (hadesx), layout.py, voice.py, report.py   (src/unne1b/ is a thin compatibility shim for the old name)
 grc/               GNU Radio Companion flowgraph (generated from core.py and genesis.py)
 examples/iq/       short real recordings: three excerpts of the UNNE-1B pass (6.6 MB) and a two-satellite WAV from SDR Console
 examples/results/  decoded frames, tracking report, voice WAVs from the full UNNE-1B pass

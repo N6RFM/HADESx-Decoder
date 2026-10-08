@@ -14,6 +14,8 @@ src/hadesx/frontend.py   the signal chain at any sample rate: tracker -> staged 
 src/hadesx/cli.py        hadesx-decode
 src/hadesx/voice.py      hadesx-voice (one WAV per satellite with tags inside, folder input, WSOLA speed change, c2dec wrapper)
 src/hadesx/report.py     hadesx-report (prints what a per-type folder holds)
+src/hadesx/easy.py       hadesx (the short command: settings file, one folder per satellite, voice and pictures made for you)
+src/hadesx/layout.py     the settings file and the per-satellite folders (MultiFolderWriter)
 src/hadesx/ssdv.py       hadesx-ssdv (merges SSDV image packets into .ssdv and a JPEG)
 grc/hadesx_decoder.grc   generated flowgraph
 tools/                   survey/probe/excerpt tools, builders, DLL comparison tools: see tools/README.md
@@ -45,6 +47,7 @@ pytest -q                # several hundred tests, about a minute
 | `tests/test_cut_excerpt.py` | `tools/cut_excerpt.py` on a two-satellite recording: labelled, small, still decodes |
 | `tests/test_voice.py`, `tests/test_voice_sat.py` | WSOLA and `c2dec` (skipped if codec2 is absent); per-satellite WAVs, tags, stray frame numbers, passes in a folder, a real HADES-SA folder |
 | `tests/test_report.py` | `hadesx-report`: order, filters, summary, UNNE-1B through a DLL |
+| `tests/test_layout.py` | the settings file (defaults, comments, overrides, errors, which file wins), `--outroot`, and the `hadesx` command end to end on the two-satellite and the HADES-SA recordings |
 | `tests/test_ssdv.py` | SSDV image packets: CRC-32 under every plausible scrambling layout, Reed-Solomon repair (up to 16 bytes), a damaged packet off the air |
 | `tests/test_ssdv_real.py` | real SSDV packets off the air (`examples/iq/hades_sa_ssdv_pass.wav`): decoded with a valid CRC-32 and assembled |
 | `tests/test_ssdv_images.py` | `hadesx-ssdv`: merging the packets of an image, repair, missing packet numbers, the JPEG through the reference `ssdv` program (skipped if absent) |

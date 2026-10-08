@@ -22,6 +22,7 @@ Homepage = "https://github.com/N6RFM/HADESx-Decoder"
 Issues = "https://github.com/N6RFM/HADESx-Decoder/issues"
 
 [project.scripts]
+hadesx = "hadesx.easy:main"
 hadesx-decode = "hadesx.cli:main"
 hadesx-voice = "hadesx.voice:main"
 hadesx-report = "hadesx.report:main"

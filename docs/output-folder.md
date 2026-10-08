@@ -11,6 +11,9 @@ hadesx-decode pass2.iq --outdir ~/hades-sa           # later pass: adds only wha
 
 It is not an export step: the folder *is* the result, updated in place by every run.
 
+To keep the three satellites apart automatically, use `--outroot DIR` (a sub-folder per satellite) or the short command `hadesx`, which
+also makes the voice WAV and the pictures and remembers your folder in a settings file: [settings.md](settings.md).
+
 ## What is written
 
 For satellite `NN` (the source address: `03` HADES-SA, `12` UNNE-1B) and packet type `TT`:
