@@ -4,7 +4,8 @@
 
 Decode the amateur-radio satellites of [AMSAT-EA](https://www.amsat-ea.org/)'s **HADES family**: **UNNE-1B (HADES-E2)**, **HADES-SA** and
 **HADES-L**. Give it an SDR recording, a raw IQ file or a WAV file from SDR#, HDSDR or SDR Console at any sample rate, and it finds the
-signal, follows its Doppler shift and decodes the CRC-checked FSK telemetry and the CODEC2 voice message. No tuning, no sound card, no Windows.
+signal, follows its Doppler shift and decodes the CRC-checked FSK telemetry, the CODEC2 voice message and the **SSDV pictures** (HADES-SA),
+which it assembles into JPEG images. No tuning, no sound card, no Windows.
 
 This project is an independent, open-source ground-station decoder; it is
 not an AMSAT-EA product; AMSAT-EA has reviewed the credit given here and confirmed it is correct (October 2026).
@@ -17,6 +18,7 @@ Developed by **N6RFM** with help from Claude (Anthropic) - see [Authorship](#aut
 IQ file / WAV  ->  FSK tracker (finds the signal anywhere in the band, follows its drift)
                ->  demodulator + clock recovery -> sync 0xBF35 -> descramble -> CRC16
                ->  telemetry text / JSON / per-type folder  |  CODEC2 700C voice -> WAV
+                                                            |  SSDV packets -> Reed-Solomon repair -> JPEG
 ```
 
 ![Whole pass: spectrogram, tracked FSK centre and decoded frames](docs/img/pass_overview.png)

@@ -1,4 +1,4 @@
-"""UNNE-1B (HADES-E2) FSK telemetry and CODEC2 voice decoder."""
+"""HADESx Decoder: HADES-family (UNNE-1B, HADES-SA, HADES-L) FSK telemetry, CODEC2 voice and SSDV picture decoder."""
 from .core import *          # noqa: F401,F403  (single self-contained module, see core.py)
 from .core import __all__ as _core_all  # noqa: F401
 

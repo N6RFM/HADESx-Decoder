@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+* The README introduction, the package description and the pipeline diagram now mention the SSDV pictures (HADES-SA) next to the FSK telemetry and the voice.
+
 ## 1.2.0 - 2026-10-07
 
 HADESx Decoder 1.2.0 decodes the **image packets (SSDV) of HADES-SA** off the air and assembles them into a picture, and fixes a bit-clock problem that made many frames of unscrambled data fail although the signal was strong. It also adds a step-by-step installation guide. Update from 1.1.0 with `git pull`; nothing else changes.
