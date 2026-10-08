@@ -5,6 +5,7 @@ Scripts that live next to the package but are not installed with it. Run them fr
 
 | Tool | What it is for | Needs |
 |---|---|---|
+| `install.sh` | **Install once, use anywhere** (Linux, macOS): a private environment in `~/.local/share/hadesx/venv` and the commands linked into `~/.local/bin`; `sh tools/install.sh --uninstall` removes them. Run it with `sh`, from any folder | python3 with venv |
 | [`iq_survey.py`](#iq_surveypy---what-is-in-a-folder-of-recordings) | **What is in these recordings?** Format, sample rate, frequency, satellite and packet types of every file in a folder | numpy, scipy |
 | [`wav_probe.py`](#wav_probepy---why-does-this-one-file-not-decode) | **Why does this file not decode?** Header, I/Q sanity, spectrum lines, burst times | numpy |
 | [`cut_excerpt.py`](#cut_excerptpy---cut-a-small-excerpt-to-share-or-to-add-as-an-example) | **Cut a small excerpt** out of a big recording (raw or WAV) to share it or add it to `examples/`: any segments, optional filtering to a lower rate, a frequency shift to keep two distant satellites in a small file | numpy, scipy |

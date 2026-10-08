@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+* `tools/install.sh`: installs the commands (`hadesx`, `hadesx-decode` ...) so they work from any folder, in a private environment, with no sudo and nothing to activate; `--uninstall` removes them. See [docs/installing.md](docs/installing.md).
 * **`hadesx`**, a short command for everyday use: `hadesx pass.wav`. Each satellite gets its own sub-folder of the output folder
   (`unne-1b`, `hades-sa`, `hades-l`), and the voice WAV and the pictures are made inside it. A new settings file
   (`hadesx --init`, plain INI, no extra package) remembers the output folder, the sample rate for raw files, voice speed, the paths of

@@ -1,5 +1,29 @@
 # Installing and running HADESx Decoder (Linux, macOS)
 
+## The easy way: one script, then the commands work from any folder
+
+```bash
+git clone https://github.com/N6RFM/HADESx-Decoder.git      # skip if you already have the folder
+cd HADESx-Decoder
+sh tools/install.sh
+```
+
+The script makes a private virtual environment in `~/.local/share/hadesx/venv`, installs the program into it and links the commands
+(`hadesx`, `hadesx-decode`, `hadesx-voice`, `hadesx-report`, `hadesx-ssdv`) into `~/.local/bin`. After that, open a new terminal,
+`cd` to the folder where your recordings are and run:
+
+```bash
+hadesx --init               # once: writes the settings file (output folder, sample rate for raw files ...)
+hadesx recording.wav
+```
+
+There is nothing to activate and no sudo (on Debian/Ubuntu it may ask you once to `sudo apt install python3-venv`). If it says
+`~/.local/bin` is not on your PATH, it prints the one line that fixes that. It is installed in "editable" mode: to update, run
+`git pull` in the repository folder, nothing else. To remove everything: `sh tools/install.sh --uninstall`. Your settings file
+and results are never touched.
+
+The three ways below are for when you want something different.
+
 Three ways to run it. Pick one; they do not interfere with each other.
 
 | | What it is | Best for | Commands afterwards |

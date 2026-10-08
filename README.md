@@ -64,7 +64,16 @@ Details, frame layouts and what is still open: [Supported satellites](docs/satel
 Needs Python 3.9+ (numpy and scipy are installed with it). Full step-by-step instructions, including what to do when `pip` refuses
 (`externally-managed-environment`) and every way to run it, are in **[docs/installing.md](docs/installing.md)**. The two usual routes:
 
-**A. Virtual environment (recommended):** an isolated copy of the libraries inside the project folder.
+**Easiest: one script, then the commands work from any folder** (private environment, nothing to activate, no sudo):
+
+```bash
+git clone https://github.com/N6RFM/HADESx-Decoder.git
+cd HADESx-Decoder && sh tools/install.sh
+# then, in the folder where your recordings are:
+hadesx --init && hadesx recording.wav
+```
+
+**A. Virtual environment:** an isolated copy of the libraries inside the project folder.
 
 ```bash
 git clone https://github.com/N6RFM/HADESx-Decoder.git
