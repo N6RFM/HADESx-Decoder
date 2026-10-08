@@ -22,13 +22,13 @@ There is nothing to activate and no sudo (on Debian/Ubuntu it may ask you once t
 `git pull` in the repository folder, nothing else. To remove everything: `sh tools/install.sh --uninstall`. Your settings file
 and results are never touched.
 
-The three ways below are for when you want something different.
+The three ways below are for when you want something different. On Windows see [windows.md](windows.md) (the script is for Linux and macOS).
 
 Three ways to run it. Pick one; they do not interfere with each other.
 
 | | What it is | Best for | Commands afterwards |
 |---|---|---|---|
-| **A. Virtual environment** (recommended) | an isolated Python folder `.venv` inside the project; nothing touches the system Python | most people; always works, also on Ubuntu 23.04+ and Debian 12+ | `hadesx-decode`, `hadesx-voice`, `hadesx-report`, `hadesx-ssdv` while the venv is active |
+| **A. Virtual environment** (recommended) | an isolated Python folder `.venv` inside the project; nothing touches the system Python | most people; always works, also on Ubuntu 23.04+ and Debian 12+ | `hadesx`, `hadesx-decode`, `hadesx-voice`, `hadesx-report`, `hadesx-ssdv` while the venv is active |
 | **B. Regular install, no pip** | use the system Python and run straight from the downloaded folder | a quick start, or a machine where you do not want to install anything | `PYTHONPATH=src python3 -m hadesx ...` from inside the folder |
 | **C. Single file** | one generated file, `hadesx_standalone.py`, that you can copy anywhere | taking the decoder to another computer | `python3 hadesx_standalone.py ...` |
 
@@ -203,7 +203,7 @@ need the full project (option A or B).
 |---|---|---|
 | Voice WAV files | `sudo apt install codec2` | provides `c2dec`; without it the decoder tells you |
 | UNNE-1B fields with all their labels | `pip install -e ".[dll]"` and AMSAT-EA's `hadesr.dll` | [dll-emulation.md](dll-emulation.md) |
-| **SSDV pictures** (HADES-SA) | the `ssdv` program: `git clone https://github.com/fsphil/ssdv && cd ssdv && make`, then `sudo cp ssdv /usr/local/bin/` | `hadesx-ssdv` runs it to make the JPEG; without it you still get the `.ssdv` file. AMSAT-EA's SSDV utilities contain a Windows build |
+| **SSDV pictures** (HADES-SA) | the `ssdv` program: `sudo apt install build-essential git`, then `git clone https://github.com/fsphil/ssdv && cd ssdv && make`, then `sudo cp ssdv /usr/local/bin/` (without sudo: `cp ssdv ~/.local/bin/`) | `hadesx` and `hadesx-ssdv` run it to make the JPEG; without it you still get the `.ssdv` file and `hadesx` says "packets stored, no JPEG". If it is somewhere else, set `ssdv = /full/path` in the settings file ([settings.md](settings.md)). AMSAT-EA's SSDV utilities contain a Windows build |
 | GNU Radio flowgraph | GNU Radio 3.10 with Companion | [gnuradio.md](gnuradio.md) |
 | The test suite | `pip install -e ".[dev]"`, then `python3 -m pytest -q` | a few tests are skipped when `ssdv` or `c2dec` is missing |
 

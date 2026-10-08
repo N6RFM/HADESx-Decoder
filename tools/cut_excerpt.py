@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# HADESx Decoder  -  https://github.com/N6RFM/HADESx-Decoder
+# Authors: N6RFM, with Claude (an AI assistant made by Anthropic).
+# Licence: MIT (see LICENSE).
 """Cut a small excerpt out of a big IQ recording (raw or WAV), e.g. to share it or to add it to the repository's examples.
 
     python3 tools/cut_excerpt.py "big recording.wav" --segments 105.0-107.6,115.6-117.0 --out excerpt.wav

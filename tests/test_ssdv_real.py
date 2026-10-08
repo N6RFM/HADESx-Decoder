@@ -1,3 +1,6 @@
+# HADESx Decoder  -  https://github.com/N6RFM/HADESx-Decoder
+# Authors: N6RFM, with Claude (an AI assistant made by Anthropic).
+# Licence: MIT (see LICENSE).
 """Real HADES-SA image (SSDV) packets off the air, 5 October 2026: the bit clock must survive the unscrambled image data."""
 import os
 

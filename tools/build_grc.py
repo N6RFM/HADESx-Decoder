@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# HADESx Decoder  -  https://github.com/N6RFM/HADESx-Decoder
+# Authors: N6RFM, with Claude (an AI assistant made by Anthropic).
+# Licence: MIT (see LICENSE).
 """Generate the GNU Radio Companion flowgraph (grc/hadesx_decoder.grc).
 
 The flowgraph embeds src/hadesx/core.py verbatim in two Embedded Python blocks, so the

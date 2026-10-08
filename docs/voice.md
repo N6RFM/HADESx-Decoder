@@ -79,6 +79,9 @@ hadesx-voice ~/hades-sa --combine voice_all.wav          # all passes merged -> 
 hadesx-voice raw_payloads.c2 --sat HADES-L voice.wav     # a raw file: say whose it is
 ```
 
+`hadesx` does the same for you after every run and puts `voice_<SATELLITE>.wav` in the satellite's own folder ([settings.md](settings.md)): the
+file is rebuilt from all stored frames each time (best pass, as above) and replaced.
+
 Output: 8 kHz, 16-bit, mono WAV. Example files from the pass: `examples/results/voice_700C.wav` (14.8 s) and
 `voice_700C_speed1.15.wav` (12.9 s).
 

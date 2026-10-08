@@ -1,5 +1,8 @@
 # Getting started
 
+This page describes `hadesx-decode`, the detailed command. For everyday use the short command `hadesx` does the same decoding, keeps each
+satellite in its own folder, makes the voice WAV and the pictures, and reads your defaults from a settings file: **[settings.md](settings.md)**.
+
 ## Requirements
 
 * Python 3.9+ with `numpy` and `scipy` (installed by `pip install -e .`)

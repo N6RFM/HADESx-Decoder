@@ -1,3 +1,7 @@
+# HADESx Decoder  -  https://github.com/N6RFM/HADESx-Decoder
+# Authors: N6RFM, with Claude (an AI assistant made by Anthropic).
+# Licence: MIT (see LICENSE).
+# Follows the method of AMSAT-EA's run_ssdv.bat; the packet format is Philip Heron's SSDV (NOTICE.md, section 10).
 """hadesx-ssdv FOLDER - put the SSDV image packets of a per-type output folder together into pictures.
 
     hadesx-ssdv ~/pass-folder                 # list the images found, packet by packet

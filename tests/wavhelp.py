@@ -1,3 +1,6 @@
+# HADESx Decoder  -  https://github.com/N6RFM/HADESx-Decoder
+# Authors: N6RFM, with Claude (an AI assistant made by Anthropic).
+# Licence: MIT (see LICENSE).
 """Helpers for the WAV tests: write a stereo I/Q WAV in any common sample format (with an optional auxi chunk)."""
 import numpy as np, struct, sys
 from scipy import signal

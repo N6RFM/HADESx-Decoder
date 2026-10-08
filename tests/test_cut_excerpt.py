@@ -1,3 +1,6 @@
+# HADESx Decoder  -  https://github.com/N6RFM/HADESx-Decoder
+# Authors: N6RFM, with Claude (an AI assistant made by Anthropic).
+# Licence: MIT (see LICENSE).
 """tools/cut_excerpt.py: a small, correctly labelled excerpt of a big two-satellite recording that still decodes."""
 import json
 import os

@@ -1,3 +1,6 @@
+# HADESx Decoder  -  https://github.com/N6RFM/HADESx-Decoder
+# Authors: N6RFM, with Claude (an AI assistant made by Anthropic).
+# Licence: MIT (see LICENSE).
 """Voice: every WAV is identified by its satellite (file name and tags inside), per-satellite grouping, stray frame numbers,
 passes in a per-type folder."""
 import json

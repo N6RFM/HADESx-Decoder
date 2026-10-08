@@ -1,3 +1,6 @@
+# HADESx Decoder  -  https://github.com/N6RFM/HADESx-Decoder
+# Authors: N6RFM, with Claude (an AI assistant made by Anthropic).
+# Licence: MIT (see LICENSE).
 """WAV and raw IQ recordings: sample rate and format from the header, any sample rate, swapped I/Q, header oddities."""
 import json
 import os

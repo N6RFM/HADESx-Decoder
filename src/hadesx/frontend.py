@@ -1,3 +1,6 @@
+# HADESx Decoder  -  https://github.com/N6RFM/HADESx-Decoder
+# Authors: N6RFM, with Claude (an AI assistant made by Anthropic).
+# Licence: MIT (see LICENSE).
 """Signal chain from raw IQ at any sample rate to decoded frames: FSK tracker -> decimation -> channel filter -> deframers.
 
 The recording's sample rate can be anything from about 48 kHz up to several MHz. The tracker finds the FSK signal wherever it is

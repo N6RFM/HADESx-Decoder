@@ -49,6 +49,8 @@ internal test picture (image 0, 320 x 240) as SSDV packets at 800 baud. The exce
 each with a valid CRC-32 (the first packet of the burst is lost while the bit clock locks):
 
 ```bash
+hadesx hades_sa_ssdv_pass.wav --out ~/ssdv-test       # folder ~/ssdv-test/hades-sa, picture made if the `ssdv` program is installed
+# or step by step:
 hadesx-decode hades_sa_ssdv_pass.wav --outdir ~/ssdv-pass
 hadesx-ssdv ~/ssdv-pass --image 0        # needs the `ssdv` program for the JPEG
 ```

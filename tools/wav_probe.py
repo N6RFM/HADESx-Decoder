@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# HADESx Decoder  -  https://github.com/N6RFM/HADESx-Decoder
+# Authors: N6RFM, with Claude (an AI assistant made by Anthropic).
+# Licence: MIT (see LICENSE).
 """What is really in this WAV (IQ) file?   (read-only, needs numpy only)
 
     python3 tools/wav_probe.py "/path/to/recording.wav"

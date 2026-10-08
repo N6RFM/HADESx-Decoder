@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+# HADESx Decoder  -  https://github.com/N6RFM/HADESx-Decoder
+# Authors: N6RFM, with Claude (an AI assistant made by Anthropic).
+# Licence: MIT (see LICENSE).
+# Runs AMSAT-EA's decoder DLLs (not redistributed) only as external references (NOTICE.md, section 8).
 """Regenerate tests/data/dll_golden_hades_sa.json and dll_golden_hades_l.json from AMSAT-EA's decoder DLLs.
 
 For a fixed set of frames (seeded random frames of every packet type, edge cases, AMSAT-EA's HADES-SA sample frames and real

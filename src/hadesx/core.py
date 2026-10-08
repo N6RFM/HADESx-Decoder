@@ -1,3 +1,8 @@
+# HADESx Decoder  -  https://github.com/N6RFM/HADESx-Decoder
+# Authors: N6RFM, with Claude (an AI assistant made by Anthropic).
+# Licence: MIT (see LICENSE).
+# Built on AMSAT-EA's open documentation and source code (CC BY 4.0): see NOTICE.md. Frame format, scrambler, CRC and the CODEC2
+# voice key come from their documents and decoder. SSDV: the format of Philip Heron's ssdv (NOTICE.md, section 10).
 import time
 import struct
 import re

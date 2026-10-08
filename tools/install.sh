@@ -1,4 +1,7 @@
 #!/bin/sh
+# HADESx Decoder  -  https://github.com/N6RFM/HADESx-Decoder
+# Authors: N6RFM, with Claude (an AI assistant made by Anthropic).
+# Licence: MIT (see LICENSE).
 # Install HADESx Decoder so that the commands (hadesx, hadesx-decode, hadesx-voice, hadesx-report, hadesx-ssdv)
 # work from ANY folder, with no virtual environment to activate.
 #

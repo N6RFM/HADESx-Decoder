@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# HADESx Decoder  -  https://github.com/N6RFM/HADESx-Decoder
+# Authors: N6RFM, with Claude (an AI assistant made by Anthropic).
+# Licence: MIT (see LICENSE).
 # Checks that audio really flows: test tone -> unne1b sink -> unne1b.monitor
 SINK=unne1b
 echo "== sinks / sources"; pactl list short sinks | grep -i $SINK || { echo "sink $SINK missing: run setup_unne1b_audio.sh"; exit 1; }

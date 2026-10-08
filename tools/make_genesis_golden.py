@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+# HADESx Decoder  -  https://github.com/N6RFM/HADESx-Decoder
+# Authors: N6RFM, with Claude (an AI assistant made by Anthropic).
+# Licence: MIT (see LICENSE).
+# Compiles AMSAT-EA's HADES-SA decoder, (c) AMSAT EA, CC BY 4.0, to produce reference output (NOTICE.md, section 7).
 """Regenerate tests/data/genesis_golden.json from AMSAT-EA's compiled reference decoder.
 
 The golden file holds, for a fixed set of frames (AMSAT-EA's sample frames plus seeded random frames of every packet

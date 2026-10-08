@@ -1,3 +1,7 @@
+# HADESx Decoder  -  https://github.com/N6RFM/HADESx-Decoder
+# Authors: N6RFM, with Claude (an AI assistant made by Anthropic).
+# Licence: MIT (see LICENSE).
+# A Python port of the decoding and file-writing logic of AMSAT-EA's HADES-SA decoder, (c) AMSAT EA, CC BY 4.0 (NOTICE.md, section 7).
 """Per-type decoded output for the GENESIS / HADES family: text (.tlm), data (.dat) and binary (.bin) files.
 
 This is a Python port of the decoding and file-writing logic of AMSAT-EA's open-source HADES-SA decoder

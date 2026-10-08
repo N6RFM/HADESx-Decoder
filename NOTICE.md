@@ -102,14 +102,17 @@ copyright field, so the individual who wrote it is not stated in the file itself
 * **GNU Radio** (GPL-3.0) - needed only to open the `.grc` flowgraph.
 * **unicorn** (GPL-2.0, <https://www.unicorn-engine.org/>) and **pefile** (MIT, <https://github.com/erocarrera/pefile>) -
   optional, only for `--dll`; separate packages installed by the user.
+* **ssdv** by Philip Heron (fsphil), GPL-3.0, <https://github.com/fsphil/ssdv> - run as an external program to turn SSDV packets into a JPEG
+  (`hadesx-ssdv`, `hadesx`); not included. See section 10.
 * **numpy**, **scipy** (BSD), **matplotlib** (figures), **pytest** (tests).
 
 ## 5. This project
 
 * Developed by N6RFM with the help of Claude (an AI assistant made by Anthropic).
-* Code: MIT (see `LICENSE`).
-* Documentation, figures and the IQ recordings in `examples/iq/`: CC BY 4.0. The IQ recordings are from a real
-  reception of UNNE-1B.
+* Code: MIT (see `LICENSE`). Every code file starts with a credit block naming the authors (N6RFM with Claude) and, where it applies, the
+  AMSAT-EA or SSDV work it is built on; `tests/test_docs.py` checks that no file is without one.
+* Documentation, figures and the IQ recordings in `examples/iq/`: CC BY 4.0. The IQ recordings are from real
+  receptions of UNNE-1B and, for `hades_sa_ssdv_pass.wav`, of HADES-SA, made by N6RFM.
 * `examples/results/voice_*.wav` are decodings of the audio the satellite transmits, a reading of the opening of
   Cervantes' *Don Quijote* (the novel is in the public domain). We do not hold rights in that recording and do not
   know its copyright status; it is included to demonstrate the decoder and credited to AMSAT-EA as the source. It will
@@ -166,3 +169,23 @@ SDR Console) that **José Elías Díaz, EB1AO**, shared for testing. The excerpt
 resampled to 250 kHz, band shifted by +111 kHz) and is used only by `tests/test_example_sdrconsole.py` and the documentation. The recording
 remains its author's work; the CC BY 4.0 licence of this repository's own example excerpts does not extend to it. The burst times and header
 values quoted in `tools/README.md` and `docs/satellites.md` come from the same recording.
+
+---
+
+## 10. SSDV pictures (HADES-SA)
+
+HADES-SA sends its camera pictures as **SSDV** packets, the format created by **Philip Heron (fsphil)** for high-altitude balloon and
+satellite images (<https://github.com/fsphil/ssdv>, GPL-3.0).
+
+* The **packet layout, the CRC-32 and the Reed-Solomon (255,223) parameters** that `src/hadesx/core.py` uses (`ssdv_*`, `rs_ssdv_*`) are those
+  of the SSDV format. The Python code is our own implementation of that published format, written for this project; the `ssdv` program is
+  **not** included or copied. Where a real `ssdv` program is installed, `tests/test_ssdv_images.py` checks our output against it (skipped
+  otherwise).
+* The `ssdv` program is run **as an external tool** to make the JPEG, as AMSAT-EA's own `run_ssdv.bat` does.
+* **AMSAT-EA** described how HADES-SA transmits the pictures (October 2026) and publishes SSDV utilities (`run_ssdv.bat`, a merge
+  tool and a Windows build of `ssdv`) that we follow in method: the packets are concatenated and passed to `ssdv -d`. Their files are not
+  redistributed here; `tests/data/windows_tool/` holds one packet written by their Windows tool (see section 7).
+* Pages by **K5WH** (<https://github.com/K5WH-Walter/Hades-SA-SSDV>) and **JE9PEL**
+  (<https://www.ne.jp/asahi/hamradio/je9pel/hadesasd.htm>) were consulted for how others receive these pictures. Thank you to both.
+* Finding by N6RFM with Claude (5 October 2026 recording): the SSDV packets are **not scrambled** on air, and the bit clock of the
+  demodulator needed a fix for such unscrambled data (see `docs/satellites.md`).

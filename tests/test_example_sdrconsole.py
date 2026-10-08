@@ -1,3 +1,6 @@
+# HADESx Decoder  -  https://github.com/N6RFM/HADESx-Decoder
+# Authors: N6RFM, with Claude (an AI assistant made by Anthropic).
+# Licence: MIT (see LICENSE).
 """examples/iq/sdrconsole_two_satellites.wav: a 5.6 s excerpt of a 1 Msps SDR Console recording of UNNE-1B and HADES-L.
 
 Shared by José Elías Díaz, EB1AO (see NOTICE.md). Cut with tools/cut_excerpt.py (filtered and resampled to 250 kHz, the band

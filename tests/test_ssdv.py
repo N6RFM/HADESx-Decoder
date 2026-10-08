@@ -1,3 +1,6 @@
+# HADESx Decoder  -  https://github.com/N6RFM/HADESx-Decoder
+# Authors: N6RFM, with Claude (an AI assistant made by Anthropic).
+# Licence: MIT (see LICENSE).
 """SSDV (HADES-SA type 10): the packet's own CRC-32 is the proof, whichever way the bytes were scrambled."""
 import os
 

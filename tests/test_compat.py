@@ -1,3 +1,6 @@
+# HADESx Decoder  -  https://github.com/N6RFM/HADESx-Decoder
+# Authors: N6RFM, with Claude (an AI assistant made by Anthropic).
+# Licence: MIT (see LICENSE).
 """The project was renamed from UNNE-1B Decoder to HADESx Decoder: the old names keep working (deprecated)."""
 import json
 import os

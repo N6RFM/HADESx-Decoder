@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# HADESx Decoder  -  https://github.com/N6RFM/HADESx-Decoder
+# Authors: N6RFM, with Claude (an AI assistant made by Anthropic).
+# Licence: MIT (see LICENSE).
 """Build the release zip: a clean snapshot of the repository (no git history) plus START-HERE-WINDOWS.txt.
 
     python3 tools/make_release_zip.py                  # dist/HADESx-Decoder-<version>.zip

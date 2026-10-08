@@ -1,3 +1,6 @@
+# HADESx Decoder  -  https://github.com/N6RFM/HADESx-Decoder
+# Authors: N6RFM, with Claude (an AI assistant made by Anthropic).
+# Licence: MIT (see LICENSE).
 """The committed GNU Radio flowgraph must be exactly what tools/build_grc.py generates from core.py."""
 import os
 import subprocess

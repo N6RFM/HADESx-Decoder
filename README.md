@@ -42,6 +42,10 @@ Details, frame layouts and what is still open: [Supported satellites](docs/satel
 
 ## What you get
 
+* **`hadesx`, the short command:** `hadesx pass.wav` decodes the recording and puts **each satellite in its own folder** (`unne-1b`, `hades-sa`,
+  `hades-l`) inside one output folder, makes the **voice WAV** and the **pictures** there, and remembers your defaults (output folder, sample
+  rate for raw files, voice speed ...) in a small settings file: [docs/settings.md](docs/settings.md). `tools/install.sh` installs it so that it works
+  from any folder.
 * **Any recording:** raw IQ (complex float32, int16, uint8) or WAV (8 to 32-bit, any rate from 48 kHz, the rate read from the header), with the
   signal anywhere in the recorded band.
 * **Finds and tracks the signal** automatically: no tuning control, the Doppler drift is followed (in the UNNE-1B example pass the centre moved
@@ -53,10 +57,10 @@ Details, frame layouts and what is still open: [Supported satellites](docs/satel
 * **Per-type output folder** (`--outdir`): the files AMSAT-EA's Windows tool writes (labelled `.tlm`, `.dat` data lines, `.bin` voice and image files),
   and new frames from later passes are added without duplicates.
 * **`hadesx-report`** prints everything such a folder holds on the console, oldest first, across satellites, with filters and a summary.
-* **`hadesx-ssdv`** puts the image (SSDV) packets of such a folder together into pictures, the way AMSAT-EA's `run_ssdv.bat` does: it merges the packets of an image, repairs damaged ones with the Reed-Solomon code and runs Philip Heron's `ssdv` program for the JPEG.
+* **`hadesx-ssdv`** puts the image (SSDV) packets of such a folder together into pictures, the way AMSAT-EA's `run_ssdv.bat` does: it merges the packets of an image, repairs damaged ones with the Reed-Solomon code and runs Philip Heron's `ssdv` program for the JPEG (build it once: [docs/installing.md](docs/installing.md#extras-you-may-need)). `hadesx` calls it for you.
 * **Tools** to look at a recording before decoding it (what is in it, why it does not decode) and to cut a small excerpt: [tools/README.md](tools/README.md).
 * **GNU Radio Companion flowgraph** with live plots, using the very same decoder code.
-* **Tested:** several hundred automated tests, including comparisons with the output of AMSAT-EA's own decoders (the DLLs of the HADES-SA and
+* **Tested:** about 470 automated tests, including comparisons with the output of AMSAT-EA's own decoders (the DLLs of the HADES-SA and
   HADES-L packages and their open-source reference program) and synthetic signals of every packet type anywhere in the band.
 
 ## Quick start

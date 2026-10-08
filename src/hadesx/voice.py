@@ -1,3 +1,7 @@
+# HADESx Decoder  -  https://github.com/N6RFM/HADESx-Decoder
+# Authors: N6RFM, with Claude (an AI assistant made by Anthropic).
+# Licence: MIT (see LICENSE).
+# The voice key and the padding rule come from AMSAT-EA's HADES-SA decoder, (c) AMSAT EA, CC BY 4.0 (NOTICE.md, section 2).
 """CODEC2 voice packets -> WAV  (Codec2 700C).   hadesx-voice frames.jsonl out.wav   |   hadesx-voice FOLDER
 
 How the voice data is carried (UNNE-1B transmission document + AMSAT-EA's HADES-SA

@@ -1,5 +1,11 @@
 # Development
 
+## Code headers
+
+Every code file (Python, shell, the CI file) starts with the same credit block: the project, the authors (N6RFM with Claude, an AI assistant made by
+Anthropic), the licence and, where the file is built on AMSAT-EA's or Philip Heron's work, a line saying so with a pointer to `NOTICE.md`.
+`tests/test_docs.py` fails if a code file has no block. New files get one too.
+
 ## Layout
 
 ```

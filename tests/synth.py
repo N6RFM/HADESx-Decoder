@@ -1,3 +1,6 @@
+# HADESx Decoder  -  https://github.com/N6RFM/HADESx-Decoder
+# Authors: N6RFM, with Claude (an AI assistant made by Anthropic).
+# Licence: MIT (see LICENSE).
 """Synthetic UNNE-1B signals for the tests: packets -> 200 baud FSK IQ."""
 import random
 import struct

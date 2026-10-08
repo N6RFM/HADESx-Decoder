@@ -30,8 +30,9 @@ cd C:\HADESx-Decoder
 py -m pip install -e .
 ```
 
-This installs numpy and scipy and the commands `hadesx-decode`, `hadesx-voice` and `hadesx-report`. If Windows says the scripts are not on your
-PATH, you do not need them: write `py -m hadesx` instead of `hadesx-decode`, and `py -m hadesx.report` instead of `hadesx-report`.
+This installs numpy and scipy and the commands `hadesx`, `hadesx-decode`, `hadesx-voice`, `hadesx-report` and `hadesx-ssdv`. If Windows says the scripts are not on your
+PATH, you do not need them: write `py -m hadesx.easy` instead of `hadesx`, `py -m hadesx` instead of `hadesx-decode`, `py -m hadesx.report` instead of
+`hadesx-report` and `py -m hadesx.ssdv` instead of `hadesx-ssdv`. (`tools/install.sh` is for Linux and macOS only.)
 
 ## 4. Decode a recording
 
@@ -52,7 +53,17 @@ py -m hadesx "C:\Users\me\Documents\recording 1.wav"
 
 A raw IQ file has no header, so give its sample rate: `py -m hadesx recording.iq --fs 50000`.
 
-## 5. Keep the results of many passes in one folder
+## 5. The short command: one folder per satellite
+
+```
+py -m hadesx.easy --init
+py -m hadesx.easy "C:\recordings\pass1.wav"
+```
+
+`--init` writes the settings file `%APPDATA%\hadesx\config.ini` (open it in Notepad; set `output = C:\Users\me\Desktop\Hadesx_Results`). Each satellite then gets
+its own folder inside it, with its telemetry, voice and pictures: [settings.md](settings.md).
+
+## 5b. Keep the results of many passes in one folder (the detailed way)
 
 ```
 py -m hadesx "C:\recordings\pass1.wav" --outdir C:\hades-folder
@@ -74,6 +85,8 @@ The first lists every file with its satellite and packet types, the second expla
 
 ## 7. Optional extras
 
+* **Pictures (SSDV)** need the `ssdv` program. AMSAT-EA's SSDV utilities contain a Windows build (`ssdv-x86.exe`); put its full path in the settings
+  file as `ssdv = C:\path\to\ssdv-x86.exe`. Without it you still get the `.ssdv` file.
 * **Voice to a WAV file** needs `c2dec` from the codec2 project, which is easy to get on Linux and not easy on Windows. Use WSL for this, or leave
   voice out: the telemetry does not need it.
 * **UNNE-1B telemetry with all its fields** uses AMSAT-EA's `hadesr.dll` (from the UNNE-1B SoundModem package): `py -m pip install unicorn pefile`, then

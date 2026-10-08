@@ -41,6 +41,7 @@
 * HADES-family frames (HADES-SA, HADES-L), 200 and 800 baud detected automatically.
 * WAV recordings and any sample rate; recordings with two satellites; swapped I/Q; sample rate worked out from the signal.
 * The per-type output folder, voice WAVs identified by satellite, `hadesx-report`, the recording survey and probe tools.
+* `hadesx`, the short command: a settings file, one folder per satellite, voice WAV and pictures made automatically; `tools/install.sh` for an install that works from any folder.
 * SSDV image packets decoded off the air, Reed-Solomon repair, `hadesx-ssdv` (merge and JPEG); a bit-clock fix for unscrambled data that also helps HADES-L.
 
 ## Roadmap ideas
@@ -50,7 +51,7 @@
 3. Live mode for SDR sources without GNU Radio (stream stdin / SoapySDR).
 4. Doppler-aware tracking with a TLE (use the ephemeris + local position to cross-check the tracker).
 5. Soft-decision voice repair (erasure marking for low-confidence symbols), and an optional transcription step.
-6. Several recordings in one command, and an export of the telemetry (CSV, plots of battery, temperatures and currents over time).
+6. An export of the telemetry (CSV, plots of battery, temperatures and currents over time); one voice WAV per pass instead of only the best pass; a Windows install script.
 7. MARIA-G when it is launched (the framing is shared; the packet set may differ), and 2400 baud.
 8. Aggregation tool: merge many passes into a telemetry database / time series, upload to a community server.
 9. Continuous integration that also compiles the GRC with `grcc`.

@@ -1,3 +1,6 @@
+# HADESx Decoder  -  https://github.com/N6RFM/HADESx-Decoder
+# Authors: N6RFM, with Claude (an AI assistant made by Anthropic).
+# Licence: MIT (see LICENSE).
 """The documentation stays honest: every command-line option is documented, every tool and module is listed, links resolve."""
 import argparse
 import glob
@@ -66,6 +69,19 @@ def test_every_test_file_is_listed_in_the_development_page():
     missing = [os.path.basename(f) for f in sorted(glob.glob(os.path.join(ROOT, 'tests', 'test_*.py')))
                if os.path.basename(f) not in t]
     assert not missing, 'test files missing from docs/development.md: %s' % missing
+
+
+def test_every_code_file_starts_with_the_credit_block():
+    files = [os.path.relpath(f, ROOT) for pat in ('src/**/*.py', 'tests/*.py', 'tools/*.py', 'tools/*.sh', 'extras/**/*.sh', '.github/workflows/*.yml')
+             for f in glob.glob(os.path.join(ROOT, pat), recursive=True)]
+    assert len(files) > 50
+    bad = []
+    for f in files:
+        head = text(f).split('\n')[:4]
+        if not (any(l.startswith('# HADESx Decoder') for l in head) and any('Authors: N6RFM' in l and 'Claude' in l for l in head)
+                and any('Licence: MIT' in l for l in head)):
+            bad.append(f)
+    assert not bad, 'no credit block (authors, licence) at the top of: %s' % bad
 
 
 def test_every_console_command_is_in_the_readme():

@@ -1,3 +1,6 @@
+# HADESx Decoder  -  https://github.com/N6RFM/HADESx-Decoder
+# Authors: N6RFM, with Claude (an AI assistant made by Anthropic).
+# Licence: MIT (see LICENSE).
 """The single-file build (tools/build_standalone.py) must decode raw and WAV recordings and write voice WAVs like the package."""
 import os
 import shutil

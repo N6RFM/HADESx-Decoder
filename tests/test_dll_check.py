@@ -1,3 +1,7 @@
+# HADESx Decoder  -  https://github.com/N6RFM/HADESx-Decoder
+# Authors: N6RFM, with Claude (an AI assistant made by Anthropic).
+# Licence: MIT (see LICENSE).
+# Reference output of AMSAT-EA's decoder DLLs, which are not redistributed (NOTICE.md, section 8).
 """--dll takes hadesr.dll of the UNNE-1B package; the HADES-SA and HADES-L DLLs are refused with a clear message."""
 import pytest
 

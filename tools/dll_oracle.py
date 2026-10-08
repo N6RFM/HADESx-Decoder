@@ -1,3 +1,7 @@
+# HADESx Decoder  -  https://github.com/N6RFM/HADESx-Decoder
+# Authors: N6RFM, with Claude (an AI assistant made by Anthropic).
+# Licence: MIT (see LICENSE).
+# Runs AMSAT-EA's decoder DLLs (not redistributed) only as external references (NOTICE.md, section 8).
 """Run a satellite package's decoder DLL in an x86 emulator and capture the files it writes.
 
     hadessa.dll  (HADES-SA package)      hadesl.dll  (HADES-L package)      hadesr.dll (UNNE-1B package: no files)

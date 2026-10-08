@@ -1,3 +1,6 @@
+# HADESx Decoder  -  https://github.com/N6RFM/HADESx-Decoder
+# Authors: N6RFM, with Claude (an AI assistant made by Anthropic).
+# Licence: MIT (see LICENSE).
 """hadesx - the short way: decode recordings, one folder per satellite, voice WAV and pictures made for you.
 
     hadesx pass.wav                          # SDR# / SDR Console / HDSDR WAV: the rate is read from the file

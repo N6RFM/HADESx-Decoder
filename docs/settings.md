@@ -11,7 +11,8 @@ hadesx capture.iq --fs 250000         # a raw IQ file: say its rate once (or put
 hadesx pass.wav --out ~/hades         # another output folder, for this run only
 ```
 
-Without the install (route B in [Installing](installing.md)): `PYTHONPATH=src python3 -m hadesx.easy pass.wav`.
+Install once with `sh tools/install.sh` ([Installing](installing.md)) and the command works from any folder, for example the one where your
+IQ files are. Without the install (route B): `PYTHONPATH=src python3 -m hadesx.easy pass.wav`; on Windows: `py -m hadesx.easy pass.wav` ([windows.md](windows.md)).
 
 ## Where the results go
 
@@ -35,10 +36,26 @@ After decoding, `hadesx` goes through each satellite folder and, if there is som
 
 If a program is missing it says so and carries on; the decoded data is stored anyway.
 
+Both are **rebuilt from everything stored in the folder** on every run, and the file is replaced by the new one:
+
+* **Voice:** `voice_<SATELLITE>.wav` is made again each time. Receptions of one pass (less than 10 minutes apart) are combined, repeated
+  frames are settled by a vote. Different passes can carry different messages, so the **one pass with the most frames** is used, a tie going
+  to the newest; a new pass changes the WAV only if it has more frames. Other choices: `hadesx-voice FOLDER --list-passes`, `--pass N`,
+  `--combine` ([voice.md](voice.md)).
+* **Pictures:** `hades_sa_image_NNN.jpg` is made again from every packet of that image stored so far, so each pass fills more gaps. The
+  `.ssdv` file next to it holds the merged packets; `hadesx-ssdv FOLDER` lists the packet numbers still missing.
+
+If the `ssdv` program is not installed you get "packets stored, no JPEG": build it ([installing.md](installing.md#extras-you-may-need)) and run
+`hadesx` on any recording again (a recording that was already added is not decoded twice, but the pictures are rebuilt), or run
+`hadesx-ssdv FOLDER --all`.
+
 ## The settings file
 
 `hadesx --init` writes a commented file and tells you where it is (Linux and macOS: `~/.config/hadesx/config.ini`, Windows:
 `%APPDATA%\hadesx\config.ini`). Open it in any text editor. `hadesx --show-config` shows what is in use.
+
+A common choice is a folder on the desktop: `output = ~/Desktop/Hadesx_Results` (a leading `~/` means your home folder; the folder is created
+when needed).
 
 ```ini
 [general]

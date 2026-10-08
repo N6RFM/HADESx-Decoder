@@ -1,3 +1,6 @@
+# HADESx Decoder  -  https://github.com/N6RFM/HADESx-Decoder
+# Authors: N6RFM, with Claude (an AI assistant made by Anthropic).
+# Licence: MIT (see LICENSE).
 """hadesx-report: print what a per-type output folder holds, in time order, with filters; UNNE-1B through a DLL."""
 import datetime
 import os

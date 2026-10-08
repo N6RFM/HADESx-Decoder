@@ -14,7 +14,7 @@
 | `voice_700C.wav` | decoded voice, 14.8 s, 8 kHz mono - the opening of *Don Quijote* ([transcript](results/voice_transcript.md)) |
 | `voice_700C_speed1.15.wav` | the same, 15 % faster with the same pitch |
 
-Reproduce the small ones yourself:
+Reproduce the small ones yourself (or run `hadesx FILE --out DIR` on any of the recordings: [../docs/settings.md](../docs/settings.md)):
 
 ```bash
 hadesx-decode examples/iq/pass_t122s_voice.iq --voice-wav /tmp/voice_start.wav   # first 6 voice packets (2.4 s)

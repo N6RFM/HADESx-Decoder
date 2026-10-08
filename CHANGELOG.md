@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+* Every code file now starts with a credit block (authors N6RFM with Claude, licence, and the AMSAT-EA / SSDV work it builds on);
+  `tests/test_docs.py` checks it. NOTICE.md gains a section on SSDV (Philip Heron's `ssdv`, AMSAT-EA's utilities).
+* Documentation brought up to date for `hadesx`, the settings file, the per-satellite folders and `tools/install.sh`: README, installing,
+  settings (how the voice WAV and the pictures are rebuilt each run), Windows, voice, troubleshooting, roadmap, examples.
+
 * `tools/install.sh`: installs the commands (`hadesx`, `hadesx-decode` ...) so they work from any folder, in a private environment, with no sudo and nothing to activate; `--uninstall` removes them. See [docs/installing.md](docs/installing.md).
 * **`hadesx`**, a short command for everyday use: `hadesx pass.wav`. Each satellite gets its own sub-folder of the output folder
   (`unne-1b`, `hades-sa`, `hades-l`), and the voice WAV and the pictures are made inside it. A new settings file

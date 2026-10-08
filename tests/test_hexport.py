@@ -1,3 +1,6 @@
+# HADESx Decoder  -  https://github.com/N6RFM/HADESx-Decoder
+# Authors: N6RFM, with Claude (an AI assistant made by Anthropic).
+# Licence: MIT (see LICENSE).
 """The deframer block's `hex` port and its optional time stamp.
 
 Runs without GNU Radio: the block's code (core + wrapper, exactly as embedded in the flowgraph) is executed

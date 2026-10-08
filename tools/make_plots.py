@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# HADESx Decoder  -  https://github.com/N6RFM/HADESx-Decoder
+# Authors: N6RFM, with Claude (an AI assistant made by Anthropic).
+# Licence: MIT (see LICENSE).
 """Regenerate the figures in docs/img.
 
     python3 tools/make_plots.py                     # figures that only need the repo's examples

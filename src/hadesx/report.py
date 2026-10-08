@@ -1,3 +1,6 @@
+# HADESx Decoder  -  https://github.com/N6RFM/HADESx-Decoder
+# Authors: N6RFM, with Claude (an AI assistant made by Anthropic).
+# Licence: MIT (see LICENSE).
 """hadesx-report FOLDER - print the telemetry of a per-type output folder (--outdir) on the console, in time order.
 
     hadesx-report ~/hades-l-sdrc                       # every packet, oldest first, with its labelled fields

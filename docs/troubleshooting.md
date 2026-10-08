@@ -28,3 +28,16 @@
 pytest -q                                                  # 64 tests
 hadesx-decode examples/iq/pass_t211s_type01.iq             # must print a CRC OK Power packet, sclock 192304
 ```
+
+## The short command (`hadesx`)
+
+| Symptom | Cause and fix |
+|---|---|
+| `hadesx: command not found` | Not installed, or `~/.local/bin` is not on your PATH. Run `sh tools/install.sh` from the repository and open a new terminal; if it prints a `PATH` line, run that line. Without installing: `PYTHONPATH=src python3 -m hadesx.easy ...` |
+| `pictures: packets stored, no JPEG` | The `ssdv` program is missing. Build it ([installing.md](installing.md#extras-you-may-need)), or set `ssdv = /full/path` in the settings file, then run `hadesx` again or `hadesx-ssdv FOLDER --all`. |
+| `voice: not made (c2dec not found ...)` | `sudo apt install codec2`. The frames are stored; the WAV is made on the next run. |
+| `no frames decoded` on a raw file | Give the sample rate: `--fs HZ` (or `fs = ...` in the settings file), or `--fs guess`; try `--swap-iq`. A WAV file needs neither. |
+| Results are not where you expected | `hadesx --show-config` prints the settings file in use and every folder. The current folder's `hadesx.ini` and the `HADESX_CONFIG` variable take priority over `~/.config/hadesx/config.ini`. |
+| `settings file ...: unknown setting` | A misspelt name or value in the settings file; the message names it. `hadesx --init` shows the valid ones (it will not overwrite your file). |
+| `... was already added ... nothing done` | That recording is already in the folder. `--force` adds it again (nothing is duplicated). |
+| The voice WAV did not change after a new pass | The WAV is built from the best pass only; the new pass has no more frames than the best earlier one. See [voice.md](voice.md) (`--list-passes`, `--combine`). |

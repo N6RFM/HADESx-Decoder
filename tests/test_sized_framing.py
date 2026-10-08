@@ -1,3 +1,6 @@
+# HADESx Decoder  -  https://github.com/N6RFM/HADESx-Decoder
+# Authors: N6RFM, with Claude (an AI assistant made by Anthropic).
+# Licence: MIT (see LICENSE).
 """HADES-SA / HADES-L style frames (length byte after the sync word), 800 and 200 baud, automatic baud detection.
 
 The frame contents are AMSAT-EA's own HADES-SA sample frames (tests/data/hades_sa_sample_frames.json), so the

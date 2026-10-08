@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+# HADESx Decoder  -  https://github.com/N6RFM/HADESx-Decoder
+# Authors: N6RFM, with Claude (an AI assistant made by Anthropic).
+# Licence: MIT (see LICENSE).
+# Runs AMSAT-EA's decoder DLLs (not redistributed) only as external references (NOTICE.md, section 8).
 """Compare src/hadesx/genesis.py with a decoder DLL on random frames (needs your own copy of the DLL; see dll_oracle.py).
 
     python3 tools/compare_with_dll.py --dll hadesl.dll --source 5 --types 1,2,3,7,14,15 -n 50

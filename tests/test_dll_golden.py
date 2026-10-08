@@ -1,3 +1,7 @@
+# HADESx Decoder  -  https://github.com/N6RFM/HADESx-Decoder
+# Authors: N6RFM, with Claude (an AI assistant made by Anthropic).
+# Licence: MIT (see LICENSE).
+# Reference output of AMSAT-EA's decoder DLLs, which are not redistributed (NOTICE.md, section 8).
 """genesis.py against the files AMSAT-EA's own decoder DLLs write (one package per satellite: hadessa.dll for HADES-SA,
 hadesl.dll for HADES-L). The golden files were made by tools/make_dll_golden.py running each DLL's `procesar` routine."""
 import json
