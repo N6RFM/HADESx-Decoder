@@ -46,15 +46,17 @@ def run(capsys, folder, *args):
 
 
 def test_summary_counts_per_satellite_and_type(folder, capsys):
-    rc, out, err = run(capsys, folder, '--summary')
+    rc, out, err = run(capsys, folder, '--summary', '--no-voice')
     assert rc == 0
     rows = [l.split() for l in out.splitlines() if l and l[0].isupper() and l.split()[0] != 'satellite']
     assert {(r[0], r[1]) for r in rows} == {('HADES-L', '1'), ('HADES-L', '2'), ('UNNE-1B', '1'), ('UNNE-1B', '3'), ('HADES-SA', '1')}
-    assert '5 packets, 2026-10-05 00:01:03 to 2026-10-05 00:01:38 UTC' in out                 # voice not counted
+    assert '5 packets, 2026-10-05 00:01:03 to 2026-10-05 00:01:38 UTC' in out                 # voice left out with --no-voice
+    _, out, _ = run(capsys, folder, '--summary')                                               # voice is counted by default
+    assert '6 packets' in out and 'HADES-SA  11' in out
 
 
 def test_packets_are_printed_oldest_first_across_satellites(folder, capsys):
-    rc, out, err = run(capsys, folder)
+    rc, out, err = run(capsys, folder, '--no-voice')
     heads = [l for l in out.splitlines() if l.startswith('========')]
     assert [h.split('|')[1].strip() for h in heads] == ['UNNE-1B', 'HADES-L', 'HADES-L', 'UNNE-1B', 'HADES-SA']
     assert [h.split()[1] + ' ' + h.split()[2] for h in heads] == ['2026-10-05 00:01:03', '2026-10-05 00:01:08', '2026-10-05 00:01:18',
@@ -70,15 +72,17 @@ def test_filters(folder, capsys):
     assert out.count('\n') == 1 and 'UNNE-1B' in out and 'Status' in out
     _, out, _ = run(capsys, folder, '--since', '2026-10-05T00:01:10', '--until', '2026-10-05T00:01:30', '--brief')
     assert [l.split()[1] for l in out.splitlines()] == ['00:01:18', '00:01:28']
-    _, out, _ = run(capsys, folder, '--sat', '12,3', '--brief')                                 # source addresses work too
+    _, out, _ = run(capsys, folder, '--sat', '12,3', '--brief', '--no-voice')                                 # source addresses work too
     assert [l.split()[2] for l in out.splitlines()] == ['UNNE-1B', 'UNNE-1B', 'HADES-SA']
 
 
-def test_voice_is_hidden_unless_asked_for(folder, capsys):
+def test_voice_is_included_unless_left_out(folder, capsys):
     _, out, _ = run(capsys, folder, '--brief', '--sat', 'HADES-SA')
-    assert out.count('\n') == 1
-    _, out, _ = run(capsys, folder, '--brief', '--sat', 'HADES-SA', '--voice')
-    assert out.count('\n') == 2 and 'CODEC2' in out
+    assert out.count('\n') == 2 and 'CODEC2' in out                                            # included by default
+    _, out, _ = run(capsys, folder, '--brief', '--sat', 'HADES-SA', '--no-voice')
+    assert out.count('\n') == 1 and 'CODEC2' not in out
+    _, out, _ = run(capsys, folder, '--brief', '--sat', 'HADES-SA', '--voice')                  # the old switch still works
+    assert out.count('\n') == 2
 
 
 def test_unne_1b_through_the_dll_uses_the_saved_data_and_the_packet_time(folder, capsys, monkeypatch):

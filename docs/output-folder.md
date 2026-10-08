@@ -140,7 +140,7 @@ hadesx-report ~/hadesx-output --summary            # a results folder of `hadesx
 | `--type N,N` | only these packet types |
 | `--since T`, `--until T` | UTC, e.g. `2026-10-05T01:00` |
 | `--dll hadesr.dll` | UNNE-1B packets with all their fields (below) |
-| `--voice`, `--images` | include CODEC2 voice and SSDV image packets (left out by default: `hadesx-voice` makes the audio) |
+| `--no-voice`, `--no-images` | leave out the CODEC2 voice packets / the SSDV image packets (both are included by default; `hadesx-voice` makes the audio, `hadesx-ssdv` the pictures). `--voice` and `--images` are still accepted and do nothing new |
 
 **UNNE-1B fields.** HADES-SA and HADES-L packets are decoded by this project and their text is printed as it is. UNNE-1B packets are
 stored as bytes (there is no native UNNE-1B field decoder yet), so without a DLL you see the type, the satellite clock and the raw data.

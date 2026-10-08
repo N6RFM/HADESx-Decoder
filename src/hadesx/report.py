@@ -15,7 +15,8 @@ text is printed as it is. UNNE-1B packets are stored as bytes (the decoder has n
 hadesr.dll` (AMSAT-EA's decoder from the UNNE-1B package; needs `pip install unicorn pefile`) they are rendered here with all their
 fields from the saved data, with no need to decode the recordings again.
 
-Voice (CODEC2) and image (SSDV) packets are left out unless asked for (`--voice`, `--images`): see hadesx-voice for the audio.
+Voice (CODEC2) and image (SSDV) packets are included; `--no-voice` and `--no-images` leave them out (see hadesx-voice for the audio, hadesx-ssdv
+for the pictures).
 """
 import argparse
 import collections
@@ -154,8 +155,10 @@ def report_main(argv=None):
     ap.add_argument('--summary', action='store_true', help='counts per satellite and type instead of the packets')
     ap.add_argument('--brief', action='store_true', help='one line per packet')
     ap.add_argument('--dll', help="AMSAT-EA's hadesr.dll: print UNNE-1B packets with all their fields (needs unicorn and pefile)")
-    ap.add_argument('--voice', action='store_true', help='include CODEC2 voice packets')
-    ap.add_argument('--images', action='store_true', help='include SSDV image packets')
+    ap.add_argument('--no-voice', action='store_true', help='leave out the CODEC2 voice packets (included by default)')
+    ap.add_argument('--no-images', action='store_true', help='leave out the SSDV image packets (included by default)')
+    ap.add_argument('--voice', action='store_true', help='include the voice packets (the default; kept for old command lines)')
+    ap.add_argument('--images', action='store_true', help='include the image packets (the default; kept for old command lines)')
     a = ap.parse_args(argv)
     if not os.path.isdir(a.folder):
         raise SystemExit('not a folder: %s' % a.folder)
@@ -182,7 +185,7 @@ def report_main(argv=None):
     t0, t1 = stamp(a.since), stamp(a.until)
     keep = []
     for r in recs:
-        if r.kind == 'voice' and not a.voice or r.kind == 'image' and not a.images:
+        if r.kind == 'voice' and a.no_voice and not a.voice or r.kind == 'image' and a.no_images and not a.images:
             continue
         if want_sat and r.src not in want_sat or want_type and r.ptype not in want_type:
             continue

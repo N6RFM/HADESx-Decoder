@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+* `hadesx-report` now includes the voice and image (SSDV) packets by default (counted in `--summary`); `--no-voice` and `--no-images` leave them out. `--voice` and `--images` are still accepted.
+
 * `hadesx-report` accepts the results folder of `hadesx` (it reads all the satellite sub-folders together); new "Reading the telemetry" section in docs/settings.md.
 
 * Every code file now starts with a credit block (authors N6RFM with Claude, licence, and the AMSAT-EA / SSDV work it builds on);
