@@ -10,6 +10,7 @@
 
     hadesx --init                            # write a commented settings file (output folder, sample rate, ...) and show where it is
     hadesx --show-config                     # show the settings in use
+    hadesx pass.wav --satnogs                # also send the frames to SatNOGS DB (docs/satnogs.md); --satnogs-dry-run only shows
 
 Results go to  <output folder>/unne-1b/, hades-sa/, hades-l/  (maria-g, hades-icm or other only if heard): every satellite
 has its own folder with the per-type files (see docs/output-folder.md), its voice WAV and its pictures.  Running the same
@@ -46,6 +47,9 @@ def build_parser():
     ap.add_argument('--swap-iq', action='store_true', help='exchange I and Q (if a recording decodes nothing)')
     ap.add_argument('--force', action='store_true', help='add a recording even if it was added before')
     ap.add_argument('-v', '--verbose', action='store_true', help='show every decoded frame and all details')
+    ap.add_argument('--recorder-time', help='what your recorder\'s clock shows: utc, local, or hours from UTC such as -5 (default: settings file)')
+    ap.add_argument('--satnogs', action='store_true', help='send the decoded frames to SatNOGS DB (settings: [satnogs], see docs/satnogs.md)')
+    ap.add_argument('--satnogs-dry-run', action='store_true', help='show what --satnogs would send, and send nothing')
     ap.add_argument('--init', action='store_true', help='write a commented settings file, say where it is, and stop')
     ap.add_argument('--show-config', action='store_true', help='show the settings in use, and stop')
     return ap
@@ -70,7 +74,11 @@ def _show_config(cfg):
     print('voice         : %s  (speed %g)' % ('yes' if cfg['voice'] else 'no', cfg['voice_speed']))
     print('pictures      : %s%s' % ('yes' if cfg['images'] else 'no', ('  ssdv program: ' + cfg['ssdv']) if cfg['ssdv'] else ''))
     print('hadesr.dll    : %s' % (cfg['dll'] or '(none)'))
-    print('times         : %s' % ('local' if cfg['local_time'] else 'UTC'))
+    print('times         : %s  (recorder clock: %s)' % ('local' if cfg['local_time'] else 'UTC', cfg['recorder_time']))
+    sn = cfg['satnogs']
+    print('SatNOGS       : %s  (callsign %s, position %s %s, frames: %s)' % (
+        'upload on' if sn['upload'] else 'off', sn['callsign'] or '-', sn['latitude'], sn['longitude'], sn['include']))
+    print('NORAD IDs     : %s' % (', '.join('%s %s' % kv for kv in sorted(cfg['norad'].items())) or '-'))
     for src, name in list(layout.SAT_NAMES.items()) + [(-1, 'other')]:
         print('  %-9s -> %s' % (name, layout.folder_for(cfg['output'], src, cfg['folders'])))
 
@@ -94,6 +102,8 @@ def main(argv=None):
         cfg['images'] = False
     if a.speed:
         cfg['voice_speed'] = a.speed
+    if a.recorder_time:
+        cfg['recorder_time'] = layout._recorder_time(a.recorder_time)
 
     if a.show_config:
         _show_config(cfg)
@@ -103,6 +113,11 @@ def main(argv=None):
 
     from . import cli
     root, status = cfg['output'], 0
+    uploader = None
+    if a.satnogs or a.satnogs_dry_run or cfg['satnogs']['upload']:
+        from . import satnogs
+        uploader = satnogs.from_settings(cfg, root, dry_run=a.satnogs_dry_run,
+                                         say=lambda t, f=sys.stdout: print(t, file=f))   # shown even while the decoder is quiet
     per_sat = {}                                  # satellite address -> frames added in this run
     for rec in a.recording:
         if not os.path.isfile(rec):
@@ -125,9 +140,9 @@ def main(argv=None):
             args.append('--force')
         print('== %s' % rec)
         if a.verbose:
-            code = cli.main(args, folders=cfg['folders'])
+            code = cli.main(args, folders=cfg['folders'], satnogs=uploader, recorder_time=cfg['recorder_time'])
         else:
-            code, _out, err, bad = _quiet_call(cli.main, args, folders=cfg['folders'])
+            code, _out, err, bad = _quiet_call(cli.main, args, folders=cfg['folders'], satnogs=uploader, recorder_time=cfg['recorder_time'])
             for line in err.splitlines():
                 if SHOW.match(line) and not line.startswith('file:'):
                     print('   ' + line.strip())
@@ -170,6 +185,10 @@ def main(argv=None):
             print('            ' + e)
     for src, n in sorted(per_sat.items()):
         print('  %s: %d frame(s) added in this run' % (layout.SAT_NAMES.get(src, 'other'), n))
+    if uploader is not None:
+        uploader.close()
+        for line in uploader.summary():
+            print(line)
     return status
 
 

@@ -39,5 +39,10 @@ hadesx-decode examples/iq/pass_t211s_type01.iq             # must print a CRC OK
 | `no frames decoded` on a raw file | Give the sample rate: `--fs HZ` (or `fs = ...` in the settings file), or `--fs guess`; try `--swap-iq`. A WAV file needs neither. |
 | Results are not where you expected | `hadesx --show-config` prints the settings file in use and every folder. The current folder's `hadesx.ini` and the `HADESX_CONFIG` variable take priority over `~/.config/hadesx/config.ini`. |
 | `settings file ...: unknown setting` | A misspelt name or value in the settings file; the message names it. `hadesx --init` shows the valid ones (it will not overwrite your file). |
+| `SatNOGS upload needs callsign ...` | Fill in `callsign`, `latitude` and `longitude` under `[satnogs]` in the settings file ([satnogs.md](satnogs.md)). |
+| `frame(s) not sent: no NORAD ID for ...` | Add the satellite's NORAD ID under `[norad]` (the number in its db.satnogs.org page address). |
+| `frame(s) not sent: the recording has no known start time` | Put the date and time in the file name (`..._20261001_120000.wav`) or give `--rec-start 2026-10-01T12:00:00Z`. |
+| The `timestamp=` in the dry run is off by whole hours | The recorder writes local time: set `recorder_time = local` (or `-5`) in the settings, or give `--rec-start` in UTC ([settings.md](settings.md#time-zone-of-the-recorder)). |
+| Nothing is sent for a recording added earlier | It is not decoded twice; run it again with `--force` ([satnogs.md](satnogs.md)). |
 | `... was already added ... nothing done` | That recording is already in the folder. `--force` adds it again (nothing is duplicated). |
 | The voice WAV did not change after a new pass | The WAV is built from the best pass only; the new pass has no more frames than the best earlier one. See [voice.md](voice.md) (`--list-passes`, `--combine`). |

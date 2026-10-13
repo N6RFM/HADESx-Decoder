@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+* **Upload to SatNOGS DB (optional).** `hadesx pass.wav --satnogs` sends the CRC-verified frames to db.satnogs.org in the SIDS format (callsign, station position and NORAD IDs come from new `[satnogs]` and `[norad]` sections of the settings file); `--satnogs-dry-run` shows exactly what would be sent and sends nothing. Each frame is sent once (a list is kept in the output folder), only when the recording's start time is known, and voice and picture frames only with `include = all`. See [docs/satnogs.md](docs/satnogs.md).
+* **`recorder_time` setting** (and `--recorder-time`): say whether your recording program writes UTC, local time or a fixed offset in its file names; the start is converted to UTC before anything is stored or uploaded.
+
 ## 1.3.0 - 2026-10-08
 
 HADESx Decoder 1.3.0 makes everyday use short: one command, `hadesx pass.wav`, decodes a recording and keeps **each satellite in its own folder** with its telemetry, its voice WAV and its pictures, and a small settings file remembers where the results go. An install script makes the commands work from any folder. Update from 1.2.0 with `git pull`; nothing is lost.

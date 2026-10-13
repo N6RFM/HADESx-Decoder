@@ -33,9 +33,12 @@ DEFAULTS = {
     'images': 'yes',              # assemble the SSDV pictures (HADES-SA) into JPEG files (needs the ssdv program)
     'ssdv': '',                   # full path of the ssdv program if it is not on the PATH
     'dll': '',                    # full path of AMSAT-EA's hadesr.dll (labelled UNNE-1B fields); empty = none
+    'recorder_time': 'utc',       # what your recorder's clock shows in file names: utc, local, or hours from UTC (-5)
     'local_time': 'no',           # label times as local instead of UTC
     'history': 'yes',             # keep one .tlm file per reception
 }
+SATNOGS_KEYS = ('upload', 'callsign', 'latitude', 'longitude', 'include', 'url')
+NORAD_DEFAULTS = {'HADES-SA': 68446}      # the only one of the family confirmed in SatNOGS DB; add the others in [norad]
 
 TEMPLATE = """\
 # HADESx Decoder settings.  Lines starting with # are comments.  Delete a line to use its default.
@@ -63,6 +66,11 @@ ssdv =
 # Full path of AMSAT-EA's hadesr.dll (gives labelled UNNE-1B fields; optional, you supply it).
 dll =
 
+# What the clock of your recording program shows in its file names / headers: utc, local (this computer's time zone,
+# daylight saving included), or a number of hours from UTC (-5 = US Central daylight time, -6 = standard time).
+# Everything stored and sent to SatNOGS is converted to UTC.  Use utc if you are not sure the recorder writes local time.
+recorder_time = utc
+
 # yes = label times as local time instead of UTC.
 local_time = no
 
@@ -74,6 +82,25 @@ history = yes
 # A relative path is taken inside the output folder above.  Examples:
 # HADES-SA = ~/Pictures/hades-sa
 # UNNE-1B = unne
+
+[satnogs]
+# Sending frames to SatNOGS DB (db.satnogs.org).  Off unless you set upload = yes or run: hadesx pass.wav --satnogs
+# (hadesx pass.wav --satnogs-dry-run shows what would be sent).  See docs/satnogs.md.
+upload = no
+# Your callsign (or station name): sent as the "source" of every frame.
+callsign =
+# Where your station is, in decimal degrees (north and east positive), for example 49.73145 and 8.95564.
+latitude =
+longitude =
+# telemetry = the telemetry frames only;  all = also voice and picture (SSDV) frames.
+include = telemetry
+# url = https://db.satnogs.org/api/telemetry/
+
+[norad]
+# NORAD ID of each satellite, from its page at db.satnogs.org.  A satellite without one is not uploaded.
+HADES-SA = 68446
+# UNNE-1B =
+# HADES-L =
 """
 
 
@@ -111,6 +138,21 @@ def _yes(text, name):
     raise SystemExit('settings: %s must be yes or no, not "%s"' % (name, text))
 
 
+def _recorder_time(text):
+    t = str(text).strip().lower()
+    if t in ('', 'utc', 'z'):
+        return 'utc'
+    if t == 'local':
+        return 'local'
+    try:
+        h = float(t)
+    except ValueError:
+        raise SystemExit('settings: recorder_time must be utc, local or a number of hours such as -5, not "%s"' % text)
+    if not -14 <= h <= 14:
+        raise SystemExit('settings: recorder_time must be between -14 and 14 hours, not "%s"' % text)
+    return h
+
+
 def load(path=None):
     """Settings as a dict with every key of DEFAULTS filled in (paths expanded, yes/no as bool) plus 'folders'
     ({satellite name: folder}) and 'path' (the file used, or None)."""
@@ -135,7 +177,33 @@ def load(path=None):
                     raise SystemExit('settings file %s: [folders] "%s" is not a satellite name' % (p, k))
                 if v.strip():
                     folders[k.strip().upper()] = v.strip()
+    sn = {'upload': 'no', 'callsign': '', 'latitude': '', 'longitude': '', 'include': 'telemetry', 'url': ''}
+    norad = dict(NORAD_DEFAULTS)
+    if p and cp.has_section('satnogs'):
+        for k, v in cp.items('satnogs'):
+            if k not in SATNOGS_KEYS:
+                raise SystemExit('settings file %s: unknown [satnogs] setting "%s" (known: %s)' % (p, k, ', '.join(SATNOGS_KEYS)))
+            sn[k] = v.strip()
+    if p and cp.has_section('norad'):
+        for k, v in cp.items('norad'):
+            if k.strip().upper() not in {n.upper() for n in SAT_NAMES.values()}:
+                raise SystemExit('settings file %s: [norad] "%s" is not a satellite name' % (p, k))
+            if v.strip():
+                try:
+                    norad[k.strip().upper()] = int(v.strip())
+                except ValueError:
+                    raise SystemExit('settings: the NORAD ID of %s must be a whole number, not "%s"' % (k, v))
+    for k in ('latitude', 'longitude'):
+        try:
+            sn[k] = float(sn[k]) if sn[k] else None
+        except ValueError:
+            raise SystemExit('settings: [satnogs] %s must be a number in decimal degrees, not "%s"' % (k, sn[k]))
+    sn['upload'] = _yes(sn['upload'], 'upload')
+    if sn['include'] not in ('telemetry', 'all'):
+        raise SystemExit('settings: [satnogs] include must be telemetry or all, not "%s"' % sn['include'])
     out = {
+        'satnogs': sn,
+        'norad': norad,
         'path': p,
         'output': os.path.expanduser(raw['output']) or os.path.expanduser(DEFAULTS['output']),
         'fs': raw['fs'] or None,
@@ -144,6 +212,7 @@ def load(path=None):
         'ssdv': os.path.expanduser(raw['ssdv']) or None,
         'dll': os.path.expanduser(raw['dll']) or None,
         'local_time': _yes(raw['local_time'], 'local_time'),
+        'recorder_time': _recorder_time(raw['recorder_time']),
         'history': _yes(raw['history'], 'history'),
         'folders': folders,
     }

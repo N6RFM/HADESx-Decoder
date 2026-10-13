@@ -106,6 +106,18 @@ def meta_from_name(name):
 _MONTHS = {m: i for i, m in enumerate(('jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'), 1)}
 
 
+def recorder_to_utc(epoch, mode='utc'):
+    """A recording start time, read as if it were UTC, corrected to real UTC.  mode says what the recorder's clock showed:
+    'utc' (nothing to do), 'local' (this computer's time zone, daylight saving included) or a number of hours the recorder's
+    clock is ahead of UTC (-5 for US Central daylight time, -6 for standard time)."""
+    if epoch is None or mode in (None, 'utc'):
+        return epoch
+    naive = datetime.datetime.fromtimestamp(epoch, datetime.timezone.utc).replace(tzinfo=None)
+    if mode == 'local':
+        return naive.astimezone().timestamp()                    # a naive time is read in the computer's time zone
+    return epoch - float(mode) * 3600.0
+
+
 def start_from_name(name):
     """Recording start time (epoch seconds) written into a file name, or None. The time zone is not in the name: it is taken as
     UTC, which is what these programs write by default (check your recorder's setting; `--rec-start` overrides).

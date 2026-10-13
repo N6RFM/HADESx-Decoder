@@ -220,6 +220,7 @@ keep the receiver simple. UNNE-1B's bursts were 30 to 40 dB above the noise in t
 | [GNU Radio](docs/gnuradio.md) | the flowgraph, variables, live SDR use |
 | [DLL emulation](docs/dll-emulation.md) | using `hadesr.dll` without Wine; which DLL is for what |
 | [Settings and folders](docs/settings.md) | the short `hadesx` command, the settings file, one folder per satellite |
+| [SatNOGS upload](docs/satnogs.md) | send your decoded frames to SatNOGS DB (optional, off by default) |
 | [Example pass](docs/example-pass.md) | the full UNNE-1B recording, burst by burst |
 | [Reverse-engineering notes](docs/reverse-engineering-notes.md) | what was tried, what worked, what didn't |
 | [Troubleshooting](docs/troubleshooting.md) | common problems |

@@ -14,7 +14,7 @@ import numpy as np
 
 from .core import (DllDecoder, FskCentreTracker, MultiBaudDeframer, format_frame, parse_bauds)
 from .frontend import FrontEnd
-from .iqfile import IQFile, IQFormatError
+from .iqfile import IQFile, IQFormatError, recorder_to_utc
 
 
 def _read_iq(path, fmt):
@@ -87,8 +87,10 @@ def build_parser():
     return ap
 
 
-def main(argv=None, folders=None):
-    """folders: {satellite name: folder} overrides for --outroot (from the settings file)."""
+def main(argv=None, folders=None, satnogs=None, recorder_time='utc'):
+    """folders: {satellite name: folder} overrides for --outroot (from the settings file).
+    recorder_time: what the clock of the recorder showed when it named the file or wrote the header: 'utc', 'local' or hours from UTC.
+    satnogs: a hadesx.satnogs.Uploader; every valid frame is offered to it (needs a known recording start time)."""
     from scipy import signal
     a = build_parser().parse_args(argv)
     if a.outdir and a.outroot:
@@ -134,7 +136,7 @@ def main(argv=None, folders=None):
             except ValueError as e:                  # a DLL of another package: say so and carry on without it
                 print('WARNING: %s Continuing without it.' % e, file=sys.stderr)
 
-    writer, rec_start, ingest_key = None, None, None
+    writer, rec_start, ingest_key, start_known = None, None, None, True
     if out_dir:
         from .genesis import FolderWriter
         if a.rec_start:
@@ -143,15 +145,16 @@ def main(argv=None, folders=None):
                 rec_start = rec_start.replace(tzinfo=datetime.timezone.utc)
             rec_start = rec_start.timestamp()
         else:
-            rec_start = guess_rec_start(a.iq)
+            rec_start = recorder_to_utc(guess_rec_start(a.iq), recorder_time)
             if rec_start is None and src.start is not None:
-                rec_start = src.start
+                rec_start = recorder_to_utc(src.start, recorder_time)
                 print('NOTE: recording start time taken from the WAV header (as the recorder wrote it).', file=sys.stderr)
             elif rec_start is not None:
-                print('NOTE: recording start time read from the file name; its time zone is not in the name and is taken as UTC '
-                      '(--rec-start overrides).', file=sys.stderr)
+                print('NOTE: recording start time read from the file name; its time zone is not in the name and is taken as %s '
+                      '(--rec-start overrides).' % ('UTC' if recorder_time == 'utc' else 'recorder time = %s' % recorder_time), file=sys.stderr)
         if rec_start is None:
             rec_start = time.time()
+            start_known = False
             print('NOTE: no recording start time (--rec-start, or a date in the file name): frames in %s are stamped '
                   'with the current time, like the Windows tool does.' % out_dir, file=sys.stderr)
         else:
@@ -178,7 +181,7 @@ def main(argv=None, folders=None):
     fe = FrontEnd(fs, bauds=bauds, center=a.center, min_db=a.min_db, max_flips=a.flips, emit_unverified=a.emit_unverified)
     state = {'nf': 0}
     voice = {}                                  # {source address: VoiceSet}: voice is kept per satellite
-    rec_t0 = guess_rec_start(a.iq) or src.start
+    rec_t0 = recorder_to_utc(guess_rec_start(a.iq) or src.start, recorder_time)
 
     def handle(frames):
         # approximate time of the frame in the recording (seconds, +-1 s: frames are found
@@ -194,6 +197,8 @@ def main(argv=None, folders=None):
                     f.write(json.dumps(fr) + '\n')
             if writer is not None:
                 writer.write(fr, rec_start + fr['t'])
+            if satnogs is not None:
+                satnogs.offer(fr, rec_start + fr['t'] if writer is not None and start_known else None)
             if fr.get('voice'):
                 from .voice import VoiceSet, c2_frame_from_payload
                 vs = voice.setdefault(fr['src'], VoiceSet(fr['src'], os.path.basename(a.iq)))

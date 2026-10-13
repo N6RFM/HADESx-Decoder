@@ -88,16 +88,34 @@ images = yes
 voice_speed = 1.0           # 1.15 = 15 percent faster, same pitch
 ssdv =                      # full path of the ssdv program, if it is not on the PATH
 dll =                       # full path of AMSAT-EA's hadesr.dll (labelled UNNE-1B fields; optional)
+recorder_time = utc         # what your recorder's clock shows in file names: utc, local, or hours from UTC (-5). See below
 local_time = no             # yes = label times as local time instead of UTC
 history = yes               # keep one .tlm file per reception
 
 [folders]
 # HADES-SA = ~/Pictures/hades-sa     # put one satellite somewhere else; a relative path is inside "output"
+
+[satnogs]                   # sending frames to SatNOGS DB, off by default: see satnogs.md
+upload = no
+callsign =
+latitude =
+longitude =
+
+[norad]
+HADES-SA = 68446
 ```
 
 Which file is used, first match wins: `--config FILE`; the environment variable `HADESX_CONFIG`; `hadesx.ini` in the current
 folder (handy for one project); the user file above. Command line switches always win over the file. A mistake in the file (for
 example `voice = maybe`) stops the run with a message that names the line, before anything is decoded.
+
+## Time zone of the recorder
+
+The decoder gets the start of a recording from its file name or WAV header, which carry no time zone. By default the time is read as UTC.
+If your recording program writes **local** time, set `recorder_time = local` (this computer's time zone, with daylight saving) or a fixed
+number of hours from UTC, for example `recorder_time = -5` for US Central daylight time and `-6` for standard time. `hadesx` converts the
+start to UTC before it stores or sends anything, so the stored times and the SatNOGS timestamps are always UTC. `--rec-start` is always
+taken as given (write it with a `Z` or `+00:00`) and is never converted. `hadesx --show-config` prints the setting in use.
 
 ## The switches
 
@@ -112,6 +130,8 @@ example `voice = maybe`) stops the run with a message that names the line, befor
 | `--swap-iq` | exchange I and Q, if a recording decodes nothing |
 | `--force` | add a recording that was added before |
 | `-v`, `--verbose` | show every decoded frame and all details |
+| `--recorder-time utc\|local\|HOURS` | what your recorder's clock shows ([below](#time-zone-of-the-recorder)); overrides the setting |
+| `--satnogs`, `--satnogs-dry-run` | send the decoded frames to SatNOGS DB / show what would be sent ([satnogs.md](satnogs.md)) |
 | `--init`, `--show-config` | write the settings file / show the settings in use |
 
 Everything else (baud rates, detection threshold, JSON log, a single folder for all satellites) is in `hadesx-decode`, which
