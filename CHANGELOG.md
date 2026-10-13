@@ -3,6 +3,7 @@
 ## Unreleased
 
 * SatNOGS upload: the PN9 link-test packets (type 13, random data without a CRC) are no longer sent with `include = telemetry`; only frames with a verified CRC are.
+* Documentation: the SatNOGS page now lists the temporary NORAD IDs of UNNE-1B (98205) and HADES-L (98206) and what is sent, `.hadesx_satnogs.json` is described in the output-folder and settings pages, the time-zone notes point to `recorder_time`, and README, Windows page and `NOTICE.md` mention the upload.
 
 ## 1.4.0 - 2026-10-13
 

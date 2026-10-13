@@ -99,8 +99,9 @@ include = telemetry
 [norad]
 # NORAD ID of each satellite, from its page at db.satnogs.org.  A satellite without one is not uploaded.
 HADES-SA = 68446
-# UNNE-1B =
-# HADES-L =
+# These two are temporary IDs in SatNOGS DB (October 2026); check db.satnogs.org/satellite/98205 and /98206 now and then.
+# UNNE-1B = 98205
+# HADES-L = 98206
 """
 
 

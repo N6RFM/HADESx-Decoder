@@ -46,6 +46,7 @@ Details, frame layouts and what is still open: [Supported satellites](docs/satel
   `hades-l`) inside one output folder, makes the **voice WAV** and the **pictures** there, and remembers your defaults (output folder, sample
   rate for raw files, voice speed ...) in a small settings file: [docs/settings.md](docs/settings.md). `tools/install.sh` installs it so that it works
   from any folder.
+* **Upload to SatNOGS DB (optional, off by default):** `hadesx pass.wav --satnogs` sends the CRC-verified telemetry frames to db.satnogs.org with your callsign, position and the right NORAD ID; `--satnogs-dry-run` shows what would be sent. Frames go once, in UTC, and a `recorder_time` setting handles recorders that write local time: [docs/satnogs.md](docs/satnogs.md).
 * **Any recording:** raw IQ (complex float32, int16, uint8) or WAV (8 to 32-bit, any rate from 48 kHz, the rate read from the header), with the
   signal anywhere in the recorded band.
 * **Finds and tracks the signal** automatically: no tuning control, the Doppler drift is followed (in the UNNE-1B example pass the centre moved
@@ -60,7 +61,7 @@ Details, frame layouts and what is still open: [Supported satellites](docs/satel
 * **`hadesx-ssdv`** puts the image (SSDV) packets of such a folder together into pictures, the way AMSAT-EA's `run_ssdv.bat` does: it merges the packets of an image, repairs damaged ones with the Reed-Solomon code and runs Philip Heron's `ssdv` program for the JPEG (build it once: [docs/installing.md](docs/installing.md#extras-you-may-need)). `hadesx` calls it for you.
 * **Tools** to look at a recording before decoding it (what is in it, why it does not decode) and to cut a small excerpt: [tools/README.md](tools/README.md).
 * **GNU Radio Companion flowgraph** with live plots, using the very same decoder code.
-* **Tested:** about 470 automated tests, including comparisons with the output of AMSAT-EA's own decoders (the DLLs of the HADES-SA and
+* **Tested:** about 490 automated tests, including comparisons with the output of AMSAT-EA's own decoders (the DLLs of the HADES-SA and
   HADES-L packages and their open-source reference program) and synthetic signals of every packet type anywhere in the band.
 
 ## Quick start

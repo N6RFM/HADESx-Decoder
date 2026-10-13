@@ -32,6 +32,7 @@ For satellite `NN` (the source address: `03` HADES-SA, `12` UNNE-1B) and packet 
 | `sat_NN_type_15.tlm` | BBS contents (callsign, message, CODEC2 frames); on HADES-L (`sat_05`) the ICM message | |
 | `sat_05_type_07_lofith_frame_FFF.tlm` / `.dat` | HADES-L Lofith experiment: one file set per frame number `FFF` (`.dat`: one line per reception) | |
 | `.hadesx_ingested.json` | which recordings were already added (see below) | |
+| `.hadesx_satnogs.json` | which frames `hadesx --satnogs` already sent to SatNOGS DB, so none goes twice ([satnogs.md](satnogs.md)) | |
 
 The file names, the text, the `.dat` columns and the `.bin` layouts are those of AMSAT-EA's tool.
 

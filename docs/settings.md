@@ -22,6 +22,7 @@ IQ files are. Without the install (route B): `PYTHONPATH=src python3 -m hadesx.e
     hades-sa/                 <- HADES-SA: telemetry, voice, SSDV packets and hades_sa_image_NNN.jpg
     hades-l/                  <- HADES-L
     .hadesx_ingested.json     <- which recordings were already added
+    .hadesx_satnogs.json      <- which frames were already sent to SatNOGS DB (only if you use --satnogs, see satnogs.md)
 ```
 
 A folder is only created when that satellite is heard (`maria-g`, `hades-icm` and `other` appear only if those frames are received). The
@@ -103,6 +104,8 @@ longitude =
 
 [norad]
 HADES-SA = 68446
+UNNE-1B = 98205             # temporary SatNOGS IDs, see satnogs.md
+HADES-L = 98206
 ```
 
 Which file is used, first match wins: `--config FILE`; the environment variable `HADESX_CONFIG`; `hadesx.ini` in the current

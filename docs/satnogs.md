@@ -17,13 +17,15 @@ include = telemetry         # telemetry = telemetry frames only; all = also voic
 
 [norad]
 HADES-SA = 68446
-# UNNE-1B =                 # fill in from the satellite's page at db.satnogs.org
-# HADES-L =
+UNNE-1B = 98205             # temporary ID, see below
+HADES-L = 98206             # temporary ID, see below
 ```
 
 The NORAD ID is the number in the address of the satellite's page, `db.satnogs.org/satellite/<NORAD ID>`. HADES-SA (SpinnyONE) is **68446**
-and is filled in for you. The IDs of the other satellites were not confirmed when this feature was written, so they are left for you to
-fill in: **a satellite without a NORAD ID is not uploaded**, and `hadesx` says so.
+and is filled in for you. For the other two, SatNOGS DB lists **temporary** IDs (October 2026): UNNE-1B (HADES-E2) **98205** and HADES-L **98206**.
+They are not built in, because SatNOGS replaces a temporary ID when an official catalogue number is assigned: copy them into `[norad]` as above and
+check the two pages (`db.satnogs.org/satellite/98205`, `db.satnogs.org/satellite/98206`) now and then. **A satellite without a NORAD ID is not
+uploaded**, and `hadesx` says so. MARIA-G and HADES-ICM are not in the list, so their frames are never sent unless you add an ID for them.
 
 ## Use it
 

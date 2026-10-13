@@ -189,3 +189,10 @@ satellite images (<https://github.com/fsphil/ssdv>, GPL-3.0).
   (<https://www.ne.jp/asahi/hamradio/je9pel/hadesasd.htm>) were consulted for how others receive these pictures. Thank you to both.
 * Finding by N6RFM with Claude (5 October 2026 recording): the SSDV packets are **not scrambled** on air, and the bit clock of the
   demodulator needed a fix for such unscrambled data (see `docs/satellites.md`).
+
+## 11. SatNOGS DB upload
+
+* `src/hadesx/satnogs.py` sends frames in the **SIDS submission format** that SatNOGS DB (<https://db.satnogs.org>, run by Libre Space Foundation)
+  accepts at `/api/telemetry/`, as described in the libre.space community forum and the SIDS documentation. No SatNOGS code is included. The
+  upload is **off unless you turn it on**; what you send (callsign, station position, frames, times) becomes public in SatNOGS DB under its own
+  terms, so check them before you upload. The NORAD IDs in the documentation are those listed in SatNOGS DB in October 2026 (two are temporary).

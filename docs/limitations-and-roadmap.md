@@ -28,7 +28,7 @@
 * **Weak bursts and burst starts:** the first packet of a burst, and long packets whose first part is damaged while the received power
   is still rising, fail their CRC (HADES-L extended power and ephemeris packets mostly); `--emit-unverified` shows them. Part of this was
   not the signal but the bit clock (see satellites.md, "Why long frames often fail"); the rest is still unexplained.
-* **Timing:** frame time stamps in the JSON log are accurate to about +-1 s. A file name has no time zone: UTC is assumed.
+* **Timing:** frame time stamps in the JSON log are accurate to about +-1 s. A file name has no time zone: UTC is assumed (for `hadesx`, `recorder_time` in the settings changes that; see [settings.md](settings.md#time-zone-of-the-recorder)).
 * **Tone spacing:** about 1.64 kHz is received; version 1.01 of the UNNE-1B document said 1125 Hz, which AMSAT-EA has
   confirmed was a mistake (October 2026). AMSAT-EA also confirmed that the HADES-SA and HADES-L documents are right: 1125 Hz at
   200 baud and 1600 Hz at 800 baud (the decoder accepts 1.0-2.4 kHz either way).

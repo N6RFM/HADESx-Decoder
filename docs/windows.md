@@ -61,7 +61,7 @@ py -m hadesx.easy "C:\recordings\pass1.wav"
 ```
 
 `--init` writes the settings file `%APPDATA%\hadesx\config.ini` (open it in Notepad; set `output = C:\Users\me\Desktop\Hadesx_Results`). Each satellite then gets
-its own folder inside it, with its telemetry, voice and pictures: [settings.md](settings.md).
+its own folder inside it, with its telemetry, voice and pictures: [settings.md](settings.md). Sending frames to SatNOGS DB works the same on Windows (`py -m hadesx.easy pass.wav --satnogs-dry-run`): [satnogs.md](satnogs.md).
 
 ## 5b. Keep the results of many passes in one folder (the detailed way)
 
