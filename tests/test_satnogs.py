@@ -62,6 +62,7 @@ def test_what_is_not_sent(tmp_path):
     assert u.offer(frame(crc_ok=False), 1.0) == 'unwanted'
     assert u.offer(frame(voice=True), 1.0) == 'unwanted'
     assert u.offer(frame(type=10), 1.0) == 'unwanted'
+    assert u.offer(frame(type=13, crc_ok=None), 1.0) == 'unwanted'          # the PN9 link test has no CRC
     assert u.offer(frame(src=5), 1.0) == 'no norad' and u.no_norad == {'HADES-L': 1}
     assert u.offer(frame(), None) == 'no time'
     assert not n

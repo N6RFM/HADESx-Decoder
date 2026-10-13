@@ -94,8 +94,8 @@ class Uploader(object):
         if fr.get('crc_ok') is False or not fr.get('plain'):
             return False
         if self.include == 'all':
-            return True
-        return not fr.get('voice') and fr.get('type') != SSDV_TYPE
+            return True                                   # also voice, pictures and the PN9 link test (these have no CRC)
+        return fr.get('crc_ok') is True and not fr.get('voice') and fr.get('type') != SSDV_TYPE
 
     def fields(self, fr, when, norad):
         return {'noradID': norad, 'source': self.callsign, 'timestamp': fmt_time(when), 'frame': fr['plain'],

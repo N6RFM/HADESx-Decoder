@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+* SatNOGS upload: the PN9 link-test packets (type 13, random data without a CRC) are no longer sent with `include = telemetry`; only frames with a verified CRC are.
+
 ## 1.4.0 - 2026-10-13
 
 HADESx Decoder 1.4.0 adds an optional **upload of your decoded frames to SatNOGS DB** (db.satnogs.org), and a setting that makes sure the times are UTC whatever clock your recording program uses. Nothing is sent unless you turn it on. Update from 1.3.0 with `git pull`; nothing is lost.

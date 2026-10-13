@@ -39,7 +39,10 @@ Try the dry run first. The summary at the end says how many frames were sent, ho
 * One request per frame to `https://db.satnogs.org/api/telemetry/`, in the SIDS format that SatNOGS DB accepts: `noradID`, `source` (your
   callsign), `timestamp` (UTC, to the millisecond), `frame` (the decoded frame as hex bytes, the same bytes that are in the `.dat` files),
   `locator=longLat`, `longitude`, `latitude`, and `version` (`hadesx-` and the program version). Nothing else leaves your computer.
-* **Only frames whose CRC checked out.** Frames shown with `--emit-unverified` are never sent.
+* **Only frames whose CRC checked out.** Frames shown with `--emit-unverified` are never sent, and neither are packet types without a CRC.
+* **Every telemetry type is sent**, each frame on its own: power (type 1), temperatures (2), status (3), power ranges (4), temperature ranges (5),
+  antenna (8), extended power (9), ephemeris (12), time series (14) and BBS (15), and types 6 and 7 if a satellite ever sends them with a valid CRC.
+  Left out unless `include = all`: voice (11), pictures / SSDV (10) and the PN9 link test (13, random test data without a CRC).
 * **Each frame once.** The output folder keeps a list of what was sent (`.hadesx_satnogs.json`); running a recording again sends nothing twice.
 * **Only when the time is known.** The timestamp is the start of the recording plus the position of the frame in it, so the recording needs a
   start time: a date and time in the file name (SDR# and SDR Console write one), or the WAV header, or `--rec-start`. Otherwise nothing is
