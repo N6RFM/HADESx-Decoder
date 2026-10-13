@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 1.4.0 - 2026-10-13
+
+HADESx Decoder 1.4.0 adds an optional **upload of your decoded frames to SatNOGS DB** (db.satnogs.org), and a setting that makes sure the times are UTC whatever clock your recording program uses. Nothing is sent unless you turn it on. Update from 1.3.0 with `git pull`; nothing is lost.
+
 * **Upload to SatNOGS DB (optional).** `hadesx pass.wav --satnogs` sends the CRC-verified frames to db.satnogs.org in the SIDS format (callsign, station position and NORAD IDs come from new `[satnogs]` and `[norad]` sections of the settings file); `--satnogs-dry-run` shows exactly what would be sent and sends nothing. Each frame is sent once (a list is kept in the output folder), only when the recording's start time is known, and voice and picture frames only with `include = all`. See [docs/satnogs.md](docs/satnogs.md).
 * **`recorder_time` setting** (and `--recorder-time`): say whether your recording program writes UTC, local time or a fixed offset in its file names; the start is converted to UTC before anything is stored or uploaded.
 
