@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+* Documentation: the SatNOGS upload was tested against the live site (two HADES-SA frames, shown under "Most Recent Observers" with the right UTC time); the SatNOGS page says how the upload looks there.
+
+
 ## 1.5.0 - 2026-10-13
 
 HADESx Decoder 1.5.0 makes the SatNOGS DB upload ready for everyday use: it sends only frames whose CRC was verified (the PN9 link-test packets are no longer sent), the temporary NORAD IDs of UNNE-1B and HADES-L are documented, and the documentation is brought up to date. Update from 1.4.0 with `git pull`; nothing is lost.

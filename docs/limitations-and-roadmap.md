@@ -2,7 +2,7 @@
 
 ## Known limitations
 
-* **SatNOGS upload** ([satnogs.md](satnogs.md)) follows the documented SIDS format but was written without a live test against db.satnogs.org: try `--satnogs-dry-run` first and report what the server answers. Only HADES-SA's NORAD ID (68446) is built in.
+* **SatNOGS upload** ([satnogs.md](satnogs.md)) was tested against the live site on 13 October 2026 with two HADES-SA frames (UNNE-1B and HADES-L go up under SatNOGS's temporary NORAD IDs, which may change). Only HADES-SA's ID is built in; the other two go in `[norad]`. Try `--satnogs-dry-run` first.
 
 * **What has been received on real signals.** UNNE-1B: packet types 1, 2, 3, 4, 5, 6, 10, 12, 14 and 15 (voice); types 8 and 9 have
   never been received. HADES-SA: status, power ranges, BBS, voice, the PN9 link test and image packets (whose CRC-32 does not verify).

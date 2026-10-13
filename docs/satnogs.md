@@ -64,6 +64,10 @@ that were never sent are sent.
 
 * The upload carries the decoded frame as AMSAT-EA's software stores it, with its CRC. SatNOGS DB keeps what it is given; whether it shows
   labelled fields for a satellite depends on a decoder being defined for that satellite there. HADES-SA has none listed at the moment.
+* **How it looks on the site.** After an upload your callsign and station locator (for example `N6RFM-FN41iq`, worked out from your latitude and
+  longitude) appear under "Most Recent Observers" on the satellite's page at db.satnogs.org, with the time of the newest frame you sent. That is
+  the check that the time came out right. The frames are not drawn in the "Data Frames Decoded" graph while the satellite has no decoder.
+  This was checked with real uploads for HADES-SA on 13 October 2026.
 * Be sure of the callsign and position: they are published with the frames.
 * A status such as 400 in the summary means the server refused the frames; check the NORAD ID and the settings.
 
