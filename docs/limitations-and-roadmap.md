@@ -21,7 +21,7 @@
 * **SSDV image packets** (HADES-SA) are decoded: a standard 256-byte SSDV packet, sent **without the scrambler** (confirmed on a real
   pass, 5 October 2026), checked by its own CRC-32, repaired with its Reed-Solomon code (up to 16 bytes) and stored like AMSAT-EA's
   tool does; `hadesx-ssdv` assembles the JPEG (it needs the `ssdv` program). The first packet of a burst is usually lost while the
-  bit clock locks, so a single pass gives a picture with gaps (the missing packet numbers are listed).
+  bit clock locks, so a single pass gives a picture with gaps (`hadesx` and `hadesx-ssdv` list the missing packet numbers and estimate where in the picture they are; the position is good to a few percent).
 * **Tracker assumptions:** a two-tone signal 1.0-2.4 kHz apart, 1.2 s latency, the whole Doppler range inside the recorded band. The
   signal can be anywhere in the band and the sample rate anything from 48 kHz (tested to 2 MHz). Two satellites in one recording work when
   they transmit at different times; simultaneous overlapping bursts are untested.

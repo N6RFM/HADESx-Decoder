@@ -264,10 +264,10 @@ def satellite_folders(root, overrides=None):
 class MultiFolderWriter(object):
     """FolderWriter that sends each frame to the folder of its own satellite (created when the first frame arrives)."""
 
-    def __init__(self, root, overrides=None, utc=True, history=True, fallback=None):
+    def __init__(self, root, overrides=None, utc=True, history=True, fallback=None, source=None):
         self.root = root
         self.overrides = overrides or {}
-        self.kw = dict(utc=utc, history=history, fallback=fallback)
+        self.kw = dict(utc=utc, history=history, fallback=fallback, source=source)
         self.writers = {}
 
     def _writer(self, src):

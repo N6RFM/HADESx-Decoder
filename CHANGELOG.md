@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+* **Picture gaps and arrivals.** `hadesx` now prints, per picture, how many packets there are, how many are new in this run and which are missing. `hadesx-ssdv FOLDER` shows how complete each picture is, a packet map (`#` have it, `.` missing, `?` end not received yet) and where in the picture each gap is (percent and rows, estimated from the neighbouring packets). New in the folder: `ssdv_log.csv` records when each new picture packet arrived (added, received, image, packet, recording), and `hadesx-ssdv FOLDER --log` lists it, including packets stored before the log existed. See [docs/output-folder.md](docs/output-folder.md#which-parts-of-a-picture-are-missing).
+
 * Documentation: the SatNOGS upload was tested against the live site (two HADES-SA frames, shown under "Most Recent Observers" with the right UTC time); the SatNOGS page says how the upload looks there.
 
 

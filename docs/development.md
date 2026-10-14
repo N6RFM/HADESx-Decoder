@@ -23,7 +23,7 @@ src/hadesx/report.py     hadesx-report (prints what a per-type folder holds)
 src/hadesx/easy.py       hadesx (the short command: settings file, one folder per satellite, voice and pictures made for you)
 src/hadesx/layout.py     the settings file and the per-satellite folders (MultiFolderWriter)
 src/hadesx/satnogs.py    sending frames to SatNOGS DB (SIDS form POST, ledger, dry run)
-src/hadesx/ssdv.py       hadesx-ssdv (merges SSDV image packets into .ssdv and a JPEG)
+src/hadesx/ssdv.py       hadesx-ssdv (merges SSDV image packets into .ssdv and a JPEG; which packets and which parts of the picture are missing; the arrival log)
 grc/hadesx_decoder.grc   generated flowgraph
 tools/                   survey/probe/excerpt tools, builders, DLL comparison tools: see tools/README.md
 tests/                   pytest suite (tests/data holds the golden files and real frames)
@@ -58,6 +58,7 @@ pytest -q                # several hundred tests, about a minute
 | `tests/test_satnogs.py` | SatNOGS upload with a fake server: the request fields, once-only ledger, what is left out, dry run, refusals and outages, the settings, `hadesx --satnogs-dry-run` end to end |
 | `tests/test_ssdv.py` | SSDV image packets: CRC-32 under every plausible scrambling layout, Reed-Solomon repair (up to 16 bytes), a damaged packet off the air |
 | `tests/test_ssdv_real.py` | real SSDV packets off the air (`examples/iq/hades_sa_ssdv_pass.wav`): decoded with a valid CRC-32 and assembled |
+| `tests/test_ssdv_gaps.py` | missing SSDV packets and where they are in the picture (synthetic packets), the one-line summary, the arrival log `ssdv_log.csv` (each new packet once, packets from before the log), `hadesx` and `hadesx-ssdv` output |
 | `tests/test_ssdv_images.py` | `hadesx-ssdv`: merging the packets of an image, repair, missing packet numbers, the JPEG through the reference `ssdv` program (skipped if absent) |
 | `tests/test_examples.py`, `tests/test_example_sdrconsole.py` | the bundled recordings through the command line, with known clocks and bytes |
 | `tests/test_hexport.py`, `tests/test_grc.py` | the flowgraph block's hex port; the committed `.grc` equals what `build_grc.py` generates |

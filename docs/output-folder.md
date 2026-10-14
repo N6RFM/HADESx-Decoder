@@ -32,6 +32,7 @@ For satellite `NN` (the source address: `03` HADES-SA, `12` UNNE-1B) and packet 
 | `sat_NN_type_15.tlm` | BBS contents (callsign, message, CODEC2 frames); on HADES-L (`sat_05`) the ICM message | |
 | `sat_05_type_07_lofith_frame_FFF.tlm` / `.dat` | HADES-L Lofith experiment: one file set per frame number `FFF` (`.dat`: one line per reception) | |
 | `.hadesx_ingested.json` | which recordings were already added (see below) | |
+| `ssdv_log.csv` | one line for every new picture (SSDV) packet: when it was added, when it was received, image, packet, recording (see below) | |
 | `.hadesx_satnogs.json` | which frames `hadesx --satnogs` already sent to SatNOGS DB, so none goes twice ([satnogs.md](satnogs.md)) | |
 
 The file names, the text, the `.dat` columns and the `.bin` layouts are those of AMSAT-EA's tool.
@@ -110,15 +111,48 @@ uses the best pass (`--list-passes`, `--pass N`, `--combine`; see [voice.md](voi
 ## Pictures from the SSDV packets: `hadesx-ssdv`
 
 ```bash
-hadesx-ssdv ~/pass-folder                 # list the images found and their packet numbers
+hadesx-ssdv ~/pass-folder                 # every image: how complete it is, which packets are missing and where in the picture
 hadesx-ssdv ~/pass-folder --image 218     # hades_sa_image_218.ssdv, and hades_sa_image_218.jpg if `ssdv` is installed
 hadesx-ssdv ~/pass-folder --all
+hadesx-ssdv ~/pass-folder --log           # when every picture packet arrived (add --image N for one picture)
 ```
 
 It does what AMSAT-EA's `run_ssdv.bat` does: the packets of one image are put in packet order into one `.ssdv` file and Philip Heron's
 `ssdv -d` (github.com/fsphil/ssdv, or `ssdv-x86.exe` from AMSAT-EA's SSDV utilities) makes the JPEG. Every packet is checked again, a damaged one is
 repaired with its Reed-Solomon code or left out, and missing packet numbers are listed. It also works on the folder of the Windows tool.
 Build `ssdv` with `git clone https://github.com/fsphil/ssdv && cd ssdv && make`; without it you still get the `.ssdv` file.
+
+### Which parts of a picture are missing
+
+The list (no `--image`) gives, for every image:
+
+```
+image  32: 36 of 50 packets (72 %), about 70 % of the picture
+  packets: ####..#####..####...#####....#####........###
+  missing: 4-5, 11-12, 17-19
+    packet 4-5: about 8 % to 14 % down the picture (rows 19-34 of 240)
+    packet 11-12: about 27 % to 33 % down the picture (rows 65-79 of 240)
+```
+
+* **Which packets:** the packet numbers that never arrived. The line of `#` and `.` has one character per packet (`#` have it, `.` missing; a
+  very long image is shown in groups, `+` meaning some of the group). A `?` at the end means the **last packet of the image has not been
+  received yet**, so more packets may still be missing after the highest one you have.
+* **Where in the picture:** every packet says at which block of the picture (16 x 16 pixels, counted from the top left, row by row) it
+  starts. From the neighbours of a gap the program works out roughly how far down the picture the missing part is: the "about 8 % to 14 % down"
+  and the rows are **estimates**, good to a few percent. `ssdv` shows a missing part as grey (or a smear) from there to the next packet.
+* **How complete:** the first percentage counts packets (only once the last packet of the image has arrived, because only then is the
+  total known); "of the picture" estimates how much of the picture area is covered.
+
+### When new packets arrived
+
+Every time a picture packet is stored that was **not in the folder before**, one line is added to `ssdv_log.csv` in that satellite's folder:
+when it was added (UTC), when it was received (UTC), the image, the packet number, and the recording it came from. A packet that is received again
+(another pass, or the same recording added again with `--force`) is not new and adds nothing, so the log lists each unique packet exactly once.
+`hadesx-ssdv FOLDER --log` prints it sorted by reception time. Packets stored **before** the log existed are listed too, with the time taken from
+their oldest timestamped `.tlm` file and "(before the log)" as the recording.
+
+`hadesx` shows the result after every run, one line per image, for example
+`image  32: 36 of 50 packets (72 %), 4 new this run, missing 4-5, 11-12, 17-19`: new packets, and what is still missing.
 
 ## Printing everything on the console: `hadesx-report`
 

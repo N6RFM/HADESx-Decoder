@@ -173,10 +173,10 @@ def main(argv=None, folders=None, satnogs=None, recorder_time='utc'):
         if a.outroot:
             from .layout import MultiFolderWriter
             writer = MultiFolderWriter(out_dir, folders, utc=not a.local_time, history=not a.no_history,
-                                       fallback=lambda fr: format_frame(fr, dll))
+                                       fallback=lambda fr: format_frame(fr, dll), source=os.path.basename(a.iq))
         else:
             writer = FolderWriter(out_dir, utc=not a.local_time, history=not a.no_history,
-                                  fallback=lambda fr: format_frame(fr, dll))
+                                  fallback=lambda fr: format_frame(fr, dll), source=os.path.basename(a.iq))
 
     fe = FrontEnd(fs, bauds=bauds, center=a.center, min_db=a.min_db, max_flips=a.flips, emit_unverified=a.emit_unverified)
     state = {'nf': 0}

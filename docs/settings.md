@@ -22,6 +22,7 @@ IQ files are. Without the install (route B): `PYTHONPATH=src python3 -m hadesx.e
     hades-sa/                 <- HADES-SA: telemetry, voice, SSDV packets and hades_sa_image_NNN.jpg
     hades-l/                  <- HADES-L
     .hadesx_ingested.json     <- which recordings were already added
+    hades-sa/ssdv_log.csv     <- when each new picture packet arrived (see output-folder.md)
     .hadesx_satnogs.json      <- which frames were already sent to SatNOGS DB (only if you use --satnogs, see satnogs.md)
 ```
 
@@ -44,7 +45,9 @@ Both are **rebuilt from everything stored in the folder** on every run, and the 
   to the newest; a new pass changes the WAV only if it has more frames. Other choices: `hadesx-voice FOLDER --list-passes`, `--pass N`,
   `--combine` ([voice.md](voice.md)).
 * **Pictures:** `hades_sa_image_NNN.jpg` is made again from every packet of that image stored so far, so each pass fills more gaps. The
-  `.ssdv` file next to it holds the merged packets; `hadesx-ssdv FOLDER` lists the packet numbers still missing.
+  `.ssdv` file next to it holds the merged packets. After each run `hadesx` prints one line per image: how many packets there are, how many are
+  new in this run, and which are still missing. `hadesx-ssdv FOLDER` shows where in the picture the gaps are, and `hadesx-ssdv FOLDER --log` when each
+  packet arrived (`ssdv_log.csv`): [output-folder.md](output-folder.md#which-parts-of-a-picture-are-missing).
 
 If the `ssdv` program is not installed you get "packets stored, no JPEG": build it ([installing.md](installing.md#extras-you-may-need)) and run
 `hadesx` on any recording again (a recording that was already added is not decoded twice, but the pictures are rebuilt), or run

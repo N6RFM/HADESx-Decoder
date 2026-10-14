@@ -26,6 +26,7 @@ import io
 import os
 import re
 import sys
+import time
 
 from . import layout
 
@@ -114,6 +115,7 @@ def main(argv=None):
     from . import cli
     root, status = cfg['output'], 0
     uploader = None
+    t_run = time.time()                           # picture packets added after this moment are "new in this run"
     if a.satnogs or a.satnogs_dry_run or cfg['satnogs']['upload']:
         from . import satnogs
         uploader = satnogs.from_settings(cfg, root, dry_run=a.satnogs_dry_run,
@@ -176,10 +178,14 @@ def main(argv=None):
             _, o, err, bad = _quiet_call(_pictures, d, cfg['ssdv'])
             jpgs = sorted(os.path.basename(p) for p in glob.glob(os.path.join(d, '*.jpg')))
             line = 'pictures: ' + (', '.join(jpgs) if jpgs else 'packets stored, no JPEG (install the ssdv program, or give its path as ssdv = ... in the settings)')
-            missing = [l.strip() for l in o.splitlines() if l.strip().startswith('missing:')]
-            if missing and jpgs:
-                line += '  (gaps: see hadesx-ssdv %s)' % d
             extras.append(line)
+            try:
+                from . import ssdv as _ssdv
+                for l in _ssdv.summary_lines(d, _ssdv.new_since(d, t_run)):
+                    extras.append('  ' + l)
+                extras.append('  (hadesx-ssdv %s shows where the gaps are; add --log for when each packet arrived)' % d)
+            except Exception as e:                  # the summary is a convenience; never let it stop a run
+                extras.append('  (no picture summary: %s)' % e)
         print('  %-9s %s' % (name, d))
         for e in extras:
             print('            ' + e)

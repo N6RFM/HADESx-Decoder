@@ -23,6 +23,7 @@ tests/test_genesis.py compares the output with that program's output on the same
 import datetime
 import math
 import os
+import re
 import struct
 import time
 
@@ -732,6 +733,9 @@ def decode_frame(ptype, source, plain, ctx, voice=False):
 NATIVE_SOURCES = (3, 5)
 
 
+PICTURE_LOG = 'ssdv_log.csv'                         # one line per new picture packet, see FolderWriter
+
+
 class FolderWriter(object):
     """Writes frames into a folder the way AMSAT-EA's tool does, and only adds what is new:
 
@@ -741,9 +745,10 @@ class FolderWriter(object):
     * `.bin` voice / image files are replaced by the newest copy of that frame / packet number.
     """
 
-    def __init__(self, outdir, utc=True, history=True, fallback=None):
+    def __init__(self, outdir, utc=True, history=True, fallback=None, source=None):
         """fallback(frame) -> text: used for frames of satellites without a native decoder (UNNE-1B); default is a
-        short raw-bytes description."""
+        short raw-bytes description.  source: name of the recording being added (written to the picture packet log)."""
+        self.source = source
         self.outdir = outdir
         self.utc = utc
         self.history = history
@@ -822,9 +827,12 @@ class FolderWriter(object):
             f.write(data)
         touched.append(n_tlm)
         if mode == 'wb':
+            new_packet = ptype == 10 and not voice and not os.path.exists(self._path(n_dat))
             with open(self._path(n_dat), 'wb') as f:
                 f.write(dat)
             self.stats['new_dat_lines'] += 1
+            if new_packet:
+                self._log_picture_packet(n_dat, t)
         elif ptype == 13 or not dat:                              # PN9 hex stream / BBS (empty .dat): as the original
             with open(self._path(n_dat), 'ab') as f:
                 f.write(dat)
@@ -836,6 +844,24 @@ class FolderWriter(object):
         touched.append(n_dat)
         self._count(source, ptype, touched)
         return touched
+
+    def _log_picture_packet(self, name, t):
+        """A picture (SSDV) packet that was not in the folder before: one line in ssdv_log.csv (when it was added,
+        when it was received, which image and packet, from which recording)."""
+        m = re.search(r'_ssdv_img_(\d+)_packet_(\d+)\.bin$', name)
+        if not m:
+            return
+        import csv
+        path = self._path(PICTURE_LOG)
+        fresh = not os.path.exists(path)
+        with open(path, 'a', newline='') as f:
+            w = csv.writer(f)
+            if fresh:
+                w.writerow(['added_utc', 'received_utc', 'image', 'packet', 'recording'])
+            now = time.time()
+            w.writerow([time.strftime('%Y-%m-%dT%H:%M:%S', time.gmtime(now)) + '.%03dZ' % int((now % 1) * 1000),
+                        time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime(t)), int(m.group(1)), int(m.group(2)), self.source or ''])
+        self.stats['new_picture_packets'] = self.stats.get('new_picture_packets', 0) + 1
 
     def _count(self, source, ptype, touched):
         self.stats['frames'] += 1

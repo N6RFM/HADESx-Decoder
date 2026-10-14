@@ -37,13 +37,14 @@ def test_build_writes_the_merged_file_and_lists_missing_packets(tmp_path):
     buf = io.StringIO()
     path, jpg = ssdv.build(str(d), 218, images[218], program=str(tmp_path / 'no-such-program'), out=buf)
     assert os.path.getsize(path) == 256
-    assert 'missing' in buf.getvalue() and '0, 1, 2' in buf.getvalue()
+    assert 'missing' in buf.getvalue() and '0-11' in buf.getvalue()
 
 
 def test_command_lists_then_builds(tmp_path, capsys):
     d = _folder(tmp_path)
     assert ssdv.main([str(d)]) == 0
-    assert 'image 218:   1 packet(s), numbers 12-12' in capsys.readouterr().out
+    out = capsys.readouterr().out
+    assert 'image 218: 1 packet so far' in out and 'missing: 0-11' in out
     assert ssdv.main([str(d), '--image', '218', '--ssdv', str(tmp_path / 'nope')]) == 0
     assert (d / 'hades_sa_image_218.ssdv').exists()
 
