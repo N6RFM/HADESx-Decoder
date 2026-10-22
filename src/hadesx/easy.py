@@ -31,7 +31,7 @@ import time
 from . import layout
 
 SHOW = re.compile(r'^(NOTE|WARNING|recording start|sample rate|file:|\d+ samples|.* updated:|   satellite|\d+ valid frame|cannot|no voice|working out|.* was already added)')
-PER_SAT = re.compile(r'^   satellite (\d+) type +(\d+): (\d+)')
+PER_SAT = re.compile(r'^   satellite (\d+) \(.*\) type +(\d+), .*: (\d+)$')
 
 
 def build_parser():

@@ -12,7 +12,7 @@ import time
 
 import numpy as np
 
-from .core import (DllDecoder, FskCentreTracker, MultiBaudDeframer, format_frame, parse_bauds)
+from .core import (DllDecoder, FskCentreTracker, MultiBaudDeframer, SOURCES, VOICE_TYPES, format_frame, parse_bauds, type_name)
 from .frontend import FrontEnd
 from .iqfile import IQFile, IQFormatError, recorder_to_utc
 
@@ -85,6 +85,16 @@ def build_parser():
     ap.add_argument('--voice-speed', type=float, default=1.0,
                     help='time-stretch the voice WAV, pitch preserved (e.g. 1.15)')
     return ap
+
+
+
+def type_line(src, typ, n):
+    """One line of the end-of-run summary: how many frames of one type from one satellite, and what kind they are."""
+    name = type_name(src, typ)
+    if name == '?' and typ in VOICE_TYPES:
+        name = 'CODEC2 voice'
+    who = SOURCES.get(src)
+    return '   satellite %d (%s) type %2d, %s: %d' % (src, who or 'unknown source', typ, name, n)
 
 
 def main(argv=None, folders=None, satnogs=None, recorder_time='utc'):
@@ -237,7 +247,7 @@ def main(argv=None, folders=None, satnogs=None, recorder_time='utc'):
         print('%s updated: %d frame(s) written, %d new data line(s), %d duplicate line(s) skipped, %d file(s) touched'
               % (out_dir, st['frames'], st['new_dat_lines'], st['skipped_duplicates'], len(st['files'])), file=sys.stderr)
         for (src, typ), n in sorted(st['by_type'].items()):
-            print('   satellite %d type %2d: %d' % (src, typ, n), file=sys.stderr)
+            print(type_line(src, typ, n), file=sys.stderr)
         done = json.load(open(ingest_path if os.path.exists(ingest_path) else legacy_path)) \
             if os.path.exists(ingest_path) or os.path.exists(legacy_path) else {}
         done[ingest_key] = time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime()) + ' UTC'
