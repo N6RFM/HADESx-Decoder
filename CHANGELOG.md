@@ -1,6 +1,8 @@
 # Changelog
 
-## Unreleased
+## 1.6.0 - 2026-10-22
+
+HADESx Decoder 1.6.0 shows what is missing from your SSDV pictures and names every frame type in the summary. Update from 1.5.0 with `git pull`; nothing is lost.
 
 * **The end-of-run summary says what each frame type is.** Instead of `satellite 3 type 10: 26` it now prints `satellite 3 (HADES-SA) type 10, SSDV image packet: 26` (the satellite and the kind of packet; a source address HADESx does not know is shown as `unknown source`).
 
