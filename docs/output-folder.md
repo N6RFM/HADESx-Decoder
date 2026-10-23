@@ -33,6 +33,7 @@ For satellite `NN` (the source address: `03` HADES-SA, `12` UNNE-1B) and packet 
 | `sat_05_type_07_lofith_frame_FFF.tlm` / `.dat` | HADES-L Lofith experiment: one file set per frame number `FFF` (`.dat`: one line per reception) | |
 | `.hadesx_ingested.json` | which recordings were already added (see below) | |
 | `ssdv_log.csv` | one line for every new picture (SSDV) packet: when it was added, when it was received, image, packet, recording (see below) | |
+| `.hadesx_clock.json` | when UNNE-1B booted, worked out from its own clock in each recording; a recording whose time does not fit it gets a warning ([troubleshooting.md](troubleshooting.md)) | |
 | `.hadesx_satnogs.json` | which frames `hadesx --satnogs` already sent to SatNOGS DB, so none goes twice ([satnogs.md](satnogs.md)) | |
 
 The file names, the text, the `.dat` columns and the `.bin` layouts are those of AMSAT-EA's tool.

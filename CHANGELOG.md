@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+* **The time of every frame is shown.** The console and the `.tlm` text of frames without a field-by-field decoder (UNNE-1B) end with `received: 2026-10-23 02:44:38 UTC` (the recording start plus the frame's place in the recording; `--local-time` labels it local time), so the frame and its time can be copied from the same place.
+* **Check of the recording time against the satellite clock.** UNNE-1B frames carry the satellite's seconds since boot, so every recording should give the same boot time. HADESx keeps it in `.hadesx_clock.json` in the output folder and warns when a recording's time does not fit (whole hours: a time-zone mistake; see `recorder_time`). The recording is stored anyway.
+
 * **The whole frame is shown, ready to share.** Frames without a field-by-field decoder (UNNE-1B telemetry without the DLL) now also print `whole frame (type/address byte first, no CRC): AC 50 A8 ...` in the console and in the `.tlm` file. Other stations' tools show the frame this way; the `data (descrambled)` line leaves the first byte out.
 
 ## 1.6.0 - 2026-10-22

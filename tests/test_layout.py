@@ -2,6 +2,7 @@
 # Authors: N6RFM, with Claude (an AI assistant made by Anthropic).
 # Licence: MIT (see LICENSE).
 """The settings file, one folder per satellite, and the short `hadesx` command."""
+import json
 import os
 
 import pytest
@@ -140,3 +141,32 @@ def test_hades_sa_pictures_go_to_the_hades_sa_folder(tmp_path):
     names = os.listdir(out / 'hades-sa')
     assert [n for n in names if n.startswith('sat_03_type_10_ssdv_img_000_packet_') and n.endswith('.bin')]
     assert not os.path.exists(out / 'unne-1b')                    # satellites that were not heard get no folder
+
+
+def test_clock_check_learns_then_accepts_then_warns(tmp_path):
+    d = str(tmp_path)
+    first = layout.clock_check(d, 'a.iq', [1760000000.0, 1760000001.0, 1760000000.5])
+    assert len(first) == 1 and first[0].startswith('NOTE') and 'learned' in first[0]
+    assert layout.clock_check(d, 'b.iq', [1760000004.0]) == []                         # within a few seconds: fine
+    assert layout.clock_check(d, 'a.iq', [1760000001.0]) == []                         # the same recording again: fine
+    w = layout.clock_check(d, 'c.iq', [1760000000.0 + 3600])                           # one hour off
+    assert len(w) == 1 and w[0].startswith('WARNING') and '1 hour' in w[0] and 'later' in w[0]
+    w = layout.clock_check(d, 'd.iq', [1760000000.0 - 5 * 3600 - 20])                  # five hours (and a little) early
+    assert w[0].startswith('WARNING') and '5 hour' in w[0] and 'earlier' in w[0]
+    w = layout.clock_check(d, 'e.iq', [1760000000.0 + 865])                            # not whole hours
+    assert w[0].startswith('WARNING') and '1 hour' not in w[0] and layout.CLOCK_FILE in w[0]
+    assert layout.clock_check(d, 'f.iq', [1760000000.0, 1760000100.0])[0].startswith('NOTE')   # frames disagree: not checked
+    assert layout.clock_check(d, 'g.iq', []) == []
+    assert set(json.load(open(os.path.join(d, layout.CLOCK_FILE)))['UNNE-1B']) == {'a.iq', 'b.iq'}   # warnings are not stored
+
+
+def test_received_line_and_clock_note_with_a_known_start(tmp_path, capsys):
+    out = tmp_path / 'o'
+    assert decode([TWO, '--outdir', str(out), '--rec-start', '2026-10-23T02:39:35Z']) == 0
+    cap = capsys.readouterr()
+    assert 'received: 2026-10-23 02:39:' in cap.out
+    tlm = [f for f in os.listdir(out) if f.endswith('.tlm')]
+    assert any('received: 2026-10-23 02:39:' in open(os.path.join(out, f)).read() for f in tlm)
+    assert 'clock reference learned' in cap.err and os.path.exists(out / layout.CLOCK_FILE)
+    assert decode([TWO]) == 0                                                           # nothing stored, no start: no received line
+    assert 'received:' not in capsys.readouterr().out

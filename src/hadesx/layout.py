@@ -16,7 +16,10 @@ The settings file is a plain INI file (works on every Python, needs nothing inst
 Command line switches always win over the file.
 """
 import configparser
+import datetime
+import json
 import os
+import statistics
 
 from .genesis import FolderWriter
 
@@ -238,6 +241,69 @@ def write_template(path=None, force=False):
     with open(path, 'w', encoding='utf-8') as f:
         f.write(TEMPLATE.format(output=DEFAULTS['output']))
     return path
+
+
+CLOCK_FILE = '.hadesx_clock.json'
+CLOCK_TOLERANCE = 30        # seconds: the recorder start, the frame times (+-1 s) and the search block add up to a few seconds
+CLOCK_KEEP = 20             # recordings remembered
+
+
+def _utc(epoch):
+    return datetime.datetime.fromtimestamp(epoch, datetime.timezone.utc).strftime('%Y-%m-%d %H:%M:%S')
+
+
+def _span(seconds):
+    s = int(round(abs(seconds)))
+    return '%d s (%dh %02dm %02ds)' % (s, s // 3600, s % 3600 // 60, s % 60)
+
+
+def clock_check(out_dir, recording, boots, name='UNNE-1B'):
+    """Compare the satellite's own clock with the time of the recording.  `boots` has, for each CRC-verified frame with
+    a satellite clock, (its UTC time as worked out from the recording) - (its clock in seconds) = when the satellite
+    booted.  Every recording of the same satellite should give the same moment; one that does not has a wrong time (a
+    time zone, a wrong clock, a renamed file).  The moment is kept in out_dir/.hadesx_clock.json.  Returns the lines to
+    print (a note, a warning, or nothing)."""
+    if not boots:
+        return []
+    boots = sorted(boots)
+    if boots[-1] - boots[0] > CLOCK_TOLERANCE:
+        return ['NOTE: the %s frames in this recording disagree about the satellite clock by %d s: clock not checked.'
+                % (name, boots[-1] - boots[0])]
+    boot = statistics.median(boots)
+    path = os.path.join(out_dir, CLOCK_FILE)
+    try:
+        with open(path) as f:
+            known = json.load(f)
+    except (OSError, ValueError):
+        known = {}
+    mine = known.get(name) if isinstance(known.get(name), dict) else {}
+    others = [v for k, v in mine.items() if k != recording]
+    lines = []
+    if others:
+        ref = statistics.median(others)
+        delta = boot - ref
+        if abs(delta) > CLOCK_TOLERANCE:
+            hours = int(round(delta / 3600.0))
+            hint = ('That is about %d hour(s): looks like a time-zone mistake, check recorder_time (or --recorder-time, '
+                    '--rec-start).' % abs(hours)) if hours and abs(delta - hours * 3600) <= 120 else \
+                   ('Check recorder_time (or --recorder-time, --rec-start); if the satellite restarted, delete %s.' % CLOCK_FILE)
+            return ['WARNING: the %s clock does not fit the time of this recording: the time taken from the file name is %s '
+                    '%s than the satellite clock says (earlier recordings put its boot at %s UTC, this one at %s UTC). %s'
+                    % (name, _span(delta), 'later' if delta > 0 else 'earlier', _utc(ref), _utc(boot), hint)]
+    else:
+        lines = ['NOTE: %s clock reference learned from this recording: the satellite booted at %s UTC (kept in %s; later '
+                 'recordings are checked against it).' % (name, _utc(boot), CLOCK_FILE)]
+    mine.pop(recording, None)
+    mine[recording] = boot
+    for k in list(mine)[:-CLOCK_KEEP]:
+        del mine[k]
+    known[name] = mine
+    try:
+        with open(path, 'w') as f:
+            json.dump(known, f, indent=1)
+    except OSError:
+        pass
+    return lines
 
 
 def folder_for(root, src, overrides=None):

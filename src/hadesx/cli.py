@@ -147,6 +147,13 @@ def main(argv=None, folders=None, satnogs=None, recorder_time='utc'):
                 print('WARNING: %s Continuing without it.' % e, file=sys.stderr)
 
     writer, rec_start, ingest_key, start_known = None, None, None, True
+
+    def received(fr):
+        """The time of the frame as a text line (UTC unless --local-time), or nothing when the recording start is unknown."""
+        if rec_start is None or not start_known:
+            return ''
+        d = datetime.datetime.fromtimestamp(int(rec_start + fr['t']), None if a.local_time else datetime.timezone.utc)
+        return '\nreceived: %s %s' % (d.strftime('%Y-%m-%d %H:%M:%S'), 'local time' if a.local_time else 'UTC')
     if out_dir:
         from .genesis import FolderWriter
         if a.rec_start:
@@ -183,13 +190,14 @@ def main(argv=None, folders=None, satnogs=None, recorder_time='utc'):
         if a.outroot:
             from .layout import MultiFolderWriter
             writer = MultiFolderWriter(out_dir, folders, utc=not a.local_time, history=not a.no_history,
-                                       fallback=lambda fr: format_frame(fr, dll), source=os.path.basename(a.iq))
+                                       fallback=lambda fr: format_frame(fr, dll) + received(fr), source=os.path.basename(a.iq))
         else:
             writer = FolderWriter(out_dir, utc=not a.local_time, history=not a.no_history,
-                                  fallback=lambda fr: format_frame(fr, dll), source=os.path.basename(a.iq))
+                                  fallback=lambda fr: format_frame(fr, dll) + received(fr), source=os.path.basename(a.iq))
 
     fe = FrontEnd(fs, bauds=bauds, center=a.center, min_db=a.min_db, max_flips=a.flips, emit_unverified=a.emit_unverified)
     state = {'nf': 0}
+    boots = []                                  # UNNE-1B: UTC time of a frame minus its satellite clock = boot time
     voice = {}                                  # {source address: VoiceSet}: voice is kept per satellite
     rec_t0 = recorder_to_utc(guess_rec_start(a.iq) or src.start, recorder_time)
 
@@ -200,8 +208,11 @@ def main(argv=None, folders=None, satnogs=None, recorder_time='utc'):
         for fr in frames:
             fr['t'] = round(max(t_now, 0.0), 1)
             state['nf'] += 1
-            print(format_frame(fr, dll))
+            print(format_frame(fr, dll) + received(fr))
             print()
+            if (fr.get('src') == 0xC and fr.get('sclock') is not None and fr.get('crc_ok') is True
+                    and rec_start is not None and start_known):
+                boots.append(rec_start + fr['t'] - fr['sclock'])
             if a.log:
                 with open(a.log, 'a') as f:
                     f.write(json.dumps(fr) + '\n')
@@ -242,6 +253,11 @@ def main(argv=None, folders=None, satnogs=None, recorder_time='utc'):
                 g[0][0], g[-1][0], np.median([c_ for _, c_ in g]), g[-1][1] - g[0][1]),
                 file=sys.stderr)
     print('%d valid frame(s)' % state['nf'], file=sys.stderr)
+    if writer is not None and boots:
+        from .layout import clock_check, folder_for
+        clock_dir = folder_for(out_dir, 0xC, folders) if a.outroot else out_dir          # next to the UNNE-1B results
+        for line in clock_check(clock_dir, os.path.basename(a.iq), boots):
+            print(line, file=sys.stderr)
     if writer is not None:
         st = writer.stats
         print('%s updated: %d frame(s) written, %d new data line(s), %d duplicate line(s) skipped, %d file(s) touched'
