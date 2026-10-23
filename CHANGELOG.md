@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+* **The whole frame is shown, ready to share.** Frames without a field-by-field decoder (UNNE-1B telemetry without the DLL) now also print `whole frame (type/address byte first, no CRC): AC 50 A8 ...` in the console and in the `.tlm` file. Other stations' tools show the frame this way; the `data (descrambled)` line leaves the first byte out.
+
 ## 1.6.0 - 2026-10-22
 
 HADESx Decoder 1.6.0 shows what is missing from your SSDV pictures and names every frame type in the summary. Update from 1.5.0 with `git pull`; nothing is lost.

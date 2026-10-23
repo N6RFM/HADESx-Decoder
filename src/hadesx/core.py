@@ -1176,6 +1176,8 @@ def format_frame(fr, dll=None):
     else:
         scrambled = not (fr.get('framing') == 'sized' and ptype in (10, 13))
         lines.append('data (%s): %s' % ('descrambled' if scrambled else 'as received, not scrambled', fr['plain'][2:]))
+        lines.append('whole frame (type/address byte first, no CRC): %s' % ' '.join(
+            fr['plain'][i:i + 2] for i in range(0, len(fr['plain']), 2)).upper())
         if dll_ok:
             lines.append('(pass --dll hadesr.dll to get the full field-by-field decode)')
         elif crc is False:

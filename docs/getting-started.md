@@ -87,7 +87,11 @@ standard error:
 === UNNE-1B packet type 2 (Temperature) from UNNE-1B  [CRC OK] ===
 sclock: 192364 s  (2d 05:26:04 since boot)
 data (descrambled): ...
+whole frame (type/address byte first, no CRC): 2C .. .. ..
 ```
+
+The `whole frame` line is the frame the way other stations' tools (SoundModem, Direwolf) show it, with the type/address byte
+(here `2C` = type 2 from UNNE-1B; a type 10 frame starts with `AC`) in front, ready to paste into a data registry. The `data` line leaves that first byte out.
 
 `[CRC OK, corrected bits [182]]` means the frame was received with a bit error that the repair step fixed
 (the CRC of the repaired frame still has to match, so this is safe for telemetry).

@@ -60,3 +60,12 @@ def test_voice_helpers():
     assert all(padded[4 * k + 3] & 0x0F == 0 for k in range(10))         # 4 zero padding bits
     packed, missing = voice_assemble({0: payload, 2: payload})
     assert missing == [1] and len(packed) == 120 and packed[40:80] == bytes(40)
+
+
+def test_raw_frame_line_has_the_type_address_byte():
+    from hadesx.core import format_frame
+    fr = {'type': 10, 'src': 12, 'src_name': 'UNNE-1B', 'type_name': 'Nebrija game payload', 'framing': 'legacy', 'baud': 200,
+          'flips': [], 'crc_ok': True, 'sclock': 1747024, 'plain': 'ac50a81a0002000300000102000201'}
+    out = format_frame(fr)
+    assert 'data (descrambled): 50a81a0002000300000102000201' in out
+    assert 'AC 50 A8 1A 00 02 00 03 00 00 01 02 00 02 01' in out
