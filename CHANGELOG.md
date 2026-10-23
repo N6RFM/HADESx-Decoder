@@ -1,6 +1,8 @@
 # Changelog
 
-## Unreleased
+## 1.7.0 - 2026-10-23
+
+HADESx Decoder 1.7.0 shows the time of every frame, shows the whole frame the way other stations do, and warns when a recording's time does not fit the satellite's own clock. Update from 1.6.0 with `git pull`; nothing is lost.
 
 * **The time of every frame is shown.** The console and the `.tlm` text of frames without a field-by-field decoder (UNNE-1B) end with `received: 2026-10-23 02:44:38 UTC` (the recording start plus the frame's place in the recording; `--local-time` labels it local time), so the frame and its time can be copied from the same place.
 * **Check of the recording time against the satellite clock.** UNNE-1B frames carry the satellite's seconds since boot, so every recording should give the same boot time. HADESx keeps it in `.hadesx_clock.json` in the output folder and warns when a recording's time does not fit (whole hours: a time-zone mistake; see `recorder_time`). The recording is stored anyway.
