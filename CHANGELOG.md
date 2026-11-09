@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+* **A clearer hint under frames without a field decoder.** It said `(pass --dll hadesr.dll to get the full field-by-field decode)`, which could be read as the frame not being decoded. It now says the frame is decoded and CRC-checked and that only the field names (voltages, temperatures ...) need AMSAT-EA's DLL.
+
 * **`hadesx-report --folder-time`.** Says what clock the times in the stored file names show: `utc` (default), `local` or hours from UTC (`--folder-time 9`). A folder made by SoundModem + KISSGENESIS names its files in the PC's clock, which `hadesx-report` used to read as UTC; the times it prints are always UTC.
 
 ## 1.7.0 - 2026-10-23

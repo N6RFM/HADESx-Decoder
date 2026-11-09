@@ -69,3 +69,11 @@ def test_raw_frame_line_has_the_type_address_byte():
     out = format_frame(fr)
     assert 'data (descrambled): 50a81a0002000300000102000201' in out
     assert 'AC 50 A8 1A 00 02 00 03 00 00 01 02 00 02 01' in out
+
+
+def test_hint_under_a_frame_without_a_field_decoder_says_the_frame_is_decoded():
+    from hadesx.core import format_frame
+    fr = {'type': 2, 'src': 12, 'src_name': 'UNNE-1B', 'type_name': 'Temperature', 'framing': 'legacy', 'baud': 200,
+          'flips': [], 'crc_ok': True, 'sclock': 3126214, 'plain': '2cc6b32f004c504856ff44444a464e'}
+    out = format_frame(fr)
+    assert 'the frame is decoded and CRC-checked' in out and 'field names' in out and '--dll hadesr.dll' in out

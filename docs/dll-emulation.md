@@ -69,6 +69,8 @@ More in [example-pass.md](example-pass.md) and `examples/results/full_pass_decod
   `[hadesr.dll import "name" not emulated]` - open an issue with the name.
 * Types 4, 5, 6, 8 and 9 were exercised on synthetic data only; types 1, 2, 3, 10, 12 and 14 on real frames.
 * Voice (type 15) is handled by this project, not the DLL.
+* The hint `(the frame is decoded and CRC-checked; the field names ... need AMSAT-EA's decoder: pass --dll hadesr.dll)` under a
+  frame does not mean anything is wrong or missing from the decoding: the DLL is only for the field names.
 * Without the DLL the tool still prints the frame header, the satellite clock and the descrambled bytes, and the
   JSON log contains everything needed to decode the fields later.
 

@@ -1179,7 +1179,8 @@ def format_frame(fr, dll=None):
         lines.append('whole frame (type/address byte first, no CRC): %s' % ' '.join(
             fr['plain'][i:i + 2] for i in range(0, len(fr['plain']), 2)).upper())
         if dll_ok:
-            lines.append('(pass --dll hadesr.dll to get the full field-by-field decode)')
+            lines.append("(the frame is decoded and CRC-checked; the field names (voltages, temperatures ...) need AMSAT-EA's decoder: "
+                         'pass --dll hadesr.dll)')
         elif crc is False:
             lines.append('(CRC failed: not decoded)')
         else:
