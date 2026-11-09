@@ -175,6 +175,7 @@ hadesx-report ~/hadesx-output --summary            # a results folder of `hadesx
 | `--sat NAMES` | only these satellites: `UNNE-1B`, `HADES-SA`, `HADES-L` or a source address, comma separated |
 | `--type N,N` | only these packet types |
 | `--since T`, `--until T` | UTC, e.g. `2026-10-05T01:00` |
+| `--folder-time ZONE` | the clock of the time in the stored file names: `utc` (the default, what `hadesx` writes), `local` (this computer's) or hours from UTC such as `9` or `-5`. Use it for a folder whose names show your local time, for example one made by SoundModem + KISSGENESIS: without it those times are read as UTC and shown wrong. All times printed are UTC |
 | `--dll hadesr.dll` | UNNE-1B packets with all their fields (below) |
 | `--no-voice`, `--no-images` | leave out the CODEC2 voice packets / the SSDV image packets (both are included by default; `hadesx-voice` makes the audio, `hadesx-ssdv` the pictures). `--voice` and `--images` are still accepted and do nothing new |
 

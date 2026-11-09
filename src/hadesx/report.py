@@ -9,6 +9,7 @@
     hadesx-report ~/hades-l-sdrc --sat UNNE-1B --type 1,2,3
     hadesx-report ~/hades-l-sdrc --dll hadesr.dll      # UNNE-1B fields through AMSAT-EA's decoder (see below)
     hadesx-report ~/hadesx-output --summary            # the results folder of `hadesx`: all satellite sub-folders together
+    hadesx-report ~/kissgenesis-folder --folder-time 9 # file names in your local time (here UTC+9), shown as UTC
 
 The folder is the one `hadesx-decode --outdir DIR` keeps. HADES-SA and HADES-L packets are decoded by this project, so their stored
 text is printed as it is. UNNE-1B packets are stored as bytes (the decoder has no native UNNE-1B field decoder): with `--dll
@@ -26,6 +27,7 @@ import re
 import sys
 
 from .core import DLL_SATELLITES, SOURCES, Unne1bDeframer, format_frame, type_name
+from .iqfile import recorder_to_utc
 
 HIST = re.compile(r'^(\d{8})-(\d{6})_sat_(\d+)_type_(\d+)(?:_(\d+)|_(lofith|codec2|ssdv)_[A-Za-z]*_?\d*(?:_packet_\d+)?)?\.tlm$')
 
@@ -50,11 +52,28 @@ def _kind(name):
     return 'telemetry'
 
 
-def _epoch(date, tm):
+def _epoch(date, tm, folder_time='utc'):
+    """The time in a history file name as real UTC.  folder_time says what clock the name shows: 'utc', 'local' or hours from UTC."""
     try:
-        return datetime.datetime.strptime(date + tm, '%Y%m%d%H%M%S').replace(tzinfo=datetime.timezone.utc).timestamp()
+        e = datetime.datetime.strptime(date + tm, '%Y%m%d%H%M%S').replace(tzinfo=datetime.timezone.utc).timestamp()
     except ValueError:
         return 0.0
+    return recorder_to_utc(e, folder_time)
+
+
+def _folder_time(text):
+    t = str(text).strip().lower()
+    if t in ('', 'utc', 'z'):
+        return 'utc'
+    if t == 'local':
+        return 'local'
+    try:
+        h = float(t)
+    except ValueError:
+        raise SystemExit('--folder-time must be utc, local or a number of hours such as 9 or -5, not "%s"' % text)
+    if not -14 <= h <= 14:
+        raise SystemExit('--folder-time must be between -14 and 14 hours, not "%s"' % text)
+    return h
 
 
 def read_text(path):
@@ -66,20 +85,20 @@ def _has_sat_files(folder):
     return any(n.startswith('sat_') for n in os.listdir(folder))
 
 
-def load(folder, dll=None):
+def load(folder, dll=None, folder_time='utc'):
     """All records of a folder, oldest first. Satellites in DLL_SATELLITES are rendered from their .dat lines when a DLL is given.
     A results folder made by `hadesx` (one sub-folder per satellite) is read as the sum of its sub-folders."""
     if not _has_sat_files(folder):
         subs = [os.path.join(folder, n) for n in sorted(os.listdir(folder))
                 if os.path.isdir(os.path.join(folder, n)) and _has_sat_files(os.path.join(folder, n))]
         if subs:
-            recs = [r for d in subs for r in _load_one(d, dll)]
+            recs = [r for d in subs for r in _load_one(d, dll, folder_time)]
             recs.sort(key=lambda r: (r.epoch, r.src, r.ptype, r.name))
             return recs
-    return _load_one(folder, dll)
+    return _load_one(folder, dll, folder_time)
 
 
-def _load_one(folder, dll=None):
+def _load_one(folder, dll=None, folder_time='utc'):
     recs, from_dat = [], set()
     names = sorted(os.listdir(folder))
     if dll is not None:
@@ -115,7 +134,7 @@ def _load_one(folder, dll=None):
         src, ptype = int(m.group(3)), int(m.group(4))
         if src in from_dat:
             continue                                                           # rendered from the .dat lines above
-        recs.append(Record(_epoch(m.group(1), m.group(2)), src, ptype, _kind(n), read_text(os.path.join(folder, n)), n))
+        recs.append(Record(_epoch(m.group(1), m.group(2), folder_time), src, ptype, _kind(n), read_text(os.path.join(folder, n)), n))
     if not recs:                                                              # a folder written with --no-history: the newest of each
         for n in names:
             m = re.match(r'^sat_(\d+)_type_(\d+)(?:_\d+|_lofith_frame_\d+)?\.tlm$', n)
@@ -154,6 +173,9 @@ def report_main(argv=None):
     ap.add_argument('--until', help='only packets up to this time (UTC)')
     ap.add_argument('--summary', action='store_true', help='counts per satellite and type instead of the packets')
     ap.add_argument('--brief', action='store_true', help='one line per packet')
+    ap.add_argument('--folder-time', default='utc', metavar='ZONE',
+                    help='the clock of the times in the stored file names: utc (default; what hadesx writes), local (this computer) or hours '
+                         'from UTC such as 9 or -5 (a folder made by SoundModem + KISSGENESIS names its files in the PC clock)')
     ap.add_argument('--dll', help="AMSAT-EA's hadesr.dll: print UNNE-1B packets with all their fields (needs unicorn and pefile)")
     ap.add_argument('--no-voice', action='store_true', help='leave out the CODEC2 voice packets (included by default)')
     ap.add_argument('--no-images', action='store_true', help='leave out the SSDV image packets (included by default)')
@@ -173,7 +195,7 @@ def report_main(argv=None):
             raise SystemExit('--dll needs: pip install unicorn pefile')
         except ValueError as e:
             raise SystemExit(str(e))
-    recs = load(a.folder, dll)
+    recs = load(a.folder, dll, _folder_time(a.folder_time))
     want_sat = parse_sat(a.sat) if a.sat else None
     want_type = {int(x) for x in a.type.split(',')} if a.type else None
 

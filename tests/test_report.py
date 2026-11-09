@@ -133,3 +133,36 @@ def test_a_results_folder_with_one_subfolder_per_satellite_is_read_as_a_whole(tm
     assert {r.src for r in report.load(root + '/hades-l')} == {5}                                       # one satellite on its own
     assert {r.src for r in report.load(root + '/unne-1b')} == {12}
 
+
+
+def test_folder_time_reads_the_file_names_in_another_time_zone(tmp_path, capsys):
+    (tmp_path / '20261108-104825_sat_12_type_2.tlm').write_text('sclock : 3126004\n')
+    assert '2026-11-08 10:48:25' in run(capsys, tmp_path, '--brief')[1]                         # default: the names are UTC
+    assert '2026-11-08 01:48:25' in run(capsys, tmp_path, '--brief', '--folder-time', '9')[1]   # Japan: UTC+9
+    assert '2026-11-08 15:48:25' in run(capsys, tmp_path, '--brief', '--folder-time=-5')[1]
+    rc, out, err = run(capsys, tmp_path, '--brief', '--folder-time', '9', '--since', '2026-11-08T01:00', '--until', '2026-11-08T02:00')
+    assert rc == 0 and '01:48:25' in out                                                        # the filters see the converted time
+    assert run(capsys, tmp_path, '--brief', '--folder-time', '9', '--since', '2026-11-08T10:00')[0] == 1
+    for bad in ('x', '15'):
+        with pytest.raises(SystemExit):
+            report_main([str(tmp_path), '--folder-time', bad])
+
+
+def test_folder_time_local_uses_this_computers_time_zone(tmp_path, capsys):
+    import time
+    if not hasattr(time, 'tzset'):
+        pytest.skip('needs time.tzset (not on Windows)')
+    (tmp_path / '20261108-104825_sat_12_type_2.tlm').write_text('sclock : 3126004\n')
+    old = os.environ.get('TZ')
+    os.environ['TZ'] = 'Asia/Tokyo'
+    time.tzset()
+    try:
+        if time.strftime('%z', time.localtime(1794000000)) != '+0900':
+            pytest.skip('no time zone database')
+        assert '2026-11-08 01:48:25' in run(capsys, tmp_path, '--brief', '--folder-time', 'local')[1]
+    finally:
+        if old is None:
+            os.environ.pop('TZ', None)
+        else:
+            os.environ['TZ'] = old
+        time.tzset()

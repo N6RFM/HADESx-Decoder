@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+* **`hadesx-report --folder-time`.** Says what clock the times in the stored file names show: `utc` (default), `local` or hours from UTC (`--folder-time 9`). A folder made by SoundModem + KISSGENESIS names its files in the PC's clock, which `hadesx-report` used to read as UTC; the times it prints are always UTC.
+
 ## 1.7.0 - 2026-10-23
 
 HADESx Decoder 1.7.0 shows the time of every frame, shows the whole frame the way other stations do, and warns when a recording's time does not fit the satellite's own clock. Update from 1.6.0 with `git pull`; nothing is lost.
