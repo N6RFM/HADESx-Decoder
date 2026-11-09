@@ -1,6 +1,8 @@
 # Changelog
 
-## Unreleased
+## 1.7.1 - 2026-11-09
+
+HADESx Decoder 1.7.1 reads folders whose file names are in local time (hadesx-report --folder-time) and says more clearly that a frame without field names is still decoded. Update from 1.7.0 with `git pull`; nothing is lost.
 
 * **A clearer hint under frames without a field decoder.** It said `(pass --dll hadesr.dll to get the full field-by-field decode)`, which could be read as the frame not being decoded. It now says the frame is decoded and CRC-checked and that only the field names (voltages, temperatures ...) need AMSAT-EA's DLL.
 
