@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+* **Docs:** `unne1b.dll` is recorded as working with 1.7.2 (JA3TDW's two runs: types 1, 2, 3, 4, 5, 9, 10 and 14 on real frames).
+
 ## 1.7.2 - 2026-11-09
 
 HADESx Decoder 1.7.2 lets the DLL emulator run decoder DLLs that print through fprintf (for example a newer UNNE-1B unne1b.dll). Update from 1.7.1 with `git pull`; nothing is lost.

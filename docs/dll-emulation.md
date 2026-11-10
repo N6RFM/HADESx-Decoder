@@ -31,6 +31,8 @@ frames to AMSAT-EA's decoder; the two are often downloaded together, which is wh
 version and date are in the DLL's own banner). Other versions may print slightly different text or lack some
 `visualiza_*` functions.
 
+**Reported working:** `unne1b.dll`, "UNNE-1B Satellite Telemetry Decoder", **version 1.14 (Bytes)**, compiled 7 October 2026, 121,803 bytes (labels the satellite `(UNNE-1B)`), reported by JA3TDW with release 1.7.2: two recordings of UNNE-1B decoded with `--dll unne1b.dll`, 36 frames (types 1, 2, 3, 4, 5, 9, 10 and 14, plus voice), all CRC OK, every field named, no `not emulated` line. It prints through `fprintf`, which 1.7.2 emulates.
+
 ## How it works
 
 * `pefile` loads the DLL's sections into an emulated 32-bit x86 address space (`unicorn`).
@@ -67,7 +69,7 @@ More in [example-pass.md](example-pass.md) and `examples/results/full_pass_decod
 * x86 PE DLLs only (the 32-bit `hadesr.dll` that ships with the AMSAT-EA tools).
 * If a future DLL imports a C-library function that is not hooked, the output contains
   `[hadesr.dll import "name" not emulated]` - open an issue with the name.
-* Types 4, 5, 6, 8 and 9 were exercised on synthetic data only; types 1, 2, 3, 10, 12 and 14 on real frames.
+* Types 6 and 8 were exercised on synthetic data only; types 1, 2, 3, 4, 5, 9, 10, 12 and 14 on real frames (4, 5 and 9 with `unne1b.dll`).
 * Voice (type 15) is handled by this project, not the DLL.
 * The hint `(the frame is decoded and CRC-checked; the field names ... need AMSAT-EA's decoder: pass --dll hadesr.dll)` under a
   frame does not mean anything is wrong or missing from the decoding: the DLL is only for the field names.
