@@ -813,6 +813,22 @@ blocks:
                   self.out.append(chr(self._arg(0) & 255))
               elif name in ('fflush', 'setvbuf'):
                   ret = 0
+              elif name == 'fprintf':                      # fprintf(stream, format, ...): every stream goes to the captured text
+                  s = self._cfmt(self._cstr(self._arg(1)), 2)
+                  self.out.append(s.decode('latin1'))
+                  ret = len(s)
+              elif name == 'fputs':                        # fputs(string, stream)
+                  self.out.append(self._cstr(self._arg(0)).decode('latin1'))
+                  ret = 1
+              elif name in ('fputc', 'putc'):              # fputc(char, stream)
+                  ret = self._arg(0) & 255
+                  self.out.append(chr(ret))
+              elif name == 'fwrite':                       # fwrite(buffer, size, count, stream)
+                  n = min(self._arg(1) * self._arg(2), 65536)
+                  self.out.append(self._rd(self._arg(0), n).decode('latin1'))
+                  ret = self._arg(2)
+              elif name in ('iob_func', 'acrt_iob_func'):  # the stdout/stderr handles: only ever handed back to fprintf and friends
+                  ret = self.HEAP + 0x300
               else:
                   self.out.append('[hadesr.dll import "%s" not emulated]\n' % name)
               mu.reg_write(self._u[2], ret & 0xFFFFFFFF)
@@ -2110,6 +2126,22 @@ blocks:
                   self.out.append(chr(self._arg(0) & 255))
               elif name in ('fflush', 'setvbuf'):
                   ret = 0
+              elif name == 'fprintf':                      # fprintf(stream, format, ...): every stream goes to the captured text
+                  s = self._cfmt(self._cstr(self._arg(1)), 2)
+                  self.out.append(s.decode('latin1'))
+                  ret = len(s)
+              elif name == 'fputs':                        # fputs(string, stream)
+                  self.out.append(self._cstr(self._arg(0)).decode('latin1'))
+                  ret = 1
+              elif name in ('fputc', 'putc'):              # fputc(char, stream)
+                  ret = self._arg(0) & 255
+                  self.out.append(chr(ret))
+              elif name == 'fwrite':                       # fwrite(buffer, size, count, stream)
+                  n = min(self._arg(1) * self._arg(2), 65536)
+                  self.out.append(self._rd(self._arg(0), n).decode('latin1'))
+                  ret = self._arg(2)
+              elif name in ('iob_func', 'acrt_iob_func'):  # the stdout/stderr handles: only ever handed back to fprintf and friends
+                  ret = self.HEAP + 0x300
               else:
                   self.out.append('[hadesr.dll import "%s" not emulated]\n' % name)
               mu.reg_write(self._u[2], ret & 0xFFFFFFFF)

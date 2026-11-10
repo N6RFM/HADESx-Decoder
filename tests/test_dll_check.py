@@ -45,3 +45,50 @@ def test_report_stops_with_the_message(tmp_path, monkeypatch):
     (tmp_path / 'sat_12_type_01.tlm').write_text('x')
     with pytest.raises(SystemExit, match='need no DLL'):
         report.report_main([str(tmp_path), '--dll', str(dll)])
+
+
+class _Mu(object):
+    """Just enough of a unicorn engine for DllDecoder._hook: memory and the three registers it reads and writes."""
+    def __init__(self):
+        self.mem, self.regs = {}, {}
+
+    def mem_write(self, a, data):
+        for i, b in enumerate(data):
+            self.mem[a + i] = b
+
+    def mem_read(self, a, n):
+        return bytes(self.mem.get(a + i, 0) for i in range(n))
+
+    def reg_read(self, r):
+        return self.regs[r]
+
+    def reg_write(self, r, v):
+        self.regs[r] = v
+
+
+def _call(name, args, strings=()):
+    """Run one hooked C-library import (cdecl, arguments pushed right to left) and return (captured text, return value)."""
+    import struct
+    mu, d = _Mu(), object.__new__(core.DllDecoder)
+    d._u, d.mu, d.out, d.HEAP = ('esp', 'eip', 'eax'), mu, [], 0x8000000
+    d.imp = {0x1234: name}
+    mu.regs['esp'] = 0x1000
+    mu.mem_write(0x1000, struct.pack('<I', 0xBEEF))                         # return address
+    mu.mem_write(0x1004, b''.join(struct.pack('<I', a) for a in args))
+    for addr, text in strings:
+        mu.mem_write(addr, text + b'\0')
+    d._hook(mu, 0x1234, 1, None)
+    assert mu.regs['esp'] == 0x1004 and mu.regs['eip'] == 0xBEEF
+    return ''.join(d.out), mu.regs['eax']
+
+
+def test_c_output_functions_other_than_printf_are_emulated():
+    import struct
+    lo, hi = struct.unpack('<II', struct.pack('<d', 21.5))
+    text, ret = _call('fprintf', [1, 0x2000, 7, lo, hi], [(0x2000, b'n=%d t=%.1f C\n')])        # fprintf(stdout, ...)
+    assert text == 'n=7 t=21.5 C\n' and ret == len(text)
+    assert _call('fputs', [0x2000, 1], [(0x2000, b'hello')])[0] == 'hello'
+    assert _call('fputc', [65, 1]) == ('A', 65)
+    assert _call('fwrite', [0x2000, 1, 5, 1], [(0x2000, b'12345')]) == ('12345', 5)
+    assert _call('__acrt_iob_func', [1])[1] != 0                                               # a handle to hand back to fprintf
+    assert 'not emulated' in _call('nonexistent_function', [])[0]

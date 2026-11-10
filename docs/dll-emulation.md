@@ -34,7 +34,7 @@ version and date are in the DLL's own banner). Other versions may print slightly
 ## How it works
 
 * `pefile` loads the DLL's sections into an emulated 32-bit x86 address space (`unicorn`).
-* The DLL's imports (`printf`, `sprintf`, `time`, `localtime`, `gmtime`, `puts`, `putchar`, ...) are replaced by
+* The DLL's imports (`printf`, `fprintf`, `sprintf`, `time`, `localtime`, `gmtime`, `puts`, `putchar`, `fputs`, `fputc`, `fwrite`, ...) are replaced by
   small Python hooks; printed text is captured.
 * For each verified frame the matching exported function is called with the descrambled bytes, laid out like a real
   receive buffer (`visualiza_powerpacket`, `visualiza_temppacket`, `visualiza_statuspacket`,

@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+* **The DLL emulator handles `fprintf`.** A UNNE-1B decoder DLL that prints through `fprintf` (a JA3TDW `unne1b.dll` did) printed `[hadesr.dll import "fprintf" not emulated]` and lost its text. `fprintf`, `fputs`, `fputc`/`putc`, `fwrite` and the stdout/stderr handles are now emulated, and everything printed is captured. Not tested against that DLL itself.
+
 ## 1.7.1 - 2026-11-09
 
 HADESx Decoder 1.7.1 reads folders whose file names are in local time (hadesx-report --folder-time) and says more clearly that a frame without field names is still decoded. Update from 1.7.0 with `git pull`; nothing is lost.
