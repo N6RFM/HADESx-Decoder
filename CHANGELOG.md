@@ -1,6 +1,8 @@
 # Changelog
 
-## Unreleased
+## 1.7.2 - 2026-11-09
+
+HADESx Decoder 1.7.2 lets the DLL emulator run decoder DLLs that print through fprintf (for example a newer UNNE-1B unne1b.dll). Update from 1.7.1 with `git pull`; nothing is lost.
 
 * **The DLL emulator handles `fprintf`.** A UNNE-1B decoder DLL that prints through `fprintf` (a JA3TDW `unne1b.dll` did) printed `[hadesr.dll import "fprintf" not emulated]` and lost its text. `fprintf`, `fputs`, `fputc`/`putc`, `fwrite` and the stdout/stderr handles are now emulated, and everything printed is captured. Not tested against that DLL itself.
 
