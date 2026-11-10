@@ -351,7 +351,7 @@ class MultiFolderWriter(object):
 
     @property
     def stats(self):
-        total = {'frames': 0, 'new_dat_lines': 0, 'skipped_duplicates': 0, 'files': set(), 'by_type': {}}
+        total = {'frames': 0, 'new_dat_lines': 0, 'skipped_duplicates': 0, 'files': set(), 'by_type': {}, 'new_by_type': {}}
         for w in self.writers.values():
             s = w.stats
             for k in ('frames', 'new_dat_lines', 'skipped_duplicates'):
@@ -359,4 +359,6 @@ class MultiFolderWriter(object):
             total['files'] |= {os.path.join(w.outdir, n) for n in s['files']}
             for key, n in s['by_type'].items():
                 total['by_type'][key] = total['by_type'].get(key, 0) + n
+            for key, n in s.get('new_by_type', {}).items():
+                total['new_by_type'][key] = total['new_by_type'].get(key, 0) + n
         return total

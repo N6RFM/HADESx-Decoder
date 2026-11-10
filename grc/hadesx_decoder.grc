@@ -3585,7 +3585,7 @@ blocks:
               self.history = history
               self.fallback = fallback
               os.makedirs(outdir, exist_ok=True)
-              self.stats = {'frames': 0, 'new_dat_lines': 0, 'skipped_duplicates': 0, 'files': set(), 'by_type': {}}
+              self.stats = {'frames': 0, 'new_dat_lines': 0, 'skipped_duplicates': 0, 'files': set(), 'by_type': {}, 'new_by_type': {}}
 
           def _path(self, name):
               return os.path.join(self.outdir, name)
@@ -3659,6 +3659,9 @@ blocks:
               touched.append(n_tlm)
               if mode == 'wb':
                   new_packet = ptype == 10 and not voice and not os.path.exists(self._path(n_dat))
+                  if new_packet or (voice and self._differs(n_dat, dat)):      # new to the folder (voice: or changed)
+                      k = (source, ptype)
+                      self.stats['new_by_type'][k] = self.stats['new_by_type'].get(k, 0) + 1
                   with open(self._path(n_dat), 'wb') as f:
                       f.write(dat)
                   self.stats['new_dat_lines'] += 1
@@ -3675,6 +3678,14 @@ blocks:
               touched.append(n_dat)
               self._count(source, ptype, touched)
               return touched
+
+          def _differs(self, name, data):
+              """True when the file is missing or holds something else than data."""
+              try:
+                  with open(self._path(name), 'rb') as f:
+                      return f.read() != data
+              except OSError:
+                  return True
 
           def _log_picture_packet(self, name, t):
               """A picture (SSDV) packet that was not in the folder before: one line in ssdv_log.csv (when it was added,

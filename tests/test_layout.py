@@ -170,3 +170,20 @@ def test_received_line_and_clock_note_with_a_known_start(tmp_path, capsys):
     assert 'clock reference learned' in cap.err and os.path.exists(out / layout.CLOCK_FILE)
     assert decode([TWO]) == 0                                                           # nothing stored, no start: no received line
     assert 'received:' not in capsys.readouterr().out
+
+
+def test_new_voice_count(tmp_path):
+    """The summary says how many voice frames are new: all the first time, none for the same frames again."""
+    from hadesx.genesis import FolderWriter
+    from hadesx.cli import type_line
+    fr = lambda n, b: {'type': 15, 'src': 0xC, 'voice': True, 'number': n, 'plain': b * 35, 'crc_ok': None}
+    w = FolderWriter(str(tmp_path), history=False)
+    for n in range(3):
+        w.write(fr(n, '%02x' % n), 1000 + n)
+    assert w.stats['new_by_type'] == {(12, 15): 3}
+    assert type_line(12, 15, 3, 3).endswith('CODEC2 voice: 3 (3 new)')
+    w2 = FolderWriter(str(tmp_path), history=False)
+    for n in range(3):
+        w2.write(fr(n, '%02x' % n), 2000 + n)
+    w2.write(fr(1, 'ff'), 2005)                                  # same frame number, other audio: counts as new
+    assert w2.stats['new_by_type'] == {(12, 15): 1}

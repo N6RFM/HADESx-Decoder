@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+* **The summary counts new voice frames.** Each voice (and picture) line of the end-of-run summary now ends with `(N new)`: frames that were not in the folder before (voice: or whose audio changed). Decoding the same recording again says `(0 new)`.
 * **Docs:** `unne1b.dll` is recorded as working with 1.7.2 (JA3TDW's two runs: types 1, 2, 3, 4, 5, 9, 10 and 14 on real frames).
 
 ## 1.7.2 - 2026-11-09
