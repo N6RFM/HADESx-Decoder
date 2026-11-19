@@ -175,7 +175,7 @@ values quoted in `tools/README.md` and `docs/satellites.md` come from the same r
 ## 10. SSDV pictures (HADES-SA)
 
 HADES-SA sends its camera pictures as **SSDV** packets, the format created by **Philip Heron (fsphil)** for high-altitude balloon and
-satellite images (<https://github.com/fsphil/ssdv>, GPL-3.0).
+satellite images (<https://codeberg.org/fsphil/ssdv>, GPL-3.0).
 
 * The **packet layout, the CRC-32 and the Reed-Solomon (255,223) parameters** that `src/hadesx/core.py` uses (`ssdv_*`, `rs_ssdv_*`) are those
   of the SSDV format. The Python code is our own implementation of that published format, written for this project; the `ssdv` program is
