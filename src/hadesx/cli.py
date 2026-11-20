@@ -264,7 +264,7 @@ def main(argv=None, folders=None, satnogs=None, recorder_time='utc'):
         print('%s updated: %d frame(s) written, %d new data line(s), %d duplicate line(s) skipped, %d file(s) touched'
               % (out_dir, st['frames'], st['new_dat_lines'], st['skipped_duplicates'], len(st['files'])), file=sys.stderr)
         for (src, typ), n in sorted(st['by_type'].items()):
-            new = st.get('new_by_type', {}).get((src, typ), 0) if (typ in VOICE_TYPES or typ == 10) else None
+            new = st.get('new_by_type', {}).get((src, typ), 0) if (typ in VOICE_TYPES or (typ == 10 and src != 0xC)) else None     # 0xC = UNNE-1B: its type 10 is the game payload, not a picture
             print(type_line(src, typ, n, new), file=sys.stderr)
         done = json.load(open(ingest_path if os.path.exists(ingest_path) else legacy_path)) \
             if os.path.exists(ingest_path) or os.path.exists(legacy_path) else {}
