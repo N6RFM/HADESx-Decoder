@@ -55,6 +55,20 @@ Every line starts with the reception time as epoch seconds (UTC) and a second co
 | 12 ephemeris | UTC, adr, ful, fdl, TLE epoch, nine TLE values, lat, lon, alt, 0 |
 | 14 time series | the 30 samples |
 
+## The summary at the end of a run
+
+```
+   satellite 3 (HADES-SA) type 11, CODEC2 voice: 10 (10 new)
+   satellite 3 (HADES-SA) type 10, SSDV image packet: 5 (5 new)
+   satellite 12 (UNNE-1B) type  2, Temperature: 1
+```
+
+One line per satellite and frame type: how many frames of that type the recording gave. On the **voice** and **picture** lines the
+number in brackets says how many of them are **new to the output folder**: a voice frame that was not stored before, or whose audio
+differs from the stored one (frames are kept by frame number, so a better copy replaces the older), and a picture packet that was
+not there before. Decoding the same recording again says `(0 new)`. Telemetry lines have no such count (their new lines are in
+the "new data line(s)" figure above them), and neither does UNNE-1B's type 10, which is a game payload, not a picture.
+
 ## Adding passes: what "unique additions" means
 
 * A `.dat` line is **not added if an identical packet is already in the file** (same values; only the time columns are

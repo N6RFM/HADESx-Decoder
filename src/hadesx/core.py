@@ -132,8 +132,8 @@ def _ssdv_layouts(body):
 def ssdv_plain(raw):
     """HADES-SA SSDV frame: `raw` = size byte + type/address + 250 bytes (the standard 256-byte SSDV packet is
     55 66 BF 35 FB followed by the 251 bytes after the size byte).  Returns those 251 bytes (type/address first) when
-    the packet's own CRC-32 verifies, else None.  Whether the satellite scrambles the SSDV bytes is not settled
-    (the spec exempts "training, sync, type and CRC"), so each plausible layout is tried; a CRC-32 pass is proof."""
+    the packet's own CRC-32 verifies, else None.  In real recordings the SSDV bytes are sent as they are (layout 0, see
+    docs/satellites.md); the scrambled layouts are only a fallback, so each is tried and a CRC-32 pass is proof."""
     body = raw[1:252]
     if len(body) < 251:
         return None
