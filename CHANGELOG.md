@@ -1,6 +1,8 @@
 # Changelog
 
-## Unreleased
+## 1.8.0 - 2026-11-20
+
+HADESx Decoder 1.8.0 decodes new recordings automatically (`hadesx --watch FOLDER`), counts the new voice frames and picture packets in its summary, and records that AMSAT-EA's newer `unne1b.dll` works. Update from 1.7.2 with `git pull`; nothing is lost.
 
 * **Fix:** UNNE-1B's type 10 (the Nebrija game payload, not a picture) no longer shows a meaningless `(0 new)` in the summary; the count is for voice frames and picture packets only. The summary is explained in [docs/output-folder.md](docs/output-folder.md#the-summary-at-the-end-of-a-run).
 * **`hadesx --watch FOLDER` decodes new recordings automatically.** It keeps running and decodes every recording that appears in the folder once it has been unchanged for 60 seconds, each name once (`.hadesx_watch_done`); `--watch-names` and the `watch` / `watch_names` settings choose the folder and the file names. See [docs/settings.md](docs/settings.md#decode-automatically-hadesx---watch).
