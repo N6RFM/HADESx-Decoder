@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+* **`hadesx --watch FOLDER` decodes new recordings automatically.** It keeps running and decodes every recording that appears in the folder once it has been unchanged for 60 seconds, each name once (`.hadesx_watch_done`); `--watch-names` and the `watch` / `watch_names` settings choose the folder and the file names. See [docs/settings.md](docs/settings.md#decode-automatically-hadesx---watch).
 * **The summary counts new voice frames.** Each voice (and picture) line of the end-of-run summary now ends with `(N new)`: frames that were not in the folder before (voice: or whose audio changed). Decoding the same recording again says `(0 new)`.
 * **Docs:** `unne1b.dll` is recorded as working with 1.7.2 (JA3TDW's two runs: types 1, 2, 3, 4, 5, 9, 10 and 14 on real frames).
 

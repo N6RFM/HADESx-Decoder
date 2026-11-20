@@ -187,3 +187,36 @@ def test_new_voice_count(tmp_path):
         w2.write(fr(n, '%02x' % n), 2000 + n)
     w2.write(fr(1, 'ff'), 2005)                                  # same frame number, other audio: counts as new
     assert w2.stats['new_by_type'] == {(12, 15): 1}
+
+
+def test_watch_decodes_each_new_file_once(tmp_path, monkeypatch):
+    """hadesx --watch: finished files that match are decoded once; a file still changing, or with another name, is left alone."""
+    import time
+    seen = []
+    monkeypatch.setattr(easy, '_run', lambda a, cfg: seen.append(os.path.basename(a.recording[0])) or 0)
+    old = time.time() - 600
+    for name in ('hadessa_a.iq', 'other.iq', 'b.wav', 'note.txt'):
+        p = tmp_path / name
+        p.write_bytes(b'x')
+        os.utime(str(p), (old, old))
+    (tmp_path / 'hadessa_new.iq').write_bytes(b'x')                  # written just now: not finished
+    a = easy.build_parser().parse_args(['--watch', str(tmp_path), '--watch-names', 'hadessa_*.iq b.wav'])
+    (tmp_path / 's.ini').write_text('[general]\n')
+    cfg = layout.load(str(tmp_path / 's.ini'))
+    out = []
+    assert easy._watch(a, cfg, settle=60, once=True, say=out.append) == 0
+    assert sorted(seen) == ['b.wav', 'hadessa_a.iq']
+    easy._watch(a, cfg, settle=60, once=True, say=out.append)        # again: nothing twice
+    assert sorted(seen) == ['b.wav', 'hadessa_a.iq']
+    assert (tmp_path / easy.WATCH_DONE).read_text().split() == ['hadessa_a.iq', 'b.wav']
+    os.utime(str(tmp_path / 'hadessa_new.iq'), (old, old))           # now finished
+    easy._watch(a, cfg, settle=60, once=True, say=out.append)
+    assert sorted(seen) == ['b.wav', 'hadessa_a.iq', 'hadessa_new.iq']
+
+
+def test_watch_needs_a_folder(tmp_path):
+    a = easy.build_parser().parse_args(['--watch'])
+    (tmp_path / 's.ini').write_text('[general]\n')
+    with pytest.raises(SystemExit) as e:
+        easy._watch(a, layout.load(str(tmp_path / 's.ini')), once=True, say=lambda t: None)
+    assert 'folder to watch' in str(e.value)

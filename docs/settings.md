@@ -95,6 +95,8 @@ dll =                       # full path of AMSAT-EA's hadesr.dll (labelled UNNE-
 recorder_time = utc         # what your recorder's clock shows in file names: utc, local, or hours from UTC (-5). See below
 local_time = no             # yes = label times as local time instead of UTC
 history = yes               # keep one .tlm file per reception
+watch =                     # the folder that plain "hadesx --watch" uses (see below)
+watch_names = *.wav *.iq    # which file names --watch takes: shell patterns separated by spaces
 
 [folders]
 # HADES-SA = ~/Pictures/hades-sa     # put one satellite somewhere else; a relative path is inside "output"
@@ -123,6 +125,24 @@ number of hours from UTC, for example `recorder_time = -5` for US Central daylig
 start to UTC before it stores or sends anything, so the stored times and the SatNOGS timestamps are always UTC. `--rec-start` is always
 taken as given (write it with a `Z` or `+00:00`) and is never converted. `hadesx --show-config` prints the setting in use.
 
+## Decode automatically: `hadesx --watch`
+
+```bash
+hadesx --watch ~/IQ_Files
+```
+
+keeps running and decodes every recording that appears in that folder, one after the other, with the same results as typing
+`hadesx recording` yourself. Stop it with Ctrl+C. It works the same on Linux, macOS and Windows; leave the window open, or start it
+when you log in.
+
+* A recording is taken when it has **not changed for 60 seconds**, so a file the recorder is still writing is left alone.
+* Each file name is written once to `.hadesx_watch_done` in that folder and is **not decoded again**, even if it held no frames.
+  Delete a line from that file to run a recording again.
+* By default every `*.wav` and `*.iq` file counts. If the folder also holds other satellites, say which names to take:
+  `hadesx --watch ~/IQ_Files --watch-names "hadessa_*.iq unne1b_*.iq"`.
+* To run `hadesx --watch` with no folder, set `watch = ~/IQ_Files` (and `watch_names`) in the settings file.
+* A raw `.iq` file needs its sample rate: set `fs` in the settings file (or `fs = guess`), since nobody is there to type `--fs`.
+
 ## The switches
 
 | Switch | Meaning |
@@ -138,6 +158,7 @@ taken as given (write it with a `Z` or `+00:00`) and is never converted. `hadesx
 | `-v`, `--verbose` | show every decoded frame and all details |
 | `--recorder-time utc\|local\|HOURS` | what your recorder's clock shows ([below](#time-zone-of-the-recorder)); overrides the setting |
 | `--satnogs`, `--satnogs-dry-run` | send the decoded frames to SatNOGS DB / show what would be sent ([satnogs.md](satnogs.md)) |
+| `--watch [FOLDER]`, `--watch-names PATTERNS` | keep running and decode every new recording in a folder ([below](#decode-automatically-hadesx---watch)) |
 | `--init`, `--show-config` | write the settings file / show the settings in use |
 
 Everything else (baud rates, detection threshold, JSON log, a single folder for all satellites) is in `hadesx-decode`, which

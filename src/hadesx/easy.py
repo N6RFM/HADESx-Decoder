@@ -10,6 +10,7 @@
 
     hadesx --init                            # write a commented settings file (output folder, sample rate, ...) and show where it is
     hadesx --show-config                     # show the settings in use
+    hadesx --watch ~/IQ_Files                # keep running: decode every new recording that appears in the folder
     hadesx pass.wav --satnogs                # also send the frames to SatNOGS DB (docs/satnogs.md); --satnogs-dry-run only shows
 
 Results go to  <output folder>/unne-1b/, hades-sa/, hades-l/  (maria-g, hades-icm or other only if heard): every satellite
@@ -51,6 +52,10 @@ def build_parser():
     ap.add_argument('--recorder-time', help='what your recorder\'s clock shows: utc, local, or hours from UTC such as -5 (default: settings file)')
     ap.add_argument('--satnogs', action='store_true', help='send the decoded frames to SatNOGS DB (settings: [satnogs], see docs/satnogs.md)')
     ap.add_argument('--satnogs-dry-run', action='store_true', help='show what --satnogs would send, and send nothing')
+    ap.add_argument('--watch', nargs='?', const='', metavar='FOLDER',
+                    help='keep running and decode every new recording that appears in FOLDER (default: the "watch" setting); stop with Ctrl+C')
+    ap.add_argument('--watch-names', metavar='PATTERNS',
+                    help='--watch: which file names count, shell patterns separated by spaces, e.g. "hadessa_*.iq unne1b_*.iq" (default: the setting, else *.wav *.iq)')
     ap.add_argument('--init', action='store_true', help='write a commented settings file, say where it is, and stop')
     ap.add_argument('--show-config', action='store_true', help='show the settings in use, and stop')
     return ap
@@ -79,6 +84,7 @@ def _show_config(cfg):
     sn = cfg['satnogs']
     print('SatNOGS       : %s  (callsign %s, position %s %s, frames: %s)' % (
         'upload on' if sn['upload'] else 'off', sn['callsign'] or '-', sn['latitude'], sn['longitude'], sn['include']))
+    print('watch         : %s  (names: %s)' % (cfg['watch'] or '(none)', ' '.join(cfg['watch_names'])))
     print('NORAD IDs     : %s' % (', '.join('%s %s' % kv for kv in sorted(cfg['norad'].items())) or '-'))
     for src, name in list(layout.SAT_NAMES.items()) + [(-1, 'other')]:
         print('  %-9s -> %s' % (name, layout.folder_for(cfg['output'], src, cfg['folders'])))
@@ -109,9 +115,56 @@ def main(argv=None):
     if a.show_config:
         _show_config(cfg)
         return 0
+    if a.watch is not None:
+        return _watch(a, cfg)
     if not a.recording:
-        ap.error('give at least one recording (or --init / --show-config)')
+        ap.error('give at least one recording (or --watch / --init / --show-config)')
+    return _run(a, cfg)
 
+
+WATCH_DONE = '.hadesx_watch_done'          # in the watched folder: the names of the recordings already handled
+
+
+def _watch(a, cfg, settle=60, every=30, once=False, say=print):
+    """Decode each new recording that appears in a folder.  A file is taken when it has not changed for `settle` seconds
+    (the recorder has finished), once: its name is then written to .hadesx_watch_done, whatever the result.  Ctrl+C stops."""
+    folder = os.path.expanduser(a.watch) if a.watch else cfg['watch']
+    if not folder:
+        raise SystemExit('give the folder to watch: hadesx --watch FOLDER (or set watch = FOLDER in the settings file)')
+    if not os.path.isdir(folder):
+        raise SystemExit('watch folder not found: %s' % folder)
+    names = (a.watch_names or '').split() or cfg['watch_names']
+    state = os.path.join(folder, WATCH_DONE)
+    say('Watching %s for %s: a recording is decoded once it has been unchanged for %d s.  Ctrl+C stops.' % (folder, ' '.join(names), settle))
+    try:
+        while True:
+            done = set(open(state).read().split('\n')) if os.path.exists(state) else set()
+            for pat in names:
+                for f in sorted(glob.glob(os.path.join(folder, pat))):
+                    name = os.path.basename(f)
+                    if name in done or not os.path.isfile(f) or time.time() - os.path.getmtime(f) < settle:
+                        continue
+                    say('%s  decoding %s' % (time.strftime('%Y-%m-%d %H:%M:%S'), name))
+                    a.recording = [f]
+                    try:
+                        _run(a, cfg)
+                    except SystemExit as e:
+                        say('   %s' % (e.code if isinstance(e.code, str) else 'stopped (exit status %s)' % e.code))
+                    except Exception as e:                      # one bad file must not end the watch
+                        say('   failed: %s' % e)
+                    with open(state, 'a') as fh:
+                        fh.write(name + '\n')
+                    done.add(name)
+            if once:
+                return 0
+            time.sleep(every)
+    except KeyboardInterrupt:
+        say('stopped')
+        return 0
+
+
+def _run(a, cfg):
+    """Decode the recordings in a.recording into the output folder, then make the voice WAVs and the pictures."""
     from . import cli
     root, status = cfg['output'], 0
     uploader = None

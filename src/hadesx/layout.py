@@ -39,6 +39,8 @@ DEFAULTS = {
     'recorder_time': 'utc',       # what your recorder's clock shows in file names: utc, local, or hours from UTC (-5)
     'local_time': 'no',           # label times as local instead of UTC
     'history': 'yes',             # keep one .tlm file per reception
+    'watch': '',                  # hadesx --watch with no folder watches this one; empty = none
+    'watch_names': '*.wav *.iq',  # which file names hadesx --watch picks up: shell patterns separated by spaces
 }
 SATNOGS_KEYS = ('upload', 'callsign', 'latitude', 'longitude', 'include', 'url')
 NORAD_DEFAULTS = {'HADES-SA': 68446}      # the only one of the family confirmed in SatNOGS DB; add the others in [norad]
@@ -79,6 +81,12 @@ local_time = no
 
 # yes = keep one .tlm text file per reception, besides the latest.
 history = yes
+
+# hadesx --watch decodes every new recording that appears in a folder (docs/settings.md).  watch = the folder that plain
+# "hadesx --watch" uses; watch_names = which file names count: shell patterns separated by spaces, for example
+# hadessa_*.iq unne1b_*.iq   (the default takes every WAV and IQ file).
+watch =
+watch_names = *.wav *.iq
 
 [folders]
 # Optional: put one satellite somewhere else.  The names are UNNE-1B, HADES-SA, HADES-L, MARIA-G, HADES-ICM, other.
@@ -218,6 +226,8 @@ def load(path=None):
         'local_time': _yes(raw['local_time'], 'local_time'),
         'recorder_time': _recorder_time(raw['recorder_time']),
         'history': _yes(raw['history'], 'history'),
+        'watch': os.path.expanduser(raw['watch']) or None,
+        'watch_names': raw['watch_names'].split() or DEFAULTS['watch_names'].split(),
         'folders': folders,
     }
     try:
